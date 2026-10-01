@@ -7,6 +7,9 @@ public final class InventoryEvents {
 
     private InventoryEvents() {}
 
+    /** Anything about the inventory of the household changed. Published by every write. */
+    public record InventoryChanged(UUID householdId, UUID userId) {}
+
     public record FoodItemAdded(UUID householdId, UUID userId, UUID itemId) {}
 
     public record FoodItemConsumed(UUID householdId, UUID userId, UUID itemId) {}

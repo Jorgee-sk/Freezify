@@ -92,6 +92,28 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
 }
 
 /**
+ * Opens a long-lived response (server-sent events) with the same session handling as `api`.
+ * `EventSource` cannot be used because it cannot send the Authorization header.
+ */
+export async function openStream(path: string, signal: AbortSignal): Promise<Response> {
+  const send = () => {
+    const headers: Record<string, string> = { Accept: 'text/event-stream' }
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`
+    return fetch(`${API_BASE}${path}`, { headers, signal })
+  }
+
+  if (!accessToken && session.refreshToken()) {
+    await renewSession()
+  }
+  let response = await send()
+  if (response.status === 401 && (await renewSession())) {
+    response = await send()
+  }
+  if (!response.ok) throw await toApiError(response)
+  return response
+}
+
+/**
  * Refresh tokens are single use and the backend revokes the whole session when one is presented twice,
  * so concurrent requests (and other tabs) must share a single refresh.
  */

@@ -56,3 +56,7 @@ freezify:
       - /api/v1/households/join
   households:
     invitation-ttl: 7d
+  realtime:
+    # Event streams end after this long; clients reconnect and are authenticated again.
+    connection-ttl: 30m
+    heartbeat: 25s

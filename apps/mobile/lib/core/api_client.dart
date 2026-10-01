@@ -74,6 +74,41 @@ class ApiClient {
 
   Future<dynamic> delete(String path) => _request('DELETE', path);
 
+  /// Opens a long-lived response (server-sent events) and returns its bytes as they arrive.
+  /// Cancelling [cancelToken] closes the connection.
+  Future<Stream<List<int>>> openStream(String path, {CancelToken? cancelToken}) async {
+    if (_accessToken == null && await hasStoredSession()) {
+      await _renewSession();
+    }
+    var response = await _sendStream(path, cancelToken);
+    if (response.statusCode == 401 && await _renewSession()) {
+      response = await _sendStream(path, cancelToken);
+    }
+    final status = response.statusCode ?? 0;
+    if (status >= 400) throw ApiException(status, 'UNKNOWN');
+    return response.data!.stream;
+  }
+
+  Future<Response<ResponseBody>> _sendStream(String path, CancelToken? cancelToken) async {
+    try {
+      return await _dio.get<ResponseBody>(
+        path,
+        cancelToken: cancelToken,
+        options: Options(
+          responseType: ResponseType.stream,
+          // The stream is silent between events; the listener decides when silence means a dead connection.
+          receiveTimeout: Duration.zero,
+          headers: {
+            Headers.acceptHeader: 'text/event-stream',
+            if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
+          },
+        ),
+      );
+    } on DioException {
+      throw const ApiException.network();
+    }
+  }
+
   Future<dynamic> _request(String method, String path, {Object? body, bool authenticated = true}) async {
     // After an app restart only the refresh token is left: renew first instead of provoking a 401.
     if (authenticated && _accessToken == null && await hasStoredSession()) {

@@ -2,6 +2,7 @@ package com.freezify.auth.internal;
 
 import com.freezify.common.ProblemWriter;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import jakarta.servlet.DispatcherType;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import javax.crypto.SecretKey;
@@ -47,6 +48,10 @@ class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(requests -> requests
+                        // The request was authorized when it arrived; the later dispatch that finishes an
+                        // event stream has no token to check again.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC)
+                        .permitAll()
                         .requestMatchers("/api/v1/auth/**")
                         .permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info")

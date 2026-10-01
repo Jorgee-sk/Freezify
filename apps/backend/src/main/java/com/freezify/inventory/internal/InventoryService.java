@@ -11,6 +11,7 @@ import com.freezify.households.HouseholdAccess;
 import com.freezify.inventory.InventoryEvents.FoodItemAdded;
 import com.freezify.inventory.InventoryEvents.FoodItemConsumed;
 import com.freezify.inventory.InventoryEvents.FoodItemDiscarded;
+import com.freezify.inventory.InventoryEvents.InventoryChanged;
 import com.freezify.inventory.ItemStatus;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
@@ -135,6 +136,7 @@ public class InventoryService {
         requireKnownFood(data);
         FoodItemEntity item = items.saveAndFlush(new FoodItemEntity(householdId, userId, data));
         events.publishEvent(new FoodItemAdded(householdId, userId, item.id()));
+        events.publishEvent(new InventoryChanged(householdId, userId));
         return item.toView();
     }
 
@@ -144,6 +146,7 @@ public class InventoryService {
         requireKnownFood(data);
         FoodItemEntity item = loadActive(householdId, itemId);
         item.apply(data);
+        events.publishEvent(new InventoryChanged(householdId, userId));
         return items.saveAndFlush(item).toView();
     }
 
@@ -152,6 +155,7 @@ public class InventoryService {
     public void delete(UUID householdId, UUID userId, UUID itemId) {
         access.requireMember(householdId, userId);
         items.delete(load(householdId, itemId));
+        events.publishEvent(new InventoryChanged(householdId, userId));
     }
 
     @Transactional
@@ -159,6 +163,7 @@ public class InventoryService {
         access.requireMember(householdId, userId);
         FoodItemEntity item = loadActive(householdId, itemId);
         item.open(today.date());
+        events.publishEvent(new InventoryChanged(householdId, userId));
         return items.saveAndFlush(item).toView();
     }
 
@@ -213,6 +218,7 @@ public class InventoryService {
                 type == FoodOutcomeEntity.Type.CONSUMED ? ItemStatus.CONSUMED : ItemStatus.DISCARDED;
         BigDecimal value = item.takeOut(used, finalStatus);
         outcomes.save(new FoodOutcomeEntity(item, type, reason, used, value, userId, clock.instant()));
+        events.publishEvent(new InventoryChanged(householdId, userId));
         return items.saveAndFlush(item);
     }
 

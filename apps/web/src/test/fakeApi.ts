@@ -5,7 +5,10 @@ interface RequestInfoForHandler {
   query: URLSearchParams
 }
 
-type Handler = (body: unknown, request: RequestInfoForHandler) => { status?: number; body?: unknown }
+type Handler = (
+  body: unknown,
+  request: RequestInfoForHandler,
+) => { status?: number; body?: unknown; response?: Response }
 
 export interface RecordedCall {
   route: string
@@ -16,7 +19,8 @@ export interface RecordedCall {
 
 /**
  * Replaces `fetch` with a router keyed by "METHOD /path" (path relative to /api/v1, without query string).
- * An unexpected request fails the test instead of silently hanging.
+ * An unexpected request fails the test instead of silently hanging, except for event streams: unless a test
+ * serves one, they stay open and silent.
  */
 export function fakeApi(routes: Record<string, Handler>) {
   const calls: RecordedCall[] = []
@@ -30,8 +34,10 @@ export function fakeApi(routes: Record<string, Handler>) {
     calls.push({ route, body, headers, query })
 
     const handler = routes[route]
+    if (!handler && route.endsWith('/events')) return eventStream().response
     if (!handler) throw new Error(`Unexpected request: ${route}`)
     const result = handler(body, { headers, query })
+    if (result.response) return result.response
     const status = result.status ?? 200
     return new Response(status === 204 ? null : JSON.stringify(result.body ?? {}), {
       status,
@@ -49,4 +55,22 @@ export function fakeApi(routes: Record<string, Handler>) {
 
 export function problem(status: number, code: string) {
   return { status, body: { status, code, detail: code } }
+}
+
+/** A server-sent event response that the test drives: push events into it, or close it. */
+export function eventStream() {
+  let controller!: ReadableStreamDefaultController<Uint8Array>
+  const body = new ReadableStream<Uint8Array>({
+    start(streamController) {
+      controller = streamController
+    },
+  })
+  const encoder = new TextEncoder()
+  return {
+    response: new Response(body, { status: 200, headers: { 'Content-Type': 'text/event-stream' } }),
+    /** Writes raw text, to test events that arrive split across chunks. */
+    write: (text: string) => controller.enqueue(encoder.encode(text)),
+    send: (name: string) => controller.enqueue(encoder.encode(`event:${name}\ndata:{}\n\n`)),
+    close: () => controller.close(),
+  }
 }

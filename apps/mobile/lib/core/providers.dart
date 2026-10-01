@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_client.dart';
-import 'token_storage.dart';
+import 'secure_token_storage.dart';
 
 /// Override at build time: `--dart-define=FREEZIFY_API_URL=https://api.example.com/api/v1`.
 /// The default reaches a backend on the development machine from the Android emulator.

@@ -2,6 +2,8 @@ package com.freezify.households.internal;
 
 import com.freezify.common.ApiException;
 import com.freezify.households.HouseholdAccess;
+import com.freezify.households.HouseholdEvents.HouseholdDeleted;
+import com.freezify.households.HouseholdEvents.MemberRemoved;
 import com.freezify.households.HouseholdRole;
 import com.freezify.households.internal.HouseholdMemberRepository.MemberCount;
 import com.freezify.users.UserAccount;
@@ -13,6 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +28,7 @@ public class HouseholdService implements HouseholdAccess {
     private final Users users;
     private final HouseholdProperties properties;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     HouseholdService(
             HouseholdRepository households,
@@ -32,13 +36,15 @@ public class HouseholdService implements HouseholdAccess {
             HouseholdInvitationRepository invitations,
             Users users,
             HouseholdProperties properties,
-            Clock clock) {
+            Clock clock,
+            ApplicationEventPublisher events) {
         this.households = households;
         this.members = members;
         this.invitations = invitations;
         this.users = users;
         this.properties = properties;
         this.clock = clock;
+        this.events = events;
     }
 
     public record HouseholdView(UUID id, String name, HouseholdRole role, long memberCount, Instant createdAt) {}
@@ -114,6 +120,7 @@ public class HouseholdService implements HouseholdAccess {
     public void delete(UUID householdId, UUID userId) {
         requireOwner(householdId, userId);
         households.deleteById(householdId);
+        events.publishEvent(new HouseholdDeleted(householdId));
     }
 
     @Transactional(readOnly = true)
@@ -153,6 +160,7 @@ public class HouseholdService implements HouseholdAccess {
         HouseholdMemberEntity target = members.findByHouseholdIdAndUserId(householdId, targetUserId)
                 .orElseThrow(() -> ApiException.notFound("MEMBER_NOT_FOUND", "Member not found."));
         members.delete(target);
+        events.publishEvent(new MemberRemoved(householdId, targetUserId));
     }
 
     @Transactional

@@ -145,8 +145,11 @@ class AuthApiTests extends ApiTestSupport {
     void tokenWithTamperedSignatureIsRejected() throws Exception {
         TestUser user = register("Ana");
         String token = user.accessToken();
-        char last = token.charAt(token.length() - 1);
-        String tampered = token.substring(0, token.length() - 1) + (last == 'A' ? 'B' : 'A');
+        // The first character of the signature. Not the last one: its low bits are base64 padding, so
+        // changing it does not always change the signature.
+        int position = token.lastIndexOf('.') + 1;
+        char replacement = token.charAt(position) == 'A' ? 'B' : 'A';
+        String tampered = token.substring(0, position) + replacement + token.substring(position + 1);
 
         mvc.perform(get("/api/v1/users/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + tampered))
                 .andExpect(status().isUnauthorized());
