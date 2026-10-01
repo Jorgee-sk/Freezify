@@ -17,6 +17,12 @@ String errorMessage(AppLocalizations l10n, Object error) {
     'ALREADY_MEMBER' => l10n.errorAlreadyMember,
     'INVITATION_NOT_FOUND' => l10n.errorInvitationNotFound,
     'MEMBER_NOT_FOUND' => l10n.errorMemberNotFound,
+    'ITEM_NOT_FOUND' => l10n.errorItemNotFound,
+    'ITEM_NOT_ACTIVE' => l10n.errorItemNotActive,
+    'FOOD_NOT_FOUND' => l10n.errorFoodNotFound,
+    'INCOMPATIBLE_UNIT' => l10n.errorIncompatibleUnit,
+    'QUANTITY_EXCEEDS_AVAILABLE' => l10n.errorQuantityExceeds,
+    'CONCURRENT_MODIFICATION' => l10n.errorConcurrentModification,
     _ => l10n.errorGeneric,
   };
 }

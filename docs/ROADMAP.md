@@ -7,7 +7,7 @@ El estado detallado de cada entrega está en [STATUS.md](STATUS.md).
 |---|---|---|
 | 0 | Product Definition | ✅ Completada |
 | 1 | Foundation | ✅ Completada |
-| 2 | Inventory | 🟡 En curso: backend y web hechos; faltan móvil y SSE |
+| 2 | Inventory | 🟡 En curso: backend, web y móvil hechos; falta SSE |
 | 3 | Expiration Engine | ⏳ Pendiente |
 | 4 | Recipes | ⏳ Pendiente |
 | 5 | Smart Planning | ⏳ Pendiente |

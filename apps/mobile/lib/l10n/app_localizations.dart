@@ -62,8 +62,7 @@ import 'app_localizations_es.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,19 +82,15 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[
-    Locale('en'),
-    Locale('es'),
-  ];
+  static const List<Locale> supportedLocales = <Locale>[Locale('en'), Locale('es')];
 
   /// No description provided for @appName.
   ///
@@ -445,10 +439,531 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That person no longer belongs to the household.'**
   String get errorMemberNotFound;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Members and settings'**
+  String get settings;
+
+  /// No description provided for @inventoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get inventoryTitle;
+
+  /// No description provided for @inventoryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} food} other{{count} foods}}'**
+  String inventoryCount(int count);
+
+  /// No description provided for @inventoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No food yet. Add what you have at home to get started.'**
+  String get inventoryEmpty;
+
+  /// No description provided for @inventoryEmptyFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'No food matches the filter.'**
+  String get inventoryEmptyFiltered;
+
+  /// No description provided for @addFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Add food'**
+  String get addFood;
+
+  /// No description provided for @newFood.
+  ///
+  /// In en, this message translates to:
+  /// **'New food'**
+  String get newFood;
+
+  /// No description provided for @editFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit food'**
+  String get editFood;
+
+  /// No description provided for @searchInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the inventory…'**
+  String get searchInventory;
+
+  /// No description provided for @allLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allLocations;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @allCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get allCategories;
+
+  /// No description provided for @show.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get show;
+
+  /// No description provided for @stateActive.
+  ///
+  /// In en, this message translates to:
+  /// **'At home'**
+  String get stateActive;
+
+  /// No description provided for @stateFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get stateFinished;
+
+  /// No description provided for @stateAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get stateAll;
+
+  /// No description provided for @foodName.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get foodName;
+
+  /// No description provided for @suggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get suggestions;
+
+  /// No description provided for @recentlyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently added'**
+  String get recentlyAdded;
+
+  /// No description provided for @amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get amount;
+
+  /// No description provided for @unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get unit;
+
+  /// No description provided for @location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get location;
+
+  /// No description provided for @expirationDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiration date'**
+  String get expirationDate;
+
+  /// No description provided for @noDateSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get noDateSet;
+
+  /// No description provided for @clearDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove date'**
+  String get clearDate;
+
+  /// No description provided for @moreDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'More details'**
+  String get moreDetails;
+
+  /// No description provided for @purchaseDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase date'**
+  String get purchaseDate;
+
+  /// No description provided for @brand.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand'**
+  String get brand;
+
+  /// No description provided for @price.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated price (€)'**
+  String get price;
+
+  /// No description provided for @notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notes;
+
+  /// No description provided for @invalidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a quantity greater than zero.'**
+  String get invalidAmount;
+
+  /// No description provided for @expiresOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires on {date}'**
+  String expiresOn(String date);
+
+  /// No description provided for @expiresEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires around {date} (estimated date)'**
+  String expiresEstimated(String date);
+
+  /// No description provided for @noExpirationDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No expiration date'**
+  String get noExpirationDate;
+
+  /// No description provided for @openedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened on {date}'**
+  String openedOn(String date);
+
+  /// No description provided for @statusAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get statusAvailable;
+
+  /// No description provided for @statusOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened'**
+  String get statusOpened;
+
+  /// No description provided for @statusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get statusExpired;
+
+  /// No description provided for @statusConsumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumed'**
+  String get statusConsumed;
+
+  /// No description provided for @statusDiscarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Discarded'**
+  String get statusDiscarded;
+
+  /// No description provided for @consume.
+  ///
+  /// In en, this message translates to:
+  /// **'Consume'**
+  String get consume;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// No description provided for @markOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as opened'**
+  String get markOpened;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @itemActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get itemActions;
+
+  /// No description provided for @consumeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How much did you consume?'**
+  String get consumeTitle;
+
+  /// No description provided for @discardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How much did you throw away?'**
+  String get discardTitle;
+
+  /// No description provided for @reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get reason;
+
+  /// No description provided for @reasonExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get reasonExpired;
+
+  /// No description provided for @reasonSpoiled.
+  ///
+  /// In en, this message translates to:
+  /// **'Spoiled'**
+  String get reasonSpoiled;
+
+  /// No description provided for @reasonLeftover.
+  ///
+  /// In en, this message translates to:
+  /// **'Leftovers'**
+  String get reasonLeftover;
+
+  /// No description provided for @reasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get reasonOther;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @confirmDeleteItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}” from the inventory? It will not count as consumed or wasted.'**
+  String confirmDeleteItem(String name);
+
+  /// No description provided for @previousPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get previousPage;
+
+  /// No description provided for @nextPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get nextPage;
+
+  /// No description provided for @pageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {total}'**
+  String pageOf(int page, int total);
+
+  /// No description provided for @unitAbbreviation.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{unit} other{units}}'**
+  String unitAbbreviation(num count);
+
+  /// No description provided for @unitNameUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'units'**
+  String get unitNameUnit;
+
+  /// No description provided for @unitNameGram.
+  ///
+  /// In en, this message translates to:
+  /// **'grams'**
+  String get unitNameGram;
+
+  /// No description provided for @unitNameKilogram.
+  ///
+  /// In en, this message translates to:
+  /// **'kilograms'**
+  String get unitNameKilogram;
+
+  /// No description provided for @unitNameMilliliter.
+  ///
+  /// In en, this message translates to:
+  /// **'milliliters'**
+  String get unitNameMilliliter;
+
+  /// No description provided for @unitNameLiter.
+  ///
+  /// In en, this message translates to:
+  /// **'liters'**
+  String get unitNameLiter;
+
+  /// No description provided for @locationRefrigerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Fridge'**
+  String get locationRefrigerator;
+
+  /// No description provided for @locationFreezer.
+  ///
+  /// In en, this message translates to:
+  /// **'Freezer'**
+  String get locationFreezer;
+
+  /// No description provided for @locationPantry.
+  ///
+  /// In en, this message translates to:
+  /// **'Pantry'**
+  String get locationPantry;
+
+  /// No description provided for @locationOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get locationOther;
+
+  /// No description provided for @categoryVegetables.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetables'**
+  String get categoryVegetables;
+
+  /// No description provided for @categoryFruits.
+  ///
+  /// In en, this message translates to:
+  /// **'Fruit'**
+  String get categoryFruits;
+
+  /// No description provided for @categoryMeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Meat'**
+  String get categoryMeat;
+
+  /// No description provided for @categoryFish.
+  ///
+  /// In en, this message translates to:
+  /// **'Fish'**
+  String get categoryFish;
+
+  /// No description provided for @categoryDairy.
+  ///
+  /// In en, this message translates to:
+  /// **'Dairy'**
+  String get categoryDairy;
+
+  /// No description provided for @categoryEggs.
+  ///
+  /// In en, this message translates to:
+  /// **'Eggs'**
+  String get categoryEggs;
+
+  /// No description provided for @categoryBakery.
+  ///
+  /// In en, this message translates to:
+  /// **'Bakery'**
+  String get categoryBakery;
+
+  /// No description provided for @categoryPantry.
+  ///
+  /// In en, this message translates to:
+  /// **'Pantry'**
+  String get categoryPantry;
+
+  /// No description provided for @categoryFrozen.
+  ///
+  /// In en, this message translates to:
+  /// **'Frozen'**
+  String get categoryFrozen;
+
+  /// No description provided for @categoryBeverages.
+  ///
+  /// In en, this message translates to:
+  /// **'Drinks'**
+  String get categoryBeverages;
+
+  /// No description provided for @categoryPrepared.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready meals'**
+  String get categoryPrepared;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get categoryOther;
+
+  /// No description provided for @errorItemNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This food is no longer in the inventory.'**
+  String get errorItemNotFound;
+
+  /// No description provided for @errorItemNotActive.
+  ///
+  /// In en, this message translates to:
+  /// **'This food was already consumed or discarded.'**
+  String get errorItemNotActive;
+
+  /// No description provided for @errorFoodNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That food does not exist in the catalog.'**
+  String get errorFoodNotFound;
+
+  /// No description provided for @errorIncompatibleUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'That unit is not compatible with the unit of the food.'**
+  String get errorIncompatibleUnit;
+
+  /// No description provided for @errorQuantityExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'There is less left than the quantity given.'**
+  String get errorQuantityExceeds;
+
+  /// No description provided for @errorConcurrentModification.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else just changed this. Try again.'**
+  String get errorConcurrentModification;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -457,8 +972,7 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'es'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'es'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;

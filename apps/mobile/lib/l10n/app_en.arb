@@ -17,7 +17,13 @@
   "fieldRequired": "Required",
   "passwordTooShort": "At least 8 characters",
   "greeting": "Hi, {name} 👋",
-  "@greeting": { "placeholders": { "name": { "type": "String" } } },
+  "@greeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "householdsTitle": "My households",
   "householdsEmpty": "You don't belong to any household yet. Create one or join with an invitation code.",
   "createHousehold": "Create a household",
@@ -27,18 +33,36 @@
   "invitationCode": "Invitation code",
   "join": "Join",
   "memberCount": "{count, plural, =1{{count} member} other{{count} members}}",
-  "@memberCount": { "placeholders": { "count": { "type": "int" } } },
+  "@memberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "roleOwner": "Owner",
   "roleMember": "Member",
   "membersTitle": "Members",
   "you": "you",
   "joinedOn": "Since {date}",
-  "@joinedOn": { "placeholders": { "date": { "type": "String" } } },
+  "@joinedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "inviteTitle": "Invite someone",
   "inviteHelp": "Generate a code and share it. Whoever enters it will join this household.",
   "inviteGenerate": "Generate code",
   "inviteExpires": "Valid until {date}",
-  "@inviteExpires": { "placeholders": { "date": { "type": "String" } } },
+  "@inviteExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "rename": "Rename",
   "save": "Save",
   "cancel": "Cancel",
@@ -46,11 +70,29 @@
   "leaveHousehold": "Leave household",
   "deleteHousehold": "Delete household",
   "confirmRemove": "Remove {name} from this household?",
-  "@confirmRemove": { "placeholders": { "name": { "type": "String" } } },
+  "@confirmRemove": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "confirmLeave": "Are you sure you want to leave “{name}”?",
-  "@confirmLeave": { "placeholders": { "name": { "type": "String" } } },
+  "@confirmLeave": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "confirmDelete": "“{name}” will be deleted for all its members. This cannot be undone.",
-  "@confirmDelete": { "placeholders": { "name": { "type": "String" } } },
+  "@confirmDelete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "retry": "Retry",
   "errorGeneric": "Something went wrong. Please try again.",
   "errorNetwork": "Cannot reach the server.",
@@ -64,5 +106,144 @@
   "errorOwnerCannotLeave": "The owner cannot leave the household. Delete it if you no longer need it.",
   "errorAlreadyMember": "You already belong to this household.",
   "errorInvitationNotFound": "The code is invalid or has expired.",
-  "errorMemberNotFound": "That person no longer belongs to the household."
+  "errorMemberNotFound": "That person no longer belongs to the household.",
+  "settings": "Members and settings",
+  "inventoryTitle": "Inventory",
+  "inventoryCount": "{count, plural, =1{{count} food} other{{count} foods}}",
+  "@inventoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inventoryEmpty": "No food yet. Add what you have at home to get started.",
+  "inventoryEmptyFiltered": "No food matches the filter.",
+  "addFood": "Add food",
+  "newFood": "New food",
+  "editFood": "Edit food",
+  "searchInventory": "Search the inventory…",
+  "allLocations": "All",
+  "filters": "Filters",
+  "category": "Category",
+  "allCategories": "All categories",
+  "show": "Show",
+  "stateActive": "At home",
+  "stateFinished": "Finished",
+  "stateAll": "All",
+  "foodName": "Food",
+  "suggestions": "Suggestions",
+  "recentlyAdded": "Recently added",
+  "amount": "Quantity",
+  "unit": "Unit",
+  "location": "Location",
+  "expirationDate": "Expiration date",
+  "noDateSet": "Not set",
+  "clearDate": "Remove date",
+  "moreDetails": "More details",
+  "purchaseDate": "Purchase date",
+  "brand": "Brand",
+  "price": "Estimated price (€)",
+  "notes": "Notes",
+  "invalidAmount": "Enter a quantity greater than zero.",
+  "expiresOn": "Expires on {date}",
+  "@expiresOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "expiresEstimated": "Expires around {date} (estimated date)",
+  "@expiresEstimated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noExpirationDate": "No expiration date",
+  "openedOn": "Opened on {date}",
+  "@openedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "statusAvailable": "Available",
+  "statusOpened": "Opened",
+  "statusExpired": "Expired",
+  "statusConsumed": "Consumed",
+  "statusDiscarded": "Discarded",
+  "consume": "Consume",
+  "discard": "Discard",
+  "markOpened": "Mark as opened",
+  "edit": "Edit",
+  "delete": "Delete",
+  "itemActions": "Actions",
+  "consumeTitle": "How much did you consume?",
+  "discardTitle": "How much did you throw away?",
+  "reason": "Reason",
+  "reasonExpired": "Expired",
+  "reasonSpoiled": "Spoiled",
+  "reasonLeftover": "Leftovers",
+  "reasonOther": "Other",
+  "confirm": "Confirm",
+  "confirmDeleteItem": "Delete “{name}” from the inventory? It will not count as consumed or wasted.",
+  "@confirmDeleteItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "previousPage": "Previous",
+  "nextPage": "Next",
+  "pageOf": "Page {page} of {total}",
+  "@pageOf": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "unitAbbreviation": "{count, plural, =1{unit} other{units}}",
+  "@unitAbbreviation": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "unitNameUnit": "units",
+  "unitNameGram": "grams",
+  "unitNameKilogram": "kilograms",
+  "unitNameMilliliter": "milliliters",
+  "unitNameLiter": "liters",
+  "locationRefrigerator": "Fridge",
+  "locationFreezer": "Freezer",
+  "locationPantry": "Pantry",
+  "locationOther": "Other",
+  "categoryVegetables": "Vegetables",
+  "categoryFruits": "Fruit",
+  "categoryMeat": "Meat",
+  "categoryFish": "Fish",
+  "categoryDairy": "Dairy",
+  "categoryEggs": "Eggs",
+  "categoryBakery": "Bakery",
+  "categoryPantry": "Pantry",
+  "categoryFrozen": "Frozen",
+  "categoryBeverages": "Drinks",
+  "categoryPrepared": "Ready meals",
+  "categoryOther": "Other",
+  "errorItemNotFound": "This food is no longer in the inventory.",
+  "errorItemNotActive": "This food was already consumed or discarded.",
+  "errorFoodNotFound": "That food does not exist in the catalog.",
+  "errorIncompatibleUnit": "That unit is not compatible with the unit of the food.",
+  "errorQuantityExceeds": "There is less left than the quantity given.",
+  "errorConcurrentModification": "Someone else just changed this. Try again."
 }

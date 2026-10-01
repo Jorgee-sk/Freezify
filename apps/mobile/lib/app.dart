@@ -8,6 +8,7 @@ import 'features/auth/register_screen.dart';
 import 'features/auth/splash_screen.dart';
 import 'features/households/household_detail_screen.dart';
 import 'features/households/households_screen.dart';
+import 'features/inventory/inventory_screen.dart';
 import 'l10n/app_localizations.dart';
 
 const _seedColor = Color(0xFF1F9D63);
@@ -40,7 +41,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'households/:id',
-            builder: (_, state) => HouseholdDetailScreen(householdId: state.pathParameters['id']!),
+            builder: (_, state) => InventoryScreen(householdId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: 'settings',
+                builder: (_, state) => HouseholdDetailScreen(householdId: state.pathParameters['id']!),
+              ),
+            ],
           ),
         ],
       ),

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:freezify/app.dart';
-import 'package:freezify/core/api_client.dart';
-import 'package:freezify/core/providers.dart';
 
+import 'support/app_harness.dart';
 import 'support/fake_backend.dart';
 
 const _ana = {'id': 'u1', 'email': 'ana@example.com', 'displayName': 'Ana', 'locale': 'es'};
@@ -15,28 +12,15 @@ const _members = [
   {'userId': 'u2', 'displayName': 'Lucía', 'email': 'lucia@example.com', 'role': 'MEMBER', 'joinedAt': '2026-10-01T12:00:00Z'},
 ];
 
+const _emptyInventory = {'items': <Object>[], 'page': 0, 'size': 50, 'totalItems': 0, 'totalPages': 0};
+
 void main() {
   late InMemoryTokenStorage storage;
 
   setUp(() => storage = InMemoryTokenStorage());
 
-  Future<void> pumpApp(WidgetTester tester, FakeBackend backend, {Locale deviceLocale = const Locale('es')}) async {
-    // The app resolves its language from the list of preferred locales, not from the single locale.
-    tester.platformDispatcher.localesTestValue = [deviceLocale];
-    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-    await tester.pumpWidget(
-      ProviderScope(
-        retry: (_, _) => null,
-        overrides: [
-          apiClientProvider.overrideWithValue(
-            ApiClient(baseUrl: FakeBackend.baseUrl, storage: storage, adapter: backend),
-          ),
-        ],
-        child: const FreezifyApp(),
-      ),
-    );
-    await tester.pumpAndSettle();
-  }
+  Future<void> pumpApp(WidgetTester tester, FakeBackend backend, {Locale deviceLocale = const Locale('es')}) =>
+      pumpFreezify(tester, backend, storage, deviceLocale: deviceLocale);
 
   Finder field(String label) => find.widgetWithText(TextFormField, label);
 
@@ -197,6 +181,29 @@ void main() {
 
     setUp(() => storage.value = 'refresh-1');
 
+    Future<void> openSettings(WidgetTester tester) async {
+      await tester.tap(find.text('Casa'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Miembros y ajustes'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('shows the members of a household', (tester) async {
+      final backend = FakeBackend({
+        ...signedInRoutes(),
+        'GET /households': (_) => const FakeResponse.ok([_casa]),
+        'GET /households/h1': (_) => const FakeResponse.ok(_casa),
+        'GET /households/h1/members': (_) => const FakeResponse.ok(_members),
+        'GET /households/h1/inventory': (_) => const FakeResponse.ok(_emptyInventory),
+      });
+      await pumpApp(tester, backend);
+      await openSettings(tester);
+
+      expect(find.text('Ana (tú)'), findsOneWidget);
+      expect(find.text('Propietario · Desde el 01/10/2026'), findsOneWidget);
+      expect(find.text('Lucía'), findsOneWidget);
+    });
+
     testWidgets('creates a household and opens it', (tester) async {
       const piso = {'id': 'h2', 'name': 'Piso', 'role': 'OWNER', 'memberCount': 1};
       final backend = FakeBackend({
@@ -204,7 +211,7 @@ void main() {
         'GET /households': (_) => const FakeResponse.ok(<Object>[]),
         'POST /households': (_) => const FakeResponse(201, piso),
         'GET /households/h2': (_) => const FakeResponse.ok(piso),
-        'GET /households/h2/members': (_) => FakeResponse.ok([_members.first]),
+        'GET /households/h2/inventory': (_) => const FakeResponse.ok(_emptyInventory),
       });
       await pumpApp(tester, backend);
 
@@ -216,8 +223,7 @@ void main() {
 
       expect(backend.last('POST /households').body, {'name': 'Piso'});
       expect(find.widgetWithText(AppBar, 'Piso'), findsOneWidget);
-      expect(find.text('Ana (tú)'), findsOneWidget);
-      expect(find.text('Propietario · Desde el 01/10/2026'), findsOneWidget);
+      expect(find.textContaining('Aún no hay alimentos'), findsOneWidget);
     });
 
     testWidgets('explains why joining with a bad code failed', (tester) async {
@@ -243,12 +249,12 @@ void main() {
         'GET /households': (_) => const FakeResponse.ok([_casa]),
         'GET /households/h1': (_) => const FakeResponse.ok(_casa),
         'GET /households/h1/members': (_) => const FakeResponse.ok(_members),
+        'GET /households/h1/inventory': (_) => const FakeResponse.ok(_emptyInventory),
         'POST /households/h1/invitations': (_) =>
             const FakeResponse(201, {'code': 'ABCD2345', 'expiresAt': '2026-10-08T10:00:00Z'}),
       });
       await pumpApp(tester, backend);
-      await tester.tap(find.text('Casa'));
-      await tester.pumpAndSettle();
+      await openSettings(tester);
 
       await tester.tap(find.text('Generar código'));
       await tester.pumpAndSettle();
@@ -264,14 +270,14 @@ void main() {
         'GET /households': (_) => FakeResponse.ok(deleted ? const <Object>[] : const [_casa]),
         'GET /households/h1': (_) => const FakeResponse.ok(_casa),
         'GET /households/h1/members': (_) => const FakeResponse.ok(_members),
+        'GET /households/h1/inventory': (_) => const FakeResponse.ok(_emptyInventory),
         'DELETE /households/h1': (_) {
           deleted = true;
           return const FakeResponse(204);
         },
       });
       await pumpApp(tester, backend);
-      await tester.tap(find.text('Casa'));
-      await tester.pumpAndSettle();
+      await openSettings(tester);
 
       await tester.tap(find.text('Eliminar hogar'));
       await tester.pumpAndSettle();
@@ -296,10 +302,10 @@ void main() {
         'GET /households': (_) => const FakeResponse.ok([asMember]),
         'GET /households/h1': (_) => const FakeResponse.ok(asMember),
         'GET /households/h1/members': (_) => const FakeResponse.ok(_members),
+        'GET /households/h1/inventory': (_) => const FakeResponse.ok(_emptyInventory),
       });
       await pumpApp(tester, backend);
-      await tester.tap(find.text('Casa'));
-      await tester.pumpAndSettle();
+      await openSettings(tester);
 
       expect(find.text('Abandonar hogar'), findsOneWidget);
       expect(find.text('Eliminar hogar'), findsNothing);

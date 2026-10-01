@@ -16,16 +16,18 @@ class FakeResponse {
 }
 
 class RecordedCall {
-  const RecordedCall(this.route, this.body, this.authorization);
+  const RecordedCall(this.route, this.body, this.authorization, this.query);
 
   final String route;
   final Object? body;
   final String? authorization;
+  final Map<String, String> query;
 }
 
 typedef FakeHandler = FakeResponse Function(RecordedCall call);
 
-/// Stands in for the HTTP transport. Routes are keyed by "METHOD /path"; an unexpected request fails the test.
+/// Stands in for the HTTP transport. Routes are keyed by "METHOD /path" (without the query string); an
+/// unexpected request fails the test.
 class FakeBackend implements HttpClientAdapter {
   FakeBackend(this.routes);
 
@@ -51,7 +53,12 @@ class FakeBackend implements HttpClientAdapter {
       throw DioException.connectionError(requestOptions: options, reason: 'offline');
     }
     final path = options.uri.path.replaceFirst('/api/v1', '');
-    final call = RecordedCall('${options.method} $path', options.data, options.headers['Authorization'] as String?);
+    final call = RecordedCall(
+      '${options.method} $path',
+      options.data,
+      options.headers['Authorization'] as String?,
+      options.uri.queryParameters,
+    );
     calls.add(call);
 
     final handler = routes[call.route];
