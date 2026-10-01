@@ -5,6 +5,7 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @RestControllerAdvice
@@ -28,6 +30,15 @@ class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(ex.status(), ex.getMessage());
         body.setProperty(CODE, ex.code());
         return handleExceptionInternal(ex, body, new HttpHeaders(), ex.status(), request);
+    }
+
+    /** Two requests changed the same row at once; the loser can simply try again. */
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    @Nullable ResponseEntity<Object> handleConcurrentChange(OptimisticLockingFailureException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(status, "The data was changed by someone else. Try again.");
+        body.setProperty(CODE, "CONCURRENT_MODIFICATION");
+        return handleExceptionInternal(ex, body, new HttpHeaders(), status, request);
     }
 
     @ExceptionHandler(Exception.class)
@@ -50,6 +61,15 @@ class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(status, "Request validation failed.");
         body.setProperty(CODE, "VALIDATION_ERROR");
         body.setProperty("errors", errors);
+        return handleExceptionInternal(ex, body, headers, status, request);
+    }
+
+    /** Invalid query or path parameters get the same code as an invalid body. */
+    @Override
+    protected @Nullable ResponseEntity<Object> handleHandlerMethodValidationException(
+            HandlerMethodValidationException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(status, "Request validation failed.");
+        body.setProperty(CODE, "VALIDATION_ERROR");
         return handleExceptionInternal(ex, body, headers, status, request);
     }
 

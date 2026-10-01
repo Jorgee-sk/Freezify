@@ -64,8 +64,8 @@ tipos internos de otro.
 | `users` | Cuenta de usuario y perfil | common | 1 |
 | `auth` | Registro, login, tokens, configuración de seguridad | users, common | 1 |
 | `households` | Hogares, miembros, invitaciones, **control de acceso por hogar** | users, common | 1 |
-| `food` | Catálogo canónico de alimentos y categorías, unidades | common | 2 |
-| `inventory` | Alimentos del hogar, consumo y descarte | households, food | 2 |
+| `food` | Catálogo canónico de alimentos, categorías, unidades y cantidades | common | 2 ✔ |
+| `inventory` | Alimentos del hogar, consumo y descarte | households, food | 2 ✔ |
 | `expiration` | Estimación de fechas y niveles de prioridad | food | 3 |
 | `notifications` | Preferencias, generación y envío | households, inventory, expiration | 3 |
 | `recipes` | Recetas y recomendador | food, inventory, expiration | 4 |
@@ -73,9 +73,9 @@ tipos internos de otro.
 | `shopping` | Listas de la compra | mealplanning, inventory, food | 6 |
 | `ai` | `AIProvider`, `AiService`, casos de uso de IA | common | 7 |
 | `integrations` | `ProductCatalogProvider` y fuentes externas | food | 7+ |
-| `analytics` | Eventos de producto y estadísticas | escucha eventos de los demás | 2 / 8 |
+| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users` e `inventory` | 2 ✔ / 8 |
 
-Los módulos de fases futuras **no existen todavía en el código**: se crean cuando tienen contenido real.
+Los módulos marcados con ✔, además de los cuatro de la Fase 1, existen en el código. Los de fases futuras **no existen todavía**: se crean cuando tienen contenido real.
 
 Comunicación entre módulos: llamada directa a la API pública cuando la dependencia va "hacia abajo" en la
 tabla; eventos de aplicación de Spring cuando un módulo inferior debe informar a uno superior
@@ -114,6 +114,11 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D13 | Jobs con `@Scheduled`; ShedLock cuando haya más de una instancia | Suficiente para el MVP; sin broker |
 | D14 | Rate limiting en memoria (Bucket4j) en `/auth/**` | Válido con una instancia; se moverá a almacenamiento compartido al escalar |
 | D15 | Recomendador y planificador **deterministas** antes que ML | Explicables y testeables; ML solo cuando haya datos |
+| D16 | `FoodCategory` es un **enum**, no una entidad | No hay categorías de usuario en el MVP; los clientes traducen el código |
+| D17 | Consumo y desperdicio en **una tabla** `food_outcomes` con `type` | Mismas columnas y se consultan juntas; sustituye a `FoodConsumption` + `FoodWaste` |
+| D18 | Los recursos de un hogar cuelgan de su ruta: `/households/{id}/inventory` | El hogar es explícito y toda petición pasa por `HouseholdAccess` |
+| D19 | El catálogo de alimentos se carga y se **busca en memoria** | Pequeño y estático entre despliegues; ignora acentos sin extensiones de PostgreSQL |
+| D20 | Los eventos entre módulos se escuchan **tras el commit**, en transacción propia | Un fallo al registrar una métrica nunca deshace la operación del usuario |
 
 ### 3.4 Seguridad
 
@@ -135,18 +140,21 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 
 ## 4. Modelo de datos
 
-Fase 1 (implementado en `V1__foundation.sql`):
+Implementado (`V1__foundation.sql`, `V2__inventory.sql`):
 
 ```text
 users ──< refresh_tokens
 users ──< household_members >── households ──< household_invitations
+foods ──< food_items >── households
+food_items ──< food_outcomes >── households
+product_events
 ```
 
 Entidades previstas por fase:
 
 | Fase | Entidades |
 |---|---|
-| 2 | `FoodCategory`, `Food` (catálogo), `FoodItem`, `FoodConsumption`, `FoodWaste`, `ProductEvent` |
+| 2 ✔ | `Food` (catálogo), `FoodItem`, `FoodOutcome` (consumo y desperdicio), `ProductEvent`; `FoodCategory` es un enum |
 | 3 | `Notification`, `NotificationPreference`, `DeviceToken`, `ShelfLifeRule` |
 | 4 | `Recipe`, `RecipeIngredient`, `UserPreference` |
 | 5 | `MealPlan`, `MealPlanEntry` |
@@ -175,6 +183,19 @@ Fase 1:
 | DELETE | `/households/{id}/members/{userId}` | Expulsar (owner) o abandonar (uno mismo) |
 | POST | `/households/{id}/invitations` | Genera un código de invitación |
 | POST | `/households/join` | Unirse con un código |
+
+Fase 2 (todo bajo `/households/{id}/inventory` salvo el catálogo):
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/foods?q=&lang=&limit=` | Autocompletado sobre el catálogo |
+| GET | `/inventory?state=&location=&category=&q=&sort=&page=&size=` | Listado paginado |
+| GET | `/inventory/recent` | Alimentos añadidos recientemente |
+| POST | `/inventory` | Añadir |
+| GET / PUT / DELETE | `/inventory/{itemId}` | Ver / reemplazar / eliminar (no cuenta como desperdicio) |
+| POST | `/inventory/{itemId}/open` | Marcar como abierto |
+| POST | `/inventory/{itemId}/consume` | Consumir todo o una cantidad |
+| POST | `/inventory/{itemId}/discard` | Tirar todo o una cantidad, con motivo |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).

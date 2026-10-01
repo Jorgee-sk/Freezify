@@ -21,8 +21,9 @@ void main() {
   setUp(() => storage = InMemoryTokenStorage());
 
   Future<void> pumpApp(WidgetTester tester, FakeBackend backend, {Locale deviceLocale = const Locale('es')}) async {
-    tester.platformDispatcher.localeTestValue = deviceLocale;
-    addTearDown(tester.platformDispatcher.clearLocaleTestValue);
+    // The app resolves its language from the list of preferred locales, not from the single locale.
+    tester.platformDispatcher.localesTestValue = [deviceLocale];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
     await tester.pumpWidget(
       ProviderScope(
         retry: (_, _) => null,

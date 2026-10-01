@@ -57,7 +57,9 @@
     "delete": "Eliminar hogar",
     "confirmRemove": "¿Quitar a {{name}} de este hogar?",
     "confirmLeave": "¿Seguro que quieres abandonar «{{name}}»?",
-    "confirmDelete": "Se eliminará «{{name}}» para todos sus miembros. Esta acción no se puede deshacer. ¿Continuar?"
+    "confirmDelete": "Se eliminará «{{name}}» para todos sus miembros. Esta acción no se puede deshacer. ¿Continuar?",
+    "settings": "Miembros y ajustes",
+    "backToInventory": "Volver al inventario"
   },
   "errors": {
     "generic": "Algo ha salido mal. Inténtalo de nuevo.",
@@ -72,6 +74,114 @@
     "OWNER_CANNOT_LEAVE": "El propietario no puede abandonar el hogar. Elimínalo si ya no lo necesitas.",
     "ALREADY_MEMBER": "Ya perteneces a este hogar.",
     "INVITATION_NOT_FOUND": "El código no es válido o ha caducado.",
-    "MEMBER_NOT_FOUND": "Esa persona ya no pertenece al hogar."
+    "MEMBER_NOT_FOUND": "Esa persona ya no pertenece al hogar.",
+    "ITEM_NOT_FOUND": "Este alimento ya no está en el inventario.",
+    "ITEM_NOT_ACTIVE": "Este alimento ya se había consumido o tirado.",
+    "FOOD_NOT_FOUND": "Ese alimento no existe en el catálogo.",
+    "INCOMPATIBLE_UNIT": "Esa unidad no es compatible con la del alimento.",
+    "QUANTITY_EXCEEDS_AVAILABLE": "Queda menos cantidad de la indicada."
+  },
+  "inventory": {
+    "title": "Inventario",
+    "add": "Añadir alimento",
+    "addTitle": "Nuevo alimento",
+    "editTitle": "Editar alimento",
+    "empty": "Aún no hay alimentos. Añade lo que tienes en casa para empezar.",
+    "emptyFiltered": "Ningún alimento coincide con el filtro.",
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar en el inventario…",
+    "allLocations": "Todo",
+    "category": "Categoría",
+    "allCategories": "Todas las categorías",
+    "state": "Mostrar",
+    "stateOption": {
+      "ACTIVE": "En casa",
+      "FINISHED": "Terminados",
+      "ALL": "Todos"
+    },
+    "name": "Alimento",
+    "namePlaceholder": "Tomates, leche, pollo…",
+    "suggestions": "Sugerencias",
+    "recent": "Añadidos recientemente",
+    "amount": "Cantidad",
+    "unit": "Unidad",
+    "location": "Ubicación",
+    "expirationDate": "Fecha de caducidad",
+    "optional": "opcional",
+    "moreDetails": "Más detalles",
+    "purchaseDate": "Fecha de compra",
+    "brand": "Marca",
+    "price": "Precio estimado (€)",
+    "notes": "Notas",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "invalidAmount": "Introduce una cantidad mayor que cero.",
+    "expires": "Caduca el {{date}}",
+    "expiresEstimated": "Caduca hacia el {{date}} (fecha estimada)",
+    "noDate": "Sin fecha de caducidad",
+    "opened": "Abierto el {{date}}",
+    "status": {
+      "AVAILABLE": "Disponible",
+      "OPENED": "Abierto",
+      "EXPIRED": "Caducado",
+      "CONSUMED": "Consumido",
+      "DISCARDED": "Tirado"
+    },
+    "consume": "Consumir",
+    "discard": "Tirar",
+    "open": "Abrir",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "consumeTitle": "¿Cuánto has consumido?",
+    "discardTitle": "¿Cuánto has tirado?",
+    "reason": "Motivo",
+    "reasonOption": {
+      "EXPIRED": "Caducado",
+      "SPOILED": "En mal estado",
+      "LEFTOVER": "Sobras",
+      "OTHER": "Otro"
+    },
+    "confirm": "Confirmar",
+    "confirmDelete": "¿Eliminar «{{name}}» del inventario? No contará como consumido ni como desperdicio.",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageOf": "Página {{page}} de {{total}}",
+    "count_one": "{{count}} alimento",
+    "count_other": "{{count}} alimentos"
+  },
+  "units": {
+    "GRAM": "g",
+    "KILOGRAM": "kg",
+    "MILLILITER": "ml",
+    "LITER": "l",
+    "UNIT_one": "ud",
+    "UNIT_other": "uds"
+  },
+  "unitNames": {
+    "GRAM": "gramos",
+    "KILOGRAM": "kilogramos",
+    "MILLILITER": "mililitros",
+    "LITER": "litros",
+    "UNIT": "unidades"
+  },
+  "locations": {
+    "REFRIGERATOR": "Nevera",
+    "FREEZER": "Congelador",
+    "PANTRY": "Despensa",
+    "OTHER": "Otro"
+  },
+  "categories": {
+    "VEGETABLES": "Verduras",
+    "FRUITS": "Frutas",
+    "MEAT": "Carne",
+    "FISH": "Pescado",
+    "DAIRY": "Lácteos",
+    "EGGS": "Huevos",
+    "BAKERY": "Panadería",
+    "PANTRY": "Despensa",
+    "FROZEN": "Congelados",
+    "BEVERAGES": "Bebidas",
+    "PREPARED": "Platos preparados",
+    "OTHER": "Otros"
   }
 }

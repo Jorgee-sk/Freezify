@@ -8,6 +8,7 @@ import { useAuth } from './auth/useAuth'
 import { Layout } from './components/Layout'
 import { HouseholdDetailPage } from './pages/HouseholdDetailPage'
 import { HouseholdsPage } from './pages/HouseholdsPage'
+import { InventoryPage } from './pages/InventoryPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 
@@ -47,7 +48,8 @@ export function AppRoutes() {
         </Route>
         <Route element={<RequireAuth />}>
           <Route path="/" element={<HouseholdsPage />} />
-          <Route path="/households/:householdId" element={<HouseholdDetailPage />} />
+          <Route path="/households/:householdId" element={<InventoryPage />} />
+          <Route path="/households/:householdId/settings" element={<HouseholdDetailPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

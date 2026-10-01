@@ -1,0 +1,413 @@
+import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { InventoryItem } from '../api/inventory'
+import { todayIso } from '../inventory/format'
+import { fakeApi, problem } from '../test/fakeApi'
+import { ANA, CASA, renderApp, signedIn } from '../test/renderApp'
+
+const LIST = 'GET /households/h1/inventory'
+
+function item(overrides: Partial<InventoryItem> & Pick<InventoryItem, 'id' | 'name'>): InventoryItem {
+  return {
+    householdId: 'h1',
+    foodId: null,
+    category: 'OTHER',
+    quantity: { amount: 1, unit: 'UNIT' },
+    storageLocation: 'REFRIGERATOR',
+    status: 'AVAILABLE',
+    purchaseDate: '2026-10-01',
+    expirationDate: null,
+    expirationSource: null,
+    openedDate: null,
+    barcode: null,
+    brand: null,
+    estimatedPrice: null,
+    notes: null,
+    createdAt: '2026-10-01T10:00:00Z',
+    updatedAt: '2026-10-01T10:00:00Z',
+    ...overrides,
+  }
+}
+
+function page(items: InventoryItem[]) {
+  return { body: { items, page: 0, size: 50, totalItems: items.length, totalPages: items.length ? 1 : 0 } }
+}
+
+const POLLO = item({
+  id: 'i1',
+  name: 'Pollo',
+  quantity: { amount: 1, unit: 'KILOGRAM' },
+  expirationDate: '2026-10-03',
+  expirationSource: 'USER',
+})
+
+/** Routes every inventory test needs; `extra` adds or overrides. */
+function server(items: InventoryItem[], extra: Parameters<typeof fakeApi>[0] = {}) {
+  signedIn()
+  return fakeApi({
+    'GET /users/me': () => ({ body: ANA }),
+    'GET /households/h1': () => ({ body: CASA }),
+    [LIST]: () => page(items),
+    'GET /households/h1/inventory/recent': () => ({ body: [] }),
+    ...extra,
+  })
+}
+
+function row(name: string) {
+  return within(within(screen.getByRole('list', { name: 'Inventario' })).getByText(name).closest('li')!)
+}
+
+/** Like `row`, but waits for the inventory to load first. */
+async function findRow(name: string) {
+  const list = await screen.findByRole('list', { name: 'Inventario' })
+  return within((await within(list).findByText(name)).closest('li')!)
+}
+
+/** The add/edit form. Its fields share labels with the filters, so they are looked up inside it. */
+function form() {
+  return within(screen.getByRole('region', { name: /(Nuevo|Editar) alimento/ }))
+}
+
+afterEach(() => vi.unstubAllGlobals())
+
+describe('inventory list', () => {
+  it('shows what the household has, with quantity, place and expiration', async () => {
+    server([
+      POLLO,
+      item({ id: 'i2', name: 'Huevos', quantity: { amount: 6, unit: 'UNIT' }, brand: 'Campo' }),
+      item({
+        id: 'i3',
+        name: 'Leche',
+        quantity: { amount: 0.75, unit: 'LITER' },
+        status: 'OPENED',
+        openedDate: '2026-09-30',
+        expirationDate: '2026-10-06',
+        expirationSource: 'ESTIMATED',
+      }),
+    ])
+    renderApp('/households/h1')
+
+    expect(await screen.findByRole('heading', { name: 'Casa' })).toBeInTheDocument()
+    expect(await screen.findByText('3 alimentos')).toBeInTheDocument()
+    expect(row('Pollo').getByText(/1 kg · Nevera · Caduca el 03\/10\/2026/)).toBeInTheDocument()
+    expect(row('Huevos').getByText(/6 uds · Nevera · Sin fecha de caducidad/)).toBeInTheDocument()
+    expect(row('Huevos').getByText(/Campo/)).toBeInTheDocument()
+    // An estimated date is never shown as if it were the one on the package.
+    expect(row('Leche').getByText(/Caduca hacia el 06\/10\/2026 \(fecha estimada\)/)).toBeInTheDocument()
+    expect(row('Leche').getByText(/Abierto el 30\/09\/2026/)).toBeInTheDocument()
+    expect(row('Leche').queryByRole('button', { name: 'Abrir' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Miembros y ajustes' })).toHaveAttribute(
+      'href',
+      '/households/h1/settings',
+    )
+  })
+
+  it('invites to add food when the inventory is empty', async () => {
+    server([])
+    renderApp('/households/h1')
+
+    expect(await screen.findByText(/Aún no hay alimentos/)).toBeInTheDocument()
+  })
+
+  it('filters by place, category, state and text', async () => {
+    const api = server([POLLO])
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+    await screen.findByText('Pollo')
+    expect(Object.fromEntries(api.last(LIST)!.query)).toEqual({ state: 'ACTIVE', page: '0', size: '50' })
+
+    await user.click(screen.getByRole('button', { name: 'Congelador' }))
+    await waitFor(() => expect(api.last(LIST)!.query.get('location')).toBe('FREEZER'))
+    expect(screen.getByRole('button', { name: 'Congelador' })).toHaveAttribute('aria-pressed', 'true')
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Categoría' }), 'MEAT')
+    await waitFor(() => expect(api.last(LIST)!.query.get('category')).toBe('MEAT'))
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Mostrar' }), 'FINISHED')
+    await waitFor(() => expect(api.last(LIST)!.query.get('state')).toBe('FINISHED'))
+
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar' }), 'pol')
+    await waitFor(() => expect(api.last(LIST)!.query.get('q')).toBe('pol'))
+    expect(api.last(LIST)!.query.get('location')).toBe('FREEZER')
+  })
+
+  it('says so when nothing matches the filter', async () => {
+    server([])
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+    await screen.findByText(/Aún no hay alimentos/)
+
+    await user.click(screen.getByRole('button', { name: 'Despensa' }))
+
+    expect(await screen.findByText('Ningún alimento coincide con el filtro.')).toBeInTheDocument()
+  })
+
+  it('does not offer actions on food that is already finished', async () => {
+    server([item({ id: 'i9', name: 'Yogur', status: 'CONSUMED', quantity: { amount: 0, unit: 'UNIT' } })])
+    renderApp('/households/h1')
+
+    expect((await findRow('Yogur')).getByText('Consumido')).toBeInTheDocument()
+    expect(row('Yogur').queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('pages through long inventories', async () => {
+    const api = server([], {
+      [LIST]: (_, { query }) => ({
+        body: {
+          items: [item({ id: `p${query.get('page')}`, name: `Alimento de la página ${query.get('page')}` })],
+          page: Number(query.get('page')),
+          size: 50,
+          totalItems: 120,
+          totalPages: 3,
+        },
+      }),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    expect(await screen.findByText('Página 1 de 3')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Anterior' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+
+    expect(await screen.findByText('Alimento de la página 1')).toBeInTheDocument()
+    expect(screen.getByText('Página 2 de 3')).toBeInTheDocument()
+    expect(api.last(LIST)!.query.get('page')).toBe('1')
+  })
+})
+
+describe('adding and editing food', () => {
+  it('adds a food picked from the catalog suggestions', async () => {
+    const api = server([], {
+      'GET /foods': () => ({
+        body: [
+          { id: 'f1', name: 'Tomate', category: 'VEGETABLES', defaultUnit: 'UNIT', defaultStorage: 'REFRIGERATOR' },
+          { id: 'f2', name: 'Tomate frito', category: 'PANTRY', defaultUnit: 'GRAM', defaultStorage: 'PANTRY' },
+        ],
+      }),
+      'POST /households/h1/inventory': () => ({ status: 201, body: item({ id: 'new', name: 'Tomate frito' }) }),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir alimento' }))
+    await user.type(form().getByLabelText('Alimento'), 'tom')
+    await user.click(await screen.findByRole('button', { name: 'Tomate frito' }))
+
+    // The catalog food brings its usual unit and place.
+    expect(form().getByLabelText('Alimento')).toHaveValue('Tomate frito')
+    expect(form().getByLabelText('Unidad')).toHaveValue('GRAM')
+    expect(form().getByLabelText('Ubicación')).toHaveValue('PANTRY')
+    expect(api.last('GET /foods')!.query.get('lang')).toBe('es')
+
+    await user.clear(form().getByLabelText('Cantidad'))
+    await user.type(form().getByLabelText('Cantidad'), '400')
+    await user.type(form().getByLabelText(/Fecha de caducidad/), '2027-03-01')
+    await user.click(form().getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Nuevo alimento' })).not.toBeInTheDocument())
+    expect(api.last('POST /households/h1/inventory')!.body).toEqual({
+      foodId: 'f2',
+      name: 'Tomate frito',
+      category: 'PANTRY',
+      quantity: { amount: 400, unit: 'GRAM' },
+      storageLocation: 'PANTRY',
+      purchaseDate: todayIso(),
+      expirationDate: '2027-03-01',
+      openedDate: null,
+      barcode: null,
+      brand: null,
+      estimatedPrice: null,
+      notes: null,
+    })
+    // The list is fetched again after the change.
+    expect(api.count(LIST)).toBeGreaterThan(1)
+  })
+
+  it('adds a food that is not in the catalog, with a decimal comma', async () => {
+    const api = server([], {
+      'GET /foods': () => ({ body: [] }),
+      'POST /households/h1/inventory': () => ({ status: 201, body: item({ id: 'new', name: 'Kimchi' }) }),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir alimento' }))
+    await user.type(form().getByLabelText('Alimento'), 'Kimchi')
+    await user.clear(form().getByLabelText('Cantidad'))
+    await user.type(form().getByLabelText('Cantidad'), '0,5')
+    await user.selectOptions(form().getByLabelText('Unidad'), 'KILOGRAM')
+    await user.click(form().getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(api.count('POST /households/h1/inventory')).toBe(1))
+    expect(api.last('POST /households/h1/inventory')!.body).toMatchObject({
+      foodId: null,
+      name: 'Kimchi',
+      category: null,
+      quantity: { amount: 0.5, unit: 'KILOGRAM' },
+      expirationDate: null,
+    })
+  })
+
+  it('offers recently added foods to add them again in one click', async () => {
+    server([], {
+      'GET /households/h1/inventory/recent': () => ({
+        body: [
+          {
+            name: 'Leche',
+            foodId: 'f5',
+            category: 'DAIRY',
+            quantity: { amount: 2, unit: 'LITER' },
+            storageLocation: 'REFRIGERATOR',
+          },
+        ],
+      }),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir alimento' }))
+    await user.click(await within(screen.getByRole('list', { name: 'Añadidos recientemente' })).findByText('Leche'))
+
+    expect(form().getByLabelText('Alimento')).toHaveValue('Leche')
+    expect(form().getByLabelText('Cantidad')).toHaveValue('2')
+    expect(form().getByLabelText('Unidad')).toHaveValue('LITER')
+  })
+
+  it('does not send a quantity that is not a positive number', async () => {
+    const api = server([], { 'GET /foods': () => ({ body: [] }) })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir alimento' }))
+    await user.type(form().getByLabelText('Alimento'), 'Arroz')
+    await user.clear(form().getByLabelText('Cantidad'))
+    await user.type(form().getByLabelText('Cantidad'), 'mucho')
+    await user.click(form().getByRole('button', { name: 'Guardar' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Introduce una cantidad mayor que cero.')
+    expect(api.count('POST /households/h1/inventory')).toBe(0)
+  })
+
+  it('edits an item keeping what the form does not show', async () => {
+    const opened = { ...POLLO, status: 'OPENED' as const, openedDate: '2026-10-01', barcode: '8412345678905' }
+    const api = server([opened], {
+      'PUT /households/h1/inventory/i1': () => ({ body: opened }),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click((await findRow('Pollo')).getByRole('button', { name: 'Editar' }))
+    expect(screen.getByRole('heading', { name: 'Editar alimento' })).toBeInTheDocument()
+    expect(form().getByLabelText('Alimento')).toHaveValue('Pollo')
+    expect(form().getByLabelText('Unidad')).toHaveValue('KILOGRAM')
+
+    await user.selectOptions(form().getByLabelText('Ubicación'), 'FREEZER')
+    await user.type(form().getByLabelText('Precio estimado (€)'), '7,95')
+    await user.click(form().getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(api.count('PUT /households/h1/inventory/i1')).toBe(1))
+    expect(api.last('PUT /households/h1/inventory/i1')!.body).toMatchObject({
+      name: 'Pollo',
+      storageLocation: 'FREEZER',
+      estimatedPrice: 7.95,
+      expirationDate: '2026-10-03',
+      openedDate: '2026-10-01',
+      barcode: '8412345678905',
+    })
+  })
+})
+
+describe('using food', () => {
+  it('consumes part of an item, in a compatible unit', async () => {
+    const api = server([POLLO], {
+      'POST /households/h1/inventory/i1/consume': () => ({ body: POLLO }),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click((await findRow('Pollo')).getByRole('button', { name: 'Consumir' }))
+    const panel = row('Pollo')
+    // Everything that is left is proposed by default.
+    expect(panel.getByLabelText('Cantidad')).toHaveValue('1')
+    // Kilograms can be given in grams, but never in liters or units.
+    expect(within(panel.getByLabelText('Unidad')).getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'gramos',
+      'kilogramos',
+    ])
+
+    await user.clear(panel.getByLabelText('Cantidad'))
+    await user.type(panel.getByLabelText('Cantidad'), '250')
+    await user.selectOptions(panel.getByLabelText('Unidad'), 'GRAM')
+    await user.click(panel.getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(api.count('POST /households/h1/inventory/i1/consume')).toBe(1))
+    expect(api.last('POST /households/h1/inventory/i1/consume')!.body).toEqual({
+      quantity: { amount: 250, unit: 'GRAM' },
+    })
+    await waitFor(() => expect(row('Pollo').queryByRole('button', { name: 'Confirmar' })).not.toBeInTheDocument())
+  })
+
+  it('records why food was thrown away', async () => {
+    const api = server([POLLO], {
+      'POST /households/h1/inventory/i1/discard': () => ({ body: POLLO }),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click((await findRow('Pollo')).getByRole('button', { name: 'Tirar' }))
+    await user.selectOptions(row('Pollo').getByLabelText('Motivo'), 'SPOILED')
+    await user.click(row('Pollo').getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(api.count('POST /households/h1/inventory/i1/discard')).toBe(1))
+    expect(api.last('POST /households/h1/inventory/i1/discard')!.body).toEqual({
+      quantity: { amount: 1, unit: 'KILOGRAM' },
+      reason: 'SPOILED',
+    })
+  })
+
+  it('explains a rejected quantity and lets the user correct it', async () => {
+    server([POLLO], {
+      'POST /households/h1/inventory/i1/consume': () => problem(400, 'QUANTITY_EXCEEDS_AVAILABLE'),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click((await findRow('Pollo')).getByRole('button', { name: 'Consumir' }))
+    await user.click(row('Pollo').getByRole('button', { name: 'Confirmar' }))
+
+    expect((await findRow('Pollo')).getByRole('alert')).toHaveTextContent('Queda menos cantidad de la indicada.')
+    expect(row('Pollo').getByRole('button', { name: 'Confirmar' })).toBeEnabled()
+  })
+
+  it('marks an item as opened', async () => {
+    const api = server([POLLO], {
+      'POST /households/h1/inventory/i1/open': () => ({ body: POLLO }),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click((await findRow('Pollo')).getByRole('button', { name: 'Abrir' }))
+
+    await waitFor(() => expect(api.count('POST /households/h1/inventory/i1/open')).toBe(1))
+  })
+
+  it('asks for confirmation before deleting an item', async () => {
+    const api = server([POLLO], {
+      'DELETE /households/h1/inventory/i1': () => ({ status: 204 }),
+    })
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click((await findRow('Pollo')).getByRole('button', { name: 'Eliminar' }))
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Pollo'))
+    expect(api.count('DELETE /households/h1/inventory/i1')).toBe(0)
+
+    confirm.mockReturnValue(true)
+    await user.click(row('Pollo').getByRole('button', { name: 'Eliminar' }))
+
+    await waitFor(() => expect(api.count('DELETE /households/h1/inventory/i1')).toBe(1))
+  })
+})

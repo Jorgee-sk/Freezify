@@ -1,34 +1,12 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { AppRoutes } from './App'
 import { session } from './api/client'
-import type { Household, User } from './api/endpoints'
-import { AuthProvider } from './auth/AuthContext'
+import type { Household } from './api/endpoints'
 import { fakeApi, problem } from './test/fakeApi'
+import { ANA, CASA, SESSION, renderApp, signedIn } from './test/renderApp'
 
-const ANA: User = { id: 'u1', email: 'ana@example.com', displayName: 'Ana', locale: 'es', createdAt: '2026-10-01T10:00:00Z' }
-const CASA: Household = { id: 'h1', name: 'Casa', role: 'OWNER', memberCount: 2, createdAt: '2026-10-01T10:00:00Z' }
-const SESSION = { accessToken: 'access-1', refreshToken: 'refresh-1', expiresIn: 900, user: ANA }
-
-function renderApp(path = '/') {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  render(
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <MemoryRouter initialEntries={[path]}>
-          <AppRoutes />
-        </MemoryRouter>
-      </AuthProvider>
-    </QueryClientProvider>,
-  )
-}
-
-function signedIn() {
-  session.store(SESSION)
-}
+const EMPTY_PAGE = { items: [], page: 0, size: 50, totalItems: 0, totalPages: 0 }
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -155,9 +133,7 @@ describe('households', () => {
       'GET /households': () => ({ body: [] }),
       'POST /households': () => ({ status: 201, body: created }),
       'GET /households/h2': () => ({ body: created }),
-      'GET /households/h2/members': () => ({
-        body: [{ userId: 'u1', displayName: 'Ana', email: ANA.email, role: 'OWNER', joinedAt: '2026-10-01T10:00:00Z' }],
-      }),
+      'GET /households/h2/inventory': () => ({ body: EMPTY_PAGE }),
     })
     const user = userEvent.setup()
     renderApp('/')
@@ -167,9 +143,7 @@ describe('households', () => {
 
     expect(await screen.findByRole('heading', { name: 'Piso' })).toBeInTheDocument()
     expect(server.last('POST /households')?.body).toEqual({ name: 'Piso' })
-    const members = within(await screen.findByRole('region', { name: 'Miembros' }))
-    expect(await members.findByText('Ana')).toBeInTheDocument()
-    expect(members.getByText(/Desde el 01\/10\/2026/)).toBeInTheDocument()
+    expect(await screen.findByText(/Aún no hay alimentos/)).toBeInTheDocument()
   })
 
   it('explains why joining with a bad code failed', async () => {
@@ -188,6 +162,23 @@ describe('households', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('El código no es válido o ha caducado.')
   })
 
+  it('shows the members of a household', async () => {
+    signedIn()
+    fakeApi({
+      'GET /users/me': () => ({ body: ANA }),
+      'GET /households/h1': () => ({ body: CASA }),
+      'GET /households/h1/members': () => ({
+        body: [{ userId: 'u1', displayName: 'Ana', email: ANA.email, role: 'OWNER', joinedAt: '2026-10-01T10:00:00Z' }],
+      }),
+    })
+    renderApp('/households/h1/settings')
+
+    const members = within(await screen.findByRole('region', { name: 'Miembros' }))
+    expect(await members.findByText('Ana')).toBeInTheDocument()
+    expect(members.getByText(/Desde el 01\/10\/2026/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Volver al inventario/ })).toHaveAttribute('href', '/households/h1')
+  })
+
   it('lets the owner generate an invitation code', async () => {
     signedIn()
     fakeApi({
@@ -200,7 +191,7 @@ describe('households', () => {
       }),
     })
     const user = userEvent.setup()
-    renderApp('/households/h1')
+    renderApp('/households/h1/settings')
 
     await user.click(await screen.findByRole('button', { name: 'Generar código' }))
 
@@ -219,7 +210,7 @@ describe('households', () => {
     })
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
     const user = userEvent.setup()
-    renderApp('/households/h1')
+    renderApp('/households/h1/settings')
 
     await user.click(await screen.findByRole('button', { name: 'Eliminar hogar' }))
     expect(confirm).toHaveBeenCalledOnce()
@@ -239,7 +230,7 @@ describe('households', () => {
       'GET /households/h1': () => ({ body: { ...CASA, role: 'MEMBER' } }),
       'GET /households/h1/members': () => ({ body: [] }),
     })
-    renderApp('/households/h1')
+    renderApp('/households/h1/settings')
 
     expect(await screen.findByRole('button', { name: 'Abandonar hogar' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Eliminar hogar' })).not.toBeInTheDocument()
