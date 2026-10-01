@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.freezify.testsupport.ApiTestSupport;
-import com.jayway.jsonpath.JsonPath;
 import java.time.Duration;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -258,32 +257,6 @@ class HouseholdApiTests extends ApiTestSupport {
         expectHouseholdNotFound(mvc.perform(as(jorge, get("/api/v1/households/" + householdId))));
         mvc.perform(as(partner, get("/api/v1/households"))).andExpect(jsonPath("$", hasSize(0)));
         join(latecomer, code).andExpect(status().isNotFound());
-    }
-
-    private String createHousehold(TestUser owner, String name) throws Exception {
-        String body = mvc.perform(as(owner, json(post("/api/v1/households"), """
-                        {"name": "%s"}
-                        """.formatted(name))))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        return JsonPath.read(body, "$.id");
-    }
-
-    private String invite(TestUser member, String householdId) throws Exception {
-        String body = mvc.perform(as(member, post("/api/v1/households/" + householdId + "/invitations")))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        return JsonPath.read(body, "$.code");
-    }
-
-    private ResultActions join(TestUser user, String code) throws Exception {
-        return mvc.perform(as(user, json(post("/api/v1/households/join"), """
-                {"code": "%s"}
-                """.formatted(code))));
     }
 
     private static void expectHouseholdNotFound(ResultActions result) throws Exception {

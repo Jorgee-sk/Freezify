@@ -305,3 +305,140 @@ a:focus-visible {
     transition: none !important;
   }
 }
+
+.push-right {
+  margin-left: auto;
+}
+
+.title-row h2 {
+  margin: 0;
+}
+
+.small-button {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+}
+
+.item-form {
+  margin-bottom: 1rem;
+}
+
+.details-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--green-700);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.chip {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.chip:hover,
+.chip[aria-pressed='true'] {
+  background: var(--green-050);
+  border-color: var(--green-600);
+  color: var(--green-700);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) repeat(2, minmax(140px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.item-row {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+}
+
+.item-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.take-out {
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: var(--background);
+}
+
+.status-consumed {
+  background: var(--green-050);
+  border-color: transparent;
+  color: var(--green-700);
+}
+
+.status-discarded,
+.status-expired {
+  background: var(--danger-050);
+  border-color: transparent;
+  color: var(--danger);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 520px) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+}

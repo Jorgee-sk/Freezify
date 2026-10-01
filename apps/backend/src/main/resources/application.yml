@@ -38,6 +38,8 @@ springdoc:
     path: /swagger-ui.html
 
 freezify:
+  # Calendar days (purchase, expiration) are computed in this zone.
+  time-zone: ${FREEZIFY_TIME_ZONE:Europe/Madrid}
   auth:
     # No default on purpose: the application must not start without a real secret.
     jwt-secret: ${FREEZIFY_JWT_SECRET}

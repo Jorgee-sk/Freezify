@@ -85,8 +85,8 @@ export function HouseholdDetailPage() {
 
   return (
     <>
-      <Link to="/" className="back-link">
-        ← {t('households.back')}
+      <Link to={`/households/${householdId}`} className="back-link">
+        ← {t('households.backToInventory')}
       </Link>
 
       {draftName === null ? (

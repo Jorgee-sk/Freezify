@@ -17,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /** Full application against embedded PostgreSQL, driven through the HTTP layer. */
@@ -69,6 +70,32 @@ public abstract class ApiTestSupport {
                 email,
                 JsonPath.read(body, "$.accessToken"),
                 JsonPath.read(body, "$.refreshToken"));
+    }
+
+    protected String createHousehold(TestUser owner, String name) throws Exception {
+        String body = mvc.perform(as(owner, json(post("/api/v1/households"), """
+                        {"name": "%s"}
+                        """.formatted(name))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(body, "$.id");
+    }
+
+    protected String invite(TestUser member, String householdId) throws Exception {
+        String body = mvc.perform(as(member, post("/api/v1/households/" + householdId + "/invitations")))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(body, "$.code");
+    }
+
+    protected ResultActions join(TestUser user, String code) throws Exception {
+        return mvc.perform(as(user, json(post("/api/v1/households/join"), """
+                {"code": "%s"}
+                """.formatted(code))));
     }
 
     protected static MockHttpServletRequestBuilder json(MockHttpServletRequestBuilder request, String body) {

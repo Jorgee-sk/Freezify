@@ -6,9 +6,9 @@ Aplicación para controlar los alimentos de casa y reducir el desperdicio: inven
 prioridad por caducidad, recetas y plan semanal que aprovechan lo que caduca antes, y lista de la compra
 generada a partir del plan.
 
-**Estado:** Fase 1 (Foundation). Hoy funciona de extremo a extremo: registro, sesión, hogares compartidos
-e invitaciones, en backend, web y móvil. El inventario llega en la Fase 2. Detalle en
-[docs/STATUS.md](docs/STATUS.md).
+**Estado:** Fase 2 (Inventory) en curso. Hoy funciona de extremo a extremo: registro, sesión, hogares
+compartidos e invitaciones (backend, web y móvil) y el inventario del hogar con consumo y descarte
+(backend y web). Detalle en [docs/STATUS.md](docs/STATUS.md).
 
 ## Documentación
 
@@ -109,5 +109,6 @@ Web en <http://localhost:3000>, API en <http://localhost:8080>.
 | `FREEZIFY_DB_USER` / `FREEZIFY_DB_PASSWORD` | No | Credenciales de PostgreSQL |
 | `FREEZIFY_CORS_ALLOWED_ORIGINS` | No | Orígenes de navegador permitidos, separados por comas |
 | `FREEZIFY_PORT` | No | Puerto HTTP (8080) |
+| `FREEZIFY_TIME_ZONE` | No | Zona horaria para calcular el día de hoy (`Europe/Madrid`) |
 
 Ningún secreto se guarda en el repositorio.

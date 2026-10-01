@@ -31,6 +31,9 @@ ciclo.
 | `users` | Cuenta y perfil. API: `Users`, `UserAccount` |
 | `auth` | Registro, login, tokens, configuración de Spring Security |
 | `households` | Hogares, miembros, invitaciones. API: `HouseholdAccess`, `HouseholdRole` |
+| `food` | Catálogo de alimentos y cantidades. API: `FoodCatalog`, `Food`, `Quantity`, `Unit`, `FoodCategory`, `StorageLocation` |
+| `inventory` | Alimentos del hogar, consumo y descarte. API: `ItemStatus`, `ExpirationSource`, `InventoryEvents` |
+| `analytics` | Registra eventos de producto a partir de los eventos de los demás módulos |
 
 ## Añadir un módulo que maneje datos de un hogar
 

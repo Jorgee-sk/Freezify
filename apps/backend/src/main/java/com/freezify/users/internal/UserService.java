@@ -2,6 +2,7 @@ package com.freezify.users.internal;
 
 import com.freezify.common.ApiException;
 import com.freezify.users.UserAccount;
+import com.freezify.users.UserRegistered;
 import com.freezify.users.Users;
 import java.util.Collection;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,9 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService implements Users {
 
     private final UserRepository users;
+    private final ApplicationEventPublisher events;
 
-    UserService(UserRepository users) {
+    UserService(UserRepository users, ApplicationEventPublisher events) {
         this.users = users;
+        this.events = events;
     }
 
     @Override
@@ -32,7 +36,9 @@ public class UserService implements Users {
         try {
             UserEntity saved = users.saveAndFlush(new UserEntity(
                     email, newUser.passwordHash(), newUser.displayName().strip(), newUser.locale()));
-            return saved.toAccount();
+            UserAccount account = saved.toAccount();
+            events.publishEvent(new UserRegistered(account.id()));
+            return account;
         } catch (DataIntegrityViolationException e) {
             // Two concurrent registrations with the same email: the unique constraint decides.
             throw emailTaken();
