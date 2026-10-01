@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -5,14 +6,18 @@ import 'package:dio/dio.dart';
 import 'package:freezify/core/token_storage.dart';
 
 class FakeResponse {
-  const FakeResponse(this.status, [this.body]);
+  const FakeResponse(this.status, [this.body]) : stream = null;
 
   const FakeResponse.ok([Object? body]) : this(200, body);
 
   FakeResponse.problem(int status, String code) : this(status, {'status': status, 'code': code, 'detail': code});
 
+  /// A response whose body arrives over time, as server-sent events do.
+  const FakeResponse.stream(Stream<Uint8List> this.stream) : status = 200, body = null;
+
   final int status;
   final Object? body;
+  final Stream<Uint8List>? stream;
 }
 
 class RecordedCall {
@@ -27,7 +32,8 @@ class RecordedCall {
 typedef FakeHandler = FakeResponse Function(RecordedCall call);
 
 /// Stands in for the HTTP transport. Routes are keyed by "METHOD /path" (without the query string); an
-/// unexpected request fails the test.
+/// unexpected request fails the test, except for event streams: unless a test serves one, they stay open and
+/// silent.
 class FakeBackend implements HttpClientAdapter {
   FakeBackend(this.routes);
 
@@ -62,8 +68,12 @@ class FakeBackend implements HttpClientAdapter {
     calls.add(call);
 
     final handler = routes[call.route];
+    if (handler == null && path.endsWith('/events')) {
+      return _eventStream(StreamController<Uint8List>().stream);
+    }
     if (handler == null) throw StateError('Unexpected request: ${call.route}');
     final response = handler(call);
+    if (response.stream != null) return _eventStream(response.stream!);
     return ResponseBody.fromString(
       response.body == null ? '' : jsonEncode(response.body),
       response.status,
@@ -72,6 +82,14 @@ class FakeBackend implements HttpClientAdapter {
       },
     );
   }
+
+  ResponseBody _eventStream(Stream<Uint8List> stream) => ResponseBody(
+    stream,
+    200,
+    headers: {
+      Headers.contentTypeHeader: ['text/event-stream'],
+    },
+  );
 
   @override
   void close({bool force = false}) {}

@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:freezify/features/inventory/inventory_format.dart';
@@ -220,6 +224,42 @@ void main() {
 
       expect(find.text('Miembros'), findsOneWidget);
       expect(find.text('Invitar a alguien'), findsOneWidget);
+    });
+  });
+
+  group('live updates', () {
+    testWidgets('shows what another member changes without reloading', (tester) async {
+      final events = StreamController<Uint8List>();
+      addTearDown(events.close);
+      final items = [_pollo];
+      final backend = backendWith([], {
+        _list: (_) => _page(items),
+        'GET /households/h1/events': (_) => FakeResponse.stream(events.stream),
+      });
+      await openInventory(tester, backend);
+      final requestsBefore = backend.count(_list);
+
+      // Someone else adds eggs; the server only says that the inventory changed.
+      items.add(_item('i2', 'Huevos'));
+      events.add(utf8.encode('event:inventory-changed\ndata:{}\n\n'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Huevos'), findsOneWidget);
+      expect(backend.count(_list), requestsBefore + 1);
+    });
+
+    testWidgets('stops listening when the inventory is closed', (tester) async {
+      final backend = backendWith([_pollo]);
+      await openInventory(tester, backend);
+      expect(backend.count('GET /households/h1/events'), 1);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      // Long enough for a reconnection attempt, if one were still scheduled.
+      await tester.pump(const Duration(seconds: 5));
+
+      expect(find.text('Mis hogares'), findsOneWidget);
+      expect(backend.count('GET /households/h1/events'), 1);
     });
   });
 

@@ -10,6 +10,7 @@ import { ErrorMessage } from '../components/ErrorMessage'
 import { ItemForm } from '../inventory/ItemForm'
 import { ItemRow } from '../inventory/ItemRow'
 import { useDebounced } from '../inventory/useDebounced'
+import { useInventoryEvents } from '../realtime/useInventoryEvents'
 
 const STATES: ItemState[] = ['ACTIVE', 'FINISHED', 'ALL']
 
@@ -40,6 +41,9 @@ export function InventoryPage() {
     // Keeps the list on screen while the next filter or page loads.
     placeholderData: keepPreviousData,
   })
+
+  // What other members (or this user on another device) change shows up without reloading.
+  useInventoryEvents(householdId, household.isSuccess)
 
   /** Any change of filter starts again from the first page. */
   function filtering<T>(setter: (value: T) => void) {

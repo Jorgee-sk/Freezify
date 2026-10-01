@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/errors.dart';
+import '../../core/providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../households/dialogs.dart';
 import '../households/households_repository.dart';
+import '../realtime/household_event_stream.dart';
 import 'inventory_format.dart';
 import 'inventory_models.dart';
 import 'inventory_repository.dart';
@@ -35,6 +37,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   String _text = '';
   int _page = 0;
   Timer? _searchTimer;
+  late final HouseholdEventStream _events;
 
   String get _householdId => widget.householdId;
   InventoryRepository get _repository => ref.read(inventoryRepositoryProvider);
@@ -51,7 +54,21 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   bool get _filtered => _state != ItemState.active || _location != null || _category != null || _text.isNotEmpty;
 
   @override
+  void initState() {
+    super.initState();
+    // What other members (or this user on another device) change shows up without reloading.
+    _events = HouseholdEventStream(
+      ref.read(apiClientProvider),
+      _householdId,
+      onInventoryChanged: () {
+        if (mounted) _reload();
+      },
+    )..start();
+  }
+
+  @override
   void dispose() {
+    _events.dispose();
     _searchTimer?.cancel();
     super.dispose();
   }

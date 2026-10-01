@@ -1,12 +1,12 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-01
+Última actualización: 2026-10-02
 
 | Fase | Estado |
 |---|---|
 | 0 — Product Definition | ✅ Completada |
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
-| 2 — Inventory | 🟡 En curso: backend, web y móvil hechos; falta el tiempo real y confirmar en CI los tests del móvil |
+| 2 — Inventory | 🟡 Implementada, incluido el tiempo real; falta que la CI ejecute los tests nuevos del móvil |
 
 ## Fase 2 — Inventory 🟡
 
@@ -45,23 +45,34 @@
 - Alta y edición a pantalla completa con sugerencias del catálogo, recientes, coma decimal y selector de fecha.
 - Menú por alimento: consumir, tirar (con motivo), marcar como abierto, editar y eliminar con confirmación.
 
+**Tiempo real**
+- `GET /households/{id}/events`: flujo de eventos (SSE) solo para miembros. Cada cambio del inventario,
+  una vez confirmado en base de datos, envía `inventory-changed` a todos los miembros conectados.
+- Los eventos no llevan datos: el cliente vuelve a pedir el inventario por la API normal, con su autorización.
+- Quien sale del hogar, o es expulsado, deja de recibir eventos en el acto; al eliminar el hogar se cierran
+  todas las conexiones. Máximo de 5 conexiones por miembro y hogar; latido cada 25 s; cada conexión dura
+  como mucho 30 minutos y el cliente vuelve a autenticarse al reconectar.
+- Web y móvil escuchan mientras el inventario está en pantalla, reconectan con espera creciente, detectan
+  una conexión muerta por silencio y, tras reconectar, vuelven a pedir el inventario por si se perdió algo.
+
 ### Tests
 
 | Qué | Resultado |
 |---|---|
-| Mobile `flutter test` | ❌ **no ejecutados todavía**: 50 tests escritos (25 nuevos de inventario, 17 de la aplicación y 8 del cliente HTTP). No pueden correr en esta máquina; se ejecutarán en la CI del próximo pull request |
+| Tiempo real, cliente Dart real de la app contra el backend real (en la VM de Dart, con el mismo adaptador de red que Android) | ✅ recibe los cambios (26 ms) y la conexión sobrevive a 32 s de silencio |
+| Tiempo real, web en navegador contra el backend real | ✅ un alimento añadido desde fuera del navegador aparece sin recargar |
+| Mobile `flutter test` | 🟡 50 tests pasaron en CI (pull request #2). Los **9 nuevos de tiempo real no se han ejecutado todavía**: no pueden correr en la máquina de desarrollo y lo harán en la CI del próximo pull request |
 | Mobile `flutter analyze` y `flutter build apk --debug` | ✅ sin avisos / APK generado |
 | Código de la app móvil contra el backend real (compilado para web en una copia temporal) | ✅ lista compartida con la web, alta con sugerencia del catálogo (1 l de leche), consumo parcial (de 300 g a 200 g) y acceso a miembros y ajustes |
-| Backend `./mvnw verify` | ✅ 74 tests: inventario (19), catálogo (6), cantidades (8), más los 41 de la Fase 1 |
+| Backend `./mvnw verify` | ✅ 83 tests: tiempo real (9), inventario (19), catálogo (6), cantidades (8), más los 41 de la Fase 1 |
 | Comprobación del test de aislamiento | ✅ Al quitar a propósito la comprobación de hogar, el test falla (200 en lugar de 404) |
-| Web lint / test / build | ✅ sin avisos / 48 tests / correcto |
-| CI del pull request #1 | ✅ `backend`, `web`, `mobile` y `docker` |
+| Web lint / test / build | ✅ sin avisos / 59 tests / correcto |
+| CI de los pull requests #1 y #2 | ✅ `backend`, `web`, `mobile` y `docker` |
 | Extremo a extremo en navegador contra el backend real | ✅ alta con autocompletado (500 g de pechuga de pollo) y consumo parcial (quedan 300 g) |
 | Migración `V2` sobre una base con datos de `V1` | ✅ aplicada al arrancar sobre la base local existente |
 
 ### Pendiente en esta fase
 
-- **Tiempo real (SSE)**: hoy un miembro ve los cambios de otro al recargar o volver a la pantalla.
 - **Eventos de producto** `food_scanned`, `receipt_scanned` y el resto llegan con sus funcionalidades.
 
 ### Decisiones tomadas en esta fase
@@ -77,6 +88,15 @@
 
 ### Known issues
 
+- **Tiempo real a través de nginx sin probar**: se ha probado contra el backend directamente y a través del
+  proxy de desarrollo de Vite. El backend envía `X-Accel-Buffering: no` para que nginx no retenga los
+  eventos, pero esa ruta no se ha ejecutado (Docker no está instalado aquí).
+- **Tiempo real en un móvil de verdad sin probar**: el cliente se ha ejecutado en la VM de Dart, no en un
+  dispositivo; no se ha comprobado qué ocurre al pasar la app a segundo plano o cambiar de red.
+- **Conexiones en memoria**: con más de una instancia del backend, un cambio solo llegaría a los miembros
+  conectados a la misma instancia.
+- **Un token caducado sigue escuchando** hasta que la conexión termina (30 minutos como máximo); los eventos
+  no contienen datos.
 - **Selector de fecha del móvil sin probar**: ni los tests ni la prueba manual abren el calendario; solo se
   ha comprobado que el formulario guarda sin fecha y que conserva la fecha existente al editar.
 - **Ediciones simultáneas**: si dos miembros editan el mismo alimento uno tras otro, gana el último. Si dos
@@ -101,7 +121,7 @@ mismo hogar; un tercero no puede verlo.
 
 Con la segunda ejecución quedan confirmados los dos arreglos y, por primera vez, ejecutados en CI:
 los tests del backend en Linux, los 24 tests de Flutter y la construcción de las dos imágenes Docker.
-`main` seguirá en rojo hasta que se fusione el pull request.
+Tras fusionarlo, `main` también pasa.
 
 ### Sin verificar
 
@@ -125,6 +145,5 @@ los tests del backend en Linux, los 24 tests de Flutter y la construcción de la
 
 ## Next
 
-1. Abrir el pull request del inventario móvil y confirmar que sus tests pasan en CI.
-2. SSE para que los cambios de inventario lleguen a los demás miembros sin recargar.
-3. Fase 3 — motor de caducidad.
+1. Abrir el pull request del tiempo real y confirmar en CI los tests nuevos del móvil; con eso se cierra la Fase 2.
+2. Fase 3 — motor de caducidad.

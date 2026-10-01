@@ -74,6 +74,7 @@ tipos internos de otro.
 | `ai` | `AIProvider`, `AiService`, casos de uso de IA | common | 7 |
 | `integrations` | `ProductCatalogProvider` y fuentes externas | food | 7+ |
 | `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users` e `inventory` | 2 ✔ / 8 |
+| `realtime` | Flujos de eventos (SSE) por hogar | households; escucha eventos de `inventory` y `households` | 2 ✔ |
 
 Los módulos marcados con ✔, además de los cuatro de la Fase 1, existen en el código. Los de fases futuras **no existen todavía**: se crean cuando tienen contenido real.
 
@@ -119,6 +120,8 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D18 | Los recursos de un hogar cuelgan de su ruta: `/households/{id}/inventory` | El hogar es explícito y toda petición pasa por `HouseholdAccess` |
 | D19 | El catálogo de alimentos se carga y se **busca en memoria** | Pequeño y estático entre despliegues; ignora acentos sin extensiones de PostgreSQL |
 | D20 | Los eventos entre módulos se escuchan **tras el commit**, en transacción propia | Un fallo al registrar una métrica nunca deshace la operación del usuario |
+| D21 | Los eventos SSE **no llevan datos**: solo avisan de que algo cambió | Los datos siempre salen de la API autorizada; un evento filtrado no revela nada y no hay que versionar su contenido |
+| D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
 
@@ -196,6 +199,7 @@ Fase 2 (todo bajo `/households/{id}/inventory` salvo el catálogo):
 | POST | `/inventory/{itemId}/open` | Marcar como abierto |
 | POST | `/inventory/{itemId}/consume` | Consumir todo o una cantidad |
 | POST | `/inventory/{itemId}/discard` | Tirar todo o una cantidad, con motivo |
+| GET | `/households/{id}/events` | Flujo SSE: `inventory-changed` cuando cambia el inventario (sin datos) |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).

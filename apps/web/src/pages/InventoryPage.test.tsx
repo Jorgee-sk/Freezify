@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { InventoryItem } from '../api/inventory'
 import { todayIso } from '../inventory/format'
-import { fakeApi, problem } from '../test/fakeApi'
+import { eventStream, fakeApi, problem } from '../test/fakeApi'
 import { ANA, CASA, renderApp, signedIn } from '../test/renderApp'
 
 const LIST = 'GET /households/h1/inventory'
@@ -174,6 +174,39 @@ describe('inventory list', () => {
     expect(await screen.findByText('Alimento de la página 1')).toBeInTheDocument()
     expect(screen.getByText('Página 2 de 3')).toBeInTheDocument()
     expect(api.last(LIST)!.query.get('page')).toBe('1')
+  })
+})
+
+describe('live updates', () => {
+  it('shows what another member changes without reloading', async () => {
+    const stream = eventStream()
+    const items = [POLLO]
+    const api = server([], {
+      [LIST]: () => page(items),
+      'GET /households/h1/events': () => ({ response: stream.response }),
+    })
+    renderApp('/households/h1')
+    await findRow('Pollo')
+    const requestsBefore = api.count(LIST)
+
+    // Someone else adds eggs; the server only says that the inventory changed.
+    items.push(item({ id: 'i2', name: 'Huevos' }))
+    stream.send('inventory-changed')
+
+    expect(await within(screen.getByRole('list', { name: 'Inventario' })).findByText('Huevos')).toBeInTheDocument()
+    expect(api.count(LIST)).toBe(requestsBefore + 1)
+  })
+
+  it('does not listen to a household the user cannot open', async () => {
+    signedIn()
+    const api = fakeApi({
+      'GET /users/me': () => ({ body: ANA }),
+      'GET /households/h1': () => problem(404, 'HOUSEHOLD_NOT_FOUND'),
+    })
+    renderApp('/households/h1')
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(api.count('GET /households/h1/events')).toBe(0)
   })
 })
 
