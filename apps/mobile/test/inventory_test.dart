@@ -253,7 +253,8 @@ void main() {
       await openInventory(tester, backend);
       expect(backend.count('GET /households/h1/events'), 1);
 
-      await tester.pageBack();
+      // Not tester.pageBack(): it looks for the English tooltip, and the app is shown in Spanish.
+      await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       // Long enough for a reconnection attempt, if one were still scheduled.
       await tester.pump(const Duration(seconds: 5));
