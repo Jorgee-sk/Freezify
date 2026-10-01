@@ -68,6 +68,8 @@ class ApiClient {
   Future<dynamic> post(String path, {Object? body, bool authenticated = true}) =>
       _request('POST', path, body: body, authenticated: authenticated);
 
+  Future<dynamic> put(String path, {Object? body}) => _request('PUT', path, body: body);
+
   Future<dynamic> patch(String path, {Object? body}) => _request('PATCH', path, body: body);
 
   Future<dynamic> delete(String path) => _request('DELETE', path);

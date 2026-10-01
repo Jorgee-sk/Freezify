@@ -7,8 +7,7 @@ prioridad por caducidad, recetas y plan semanal que aprovechan lo que caduca ant
 generada a partir del plan.
 
 **Estado:** Fase 2 (Inventory) en curso. Hoy funciona de extremo a extremo: registro, sesión, hogares
-compartidos e invitaciones (backend, web y móvil) y el inventario del hogar con consumo y descarte
-(backend y web). Detalle en [docs/STATUS.md](docs/STATUS.md).
+compartidos e invitaciones, y el inventario del hogar con consumo y descarte, en backend, web y móvil. Detalle en [docs/STATUS.md](docs/STATUS.md).
 
 ## Documentación
 

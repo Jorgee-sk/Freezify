@@ -6,7 +6,7 @@
 |---|---|
 | 0 — Product Definition | ✅ Completada |
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
-| 2 — Inventory | 🟡 En curso: backend y web hechos; faltan móvil y tiempo real |
+| 2 — Inventory | 🟡 En curso: backend, web y móvil hechos; falta el tiempo real y confirmar en CI los tests del móvil |
 
 ## Fase 2 — Inventory 🟡
 
@@ -38,21 +38,29 @@
 - Alta y edición con autocompletado del catálogo, recientes y coma decimal.
 - Consumir / tirar (cantidad parcial en unidades compatibles, motivo), abrir y eliminar con confirmación.
 
+**Mobile**
+- Pantalla de inventario como vista principal del hogar; miembros y ajustes pasan a un icono de la barra superior.
+- Lista con cantidad, ubicación y caducidad (las fechas estimadas, etiquetadas), búsqueda, filtro por
+  ubicación, categoría y estado, y paginación.
+- Alta y edición a pantalla completa con sugerencias del catálogo, recientes, coma decimal y selector de fecha.
+- Menú por alimento: consumir, tirar (con motivo), marcar como abierto, editar y eliminar con confirmación.
+
 ### Tests
 
 | Qué | Resultado |
 |---|---|
+| Mobile `flutter test` | ❌ **no ejecutados todavía**: 50 tests escritos (25 nuevos de inventario, 17 de la aplicación y 8 del cliente HTTP). No pueden correr en esta máquina; se ejecutarán en la CI del próximo pull request |
+| Mobile `flutter analyze` y `flutter build apk --debug` | ✅ sin avisos / APK generado |
+| Código de la app móvil contra el backend real (compilado para web en una copia temporal) | ✅ lista compartida con la web, alta con sugerencia del catálogo (1 l de leche), consumo parcial (de 300 g a 200 g) y acceso a miembros y ajustes |
 | Backend `./mvnw verify` | ✅ 74 tests: inventario (19), catálogo (6), cantidades (8), más los 41 de la Fase 1 |
 | Comprobación del test de aislamiento | ✅ Al quitar a propósito la comprobación de hogar, el test falla (200 en lugar de 404) |
 | Web lint / test / build | ✅ sin avisos / 48 tests / correcto |
-| Mobile `flutter analyze` | ✅ sin avisos (solo cambió un test) |
 | CI del pull request #1 | ✅ `backend`, `web`, `mobile` y `docker` |
 | Extremo a extremo en navegador contra el backend real | ✅ alta con autocompletado (500 g de pechuga de pollo) y consumo parcial (quedan 300 g) |
 | Migración `V2` sobre una base con datos de `V1` | ✅ aplicada al arrancar sobre la base local existente |
 
 ### Pendiente en esta fase
 
-- **Móvil**: pantallas de inventario en Flutter (hoy la app móvil solo tiene sesión y hogares).
 - **Tiempo real (SSE)**: hoy un miembro ve los cambios de otro al recargar o volver a la pantalla.
 - **Eventos de producto** `food_scanned`, `receipt_scanned` y el resto llegan con sus funcionalidades.
 
@@ -69,6 +77,8 @@
 
 ### Known issues
 
+- **Selector de fecha del móvil sin probar**: ni los tests ni la prueba manual abren el calendario; solo se
+  ha comprobado que el formulario guarda sin fecha y que conserva la fecha existente al editar.
 - **Ediciones simultáneas**: si dos miembros editan el mismo alimento uno tras otro, gana el último. Si dos
   peticiones se solapan de verdad sobre el mismo alimento, la segunda debería recibir 409
   `CONCURRENT_MODIFICATION` (columna `version`); ese caso **no tiene test** y la web lo muestra con el
@@ -115,7 +125,6 @@ los tests del backend en Linux, los 24 tests de Flutter y la construcción de la
 
 ## Next
 
-1. Fusionar el pull request #1.
-2. Inventario en la app móvil.
-3. SSE para que los cambios de inventario lleguen a los demás miembros sin recargar.
-4. Fase 3 — motor de caducidad.
+1. Abrir el pull request del inventario móvil y confirmar que sus tests pasan en CI.
+2. SSE para que los cambios de inventario lleguen a los demás miembros sin recargar.
+3. Fase 3 — motor de caducidad.
