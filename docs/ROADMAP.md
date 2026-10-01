@@ -6,7 +6,7 @@ El estado detallado de cada entrega está en [STATUS.md](STATUS.md).
 | Fase | Nombre | Estado |
 |---|---|---|
 | 0 | Product Definition | ✅ Completada |
-| 1 | Foundation | 🟡 Implementada, CI sin confirmar — ver [STATUS.md](STATUS.md) |
+| 1 | Foundation | ✅ Completada |
 | 2 | Inventory | 🟡 En curso: backend y web hechos; faltan móvil y SSE |
 | 3 | Expiration Engine | ⏳ Pendiente |
 | 4 | Recipes | ⏳ Pendiente |

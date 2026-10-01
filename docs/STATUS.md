@@ -5,7 +5,7 @@
 | Fase | Estado |
 |---|---|
 | 0 — Product Definition | ✅ Completada |
-| 1 — Foundation | 🟡 Implementada; la CI falló en su primera ejecución y los arreglos están sin confirmar |
+| 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | 🟡 En curso: backend y web hechos; faltan móvil y tiempo real |
 
 ## Fase 2 — Inventory 🟡
@@ -46,6 +46,7 @@
 | Comprobación del test de aislamiento | ✅ Al quitar a propósito la comprobación de hogar, el test falla (200 en lugar de 404) |
 | Web lint / test / build | ✅ sin avisos / 48 tests / correcto |
 | Mobile `flutter analyze` | ✅ sin avisos (solo cambió un test) |
+| CI del pull request #1 | ✅ `backend`, `web`, `mobile` y `docker` |
 | Extremo a extremo en navegador contra el backend real | ✅ alta con autocompletado (500 g de pechuga de pollo) y consumo parcial (quedan 300 g) |
 | Migración `V2` sobre una base con datos de `V1` | ✅ aplicada al arrancar sobre la base local existente |
 
@@ -76,33 +77,27 @@
 - **El catálogo no tiene alias ni sinónimos** ("jitomate", abreviaturas de ticket); previsto para la Fase 7.
 - **Los eventos de producto no se borran con la cuenta** (no hay borrado de cuenta todavía).
 
-## Fase 1 — Foundation 🟡
+## Fase 1 — Foundation ✅
 
-### CI: primera ejecución fallida
+Criterio de salida cumplido y probado: un usuario se registra, crea un hogar, invita a otro y ambos ven el
+mismo hogar; un tercero no puede verlo.
 
-La primera ejecución del workflow en GitHub (commit `8094093`) falló en dos jobs:
+### CI
 
-| Job | Causa | Arreglo aplicado en local |
-|---|---|---|
-| `backend` | `mvnw` se subió sin permiso de ejecución (código de salida 126) | Bit de ejecución añadido en git |
-| `mobile` | 8 de 24 tests fallaron: fijaban `localeTestValue`, pero la app resuelve el idioma con la lista `locales`, que en el runner es inglés. Fallaban justo los 8 que esperan la interfaz en español sin sesión | Los tests fijan ahora `localesTestValue` |
-| `docker` | Omitido porque depende de `backend` | — |
-| `web` | ✅ Pasó | — |
+| Ejecución | Resultado |
+|---|---|
+| Primera, sobre `main` (`8094093`) | ❌ `backend` (`mvnw` sin permiso de ejecución) y `mobile` (8 de 24 tests) |
+| Pull request #1 (`568a593`) | ✅ `backend`, `web`, `mobile` y `docker` |
 
-Además se actualizaron las acciones (`checkout@v7`, `setup-java@v6`, `setup-node@v7`) por los avisos de
-obsolescencia y se añadió `workflow_dispatch`.
-
-**Estos arreglos no están confirmados**: no se han subido, así que la CI no ha vuelto a ejecutarse. La
-causa de `mobile` se dedujo del código de `flutter_test` y de que el número de fallos coincide exactamente;
-el log del job no es accesible sin iniciar sesión en GitHub.
+Con la segunda ejecución quedan confirmados los dos arreglos y, por primera vez, ejecutados en CI:
+los tests del backend en Linux, los 24 tests de Flutter y la construcción de las dos imágenes Docker.
+`main` seguirá en rojo hasta que se fusione el pull request.
 
 ### Sin verificar
 
 | Qué | Motivo | Qué hace falta |
 |---|---|---|
-| Tests de Flutter en verde | No se pueden ejecutar en esta máquina (Windows bloquea `flutter_tester.exe`); en CI corrieron 16 de 24 | Subir la rama y ver la CI |
-| Backend en CI (Linux) | Nunca llegó a ejecutarse por el fallo de permisos | Ídem |
-| Imágenes Docker y `docker compose up` | Docker no está instalado aquí y el job de CI se omitió | Ídem, o ejecutarlo en local |
+| `docker compose up` (los contenedores en marcha, no solo su construcción) | Docker no está instalado aquí; la CI solo construye las imágenes | Ejecutarlo en una máquina con Docker |
 | App en un dispositivo o emulador Android | No hay ningún AVD configurado | `flutter run` en un emulador |
 | iOS | Requiere macOS | Compilar en un Mac |
 
@@ -120,7 +115,7 @@ el log del job no es accesible sin iniciar sesión en GitHub.
 
 ## Next
 
-1. Subir la rama `phase-2-inventory` y confirmar que la CI pasa.
+1. Fusionar el pull request #1.
 2. Inventario en la app móvil.
 3. SSE para que los cambios de inventario lleguen a los demás miembros sin recargar.
 4. Fase 3 — motor de caducidad.
