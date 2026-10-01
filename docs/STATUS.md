@@ -6,9 +6,9 @@
 |---|---|
 | 0 — Product Definition | ✅ Completada |
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
-| 2 — Inventory | 🟡 Implementada, incluido el tiempo real; falta que la CI ejecute los tests nuevos del móvil |
+| 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
 
-## Fase 2 — Inventory 🟡
+## Fase 2 — Inventory ✅
 
 ### Completed
 
@@ -61,17 +61,17 @@
 |---|---|
 | Tiempo real, cliente Dart real de la app contra el backend real (en la VM de Dart, con el mismo adaptador de red que Android) | ✅ recibe los cambios (26 ms) y la conexión sobrevive a 32 s de silencio |
 | Tiempo real, web en navegador contra el backend real | ✅ un alimento añadido desde fuera del navegador aparece sin recargar |
-| Mobile `flutter test` | 🟡 50 tests pasaron en CI (pull request #2). Los **9 nuevos de tiempo real no se han ejecutado todavía**: no pueden correr en la máquina de desarrollo y lo harán en la CI del próximo pull request |
+| Mobile `flutter test` | ✅ en CI (pull request #3): 59 tests (27 de inventario, 17 de la aplicación, 8 del cliente HTTP y 7 de tiempo real). No pueden ejecutarse en la máquina de desarrollo. En la primera ejecución falló uno por un error del propio test (buscaba el botón de volver por su texto en inglés); corregido |
 | Mobile `flutter analyze` y `flutter build apk --debug` | ✅ sin avisos / APK generado |
 | Código de la app móvil contra el backend real (compilado para web en una copia temporal) | ✅ lista compartida con la web, alta con sugerencia del catálogo (1 l de leche), consumo parcial (de 300 g a 200 g) y acceso a miembros y ajustes |
 | Backend `./mvnw verify` | ✅ 83 tests: tiempo real (9), inventario (19), catálogo (6), cantidades (8), más los 41 de la Fase 1 |
 | Comprobación del test de aislamiento | ✅ Al quitar a propósito la comprobación de hogar, el test falla (200 en lugar de 404) |
 | Web lint / test / build | ✅ sin avisos / 59 tests / correcto |
-| CI de los pull requests #1 y #2 | ✅ `backend`, `web`, `mobile` y `docker` |
+| CI de los pull requests #1, #2 y #3 | ✅ `backend`, `web`, `mobile` y `docker` |
 | Extremo a extremo en navegador contra el backend real | ✅ alta con autocompletado (500 g de pechuga de pollo) y consumo parcial (quedan 300 g) |
 | Migración `V2` sobre una base con datos de `V1` | ✅ aplicada al arrancar sobre la base local existente |
 
-### Pendiente en esta fase
+### Fuera de esta fase
 
 - **Eventos de producto** `food_scanned`, `receipt_scanned` y el resto llegan con sus funcionalidades.
 
@@ -145,5 +145,6 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request del tiempo real y confirmar en CI los tests nuevos del móvil; con eso se cierra la Fase 2.
-2. Fase 3 — motor de caducidad.
+Fase 3 — motor de caducidad. Primera unidad de trabajo: los niveles de prioridad como función pura de dominio
+(días hasta caducar → nivel) y el panel "consume primero"; después, la estimación de fechas por reglas y las
+notificaciones.
