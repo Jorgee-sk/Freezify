@@ -1,0 +1,6 @@
+* text=auto
+
+# Executed inside Linux containers and CI even when checked out on Windows.
+mvnw text eol=lf
+*.sh text eol=lf
+*.cmd text eol=crlf

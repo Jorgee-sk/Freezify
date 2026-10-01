@@ -1,0 +1,77 @@
+{
+  "app": {
+    "name": "Freezify",
+    "tagline": "Sé qué tienes, qué caduca y qué puedes cocinar.",
+    "loading": "Cargando…"
+  },
+  "nav": {
+    "logout": "Cerrar sesión",
+    "language": "Idioma",
+    "households": "Mis hogares"
+  },
+  "auth": {
+    "loginTitle": "Inicia sesión",
+    "registerTitle": "Crea tu cuenta",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "passwordHint": "Mínimo 8 caracteres",
+    "displayName": "Tu nombre",
+    "login": "Entrar",
+    "register": "Crear cuenta",
+    "noAccount": "¿No tienes cuenta?",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "goRegister": "Regístrate",
+    "goLogin": "Inicia sesión"
+  },
+  "households": {
+    "greeting": "Hola, {{name}} 👋",
+    "title": "Mis hogares",
+    "empty": "Todavía no perteneces a ningún hogar. Crea uno o únete con un código de invitación.",
+    "createTitle": "Crear un hogar",
+    "nameLabel": "Nombre del hogar",
+    "namePlaceholder": "Casa, Piso de Lavapiés…",
+    "create": "Crear",
+    "joinTitle": "Unirme con un código",
+    "codeLabel": "Código de invitación",
+    "join": "Unirme",
+    "members_one": "{{count}} miembro",
+    "members_other": "{{count}} miembros",
+    "role": {
+      "OWNER": "Propietario",
+      "MEMBER": "Miembro"
+    },
+    "back": "Volver a mis hogares",
+    "membersTitle": "Miembros",
+    "you": "tú",
+    "joined": "Desde el {{date}}",
+    "inviteTitle": "Invitar a alguien",
+    "inviteHelp": "Genera un código y compártelo. Quien lo introduzca se unirá a este hogar.",
+    "inviteGenerate": "Generar código",
+    "inviteCode": "Código de invitación",
+    "inviteExpires": "Válido hasta el {{date}}",
+    "rename": "Renombrar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "remove": "Quitar",
+    "leave": "Abandonar hogar",
+    "delete": "Eliminar hogar",
+    "confirmRemove": "¿Quitar a {{name}} de este hogar?",
+    "confirmLeave": "¿Seguro que quieres abandonar «{{name}}»?",
+    "confirmDelete": "Se eliminará «{{name}}» para todos sus miembros. Esta acción no se puede deshacer. ¿Continuar?"
+  },
+  "errors": {
+    "generic": "Algo ha salido mal. Inténtalo de nuevo.",
+    "network": "No se puede conectar con el servidor.",
+    "VALIDATION_ERROR": "Revisa los datos introducidos.",
+    "EMAIL_ALREADY_REGISTERED": "Ya existe una cuenta con ese correo.",
+    "INVALID_CREDENTIALS": "Correo o contraseña incorrectos.",
+    "PASSWORD_TOO_LONG": "La contraseña es demasiado larga.",
+    "RATE_LIMITED": "Demasiados intentos. Espera un momento.",
+    "HOUSEHOLD_NOT_FOUND": "Este hogar no existe o ya no perteneces a él.",
+    "NOT_HOUSEHOLD_OWNER": "Solo el propietario del hogar puede hacer esto.",
+    "OWNER_CANNOT_LEAVE": "El propietario no puede abandonar el hogar. Elimínalo si ya no lo necesitas.",
+    "ALREADY_MEMBER": "Ya perteneces a este hogar.",
+    "INVITATION_NOT_FOUND": "El código no es válido o ha caducado.",
+    "MEMBER_NOT_FOUND": "Esa persona ya no pertenece al hogar."
+  }
+}

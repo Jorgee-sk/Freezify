@@ -1,0 +1,10 @@
+# Local development only (mvnw spring-boot:test-run). Never used by the packaged application.
+freezify:
+  auth:
+    jwt-secret: ${FREEZIFY_JWT_SECRET:local-development-only-secret-do-not-deploy}
+  cors:
+    allowed-origins: http://localhost:5173
+
+logging:
+  level:
+    com.freezify: DEBUG

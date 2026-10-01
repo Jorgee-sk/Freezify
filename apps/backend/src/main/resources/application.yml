@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: freezify
+  datasource:
+    url: ${FREEZIFY_DB_URL:jdbc:postgresql://localhost:5432/freezify}
+    username: ${FREEZIFY_DB_USER:freezify}
+    password: ${FREEZIFY_DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: ${FREEZIFY_PORT:8080}
+  forward-headers-strategy: framework
+  error:
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+freezify:
+  auth:
+    # No default on purpose: the application must not start without a real secret.
+    jwt-secret: ${FREEZIFY_JWT_SECRET}
+    issuer: ${FREEZIFY_JWT_ISSUER:freezify}
+    access-token-ttl: 15m
+    refresh-token-ttl: 30d
+  cors:
+    allowed-origins: ${FREEZIFY_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  rate-limit:
+    capacity: 20
+    period: 1m
+    paths:
+      - /api/v1/auth/
+      - /api/v1/households/join
+  households:
+    invitation-ttl: 7d

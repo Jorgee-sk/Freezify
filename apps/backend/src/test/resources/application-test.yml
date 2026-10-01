@@ -1,0 +1,10 @@
+freezify:
+  auth:
+    jwt-secret: test-only-secret-test-only-secret-test-only
+  rate-limit:
+    # All MockMvc requests share one client address; the limiter has its own unit test.
+    capacity: 100000
+
+logging:
+  level:
+    com.freezify.auth.internal.TokenService: ERROR
