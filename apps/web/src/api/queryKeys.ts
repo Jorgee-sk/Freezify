@@ -10,7 +10,10 @@ export const queryKeys = {
   recentFoods: (householdId: string) => ['inventory', householdId, 'recent'] as const,
   consumeFirst: (householdId: string) => ['inventory', householdId, 'consume-first'] as const,
   foodSearch: (text: string, lang: string) => ['foods', lang, text] as const,
-  recipeList: (filter: RecipeFilter, lang: string) => ['recipes', 'list', lang, filter] as const,
+  recipes: ['recipes'] as const,
+  recipeList: (householdId: string, filter: RecipeFilter, lang: string) =>
+    ['recipes', 'list', householdId, lang, filter] as const,
+  diet: (householdId: string) => ['diet', householdId] as const,
   recipe: (id: string, lang: string) => ['recipes', 'detail', lang, id] as const,
   recommendations: (householdId: string, lang: string) => ['recipes', 'recommendations', householdId, lang] as const,
   notifications: ['notifications'] as const,

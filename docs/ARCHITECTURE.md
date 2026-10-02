@@ -141,6 +141,9 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D40 | Lo pasado de fecha **no cuenta como disponible** para cocinar | La aplicación no debe proponer comer algo caducado |
 | D41 | "La he cocinado" **no descuenta** del inventario | Restar cantidades a ciegas puede perder datos; consumir sigue siendo una acción explícita por alimento |
 | D42 | Los motivos de una recomendación los **redacta el cliente** a partir de los datos (como los avisos, D25), con frases que no dependen del género ni del número del alimento | El servidor no inventa texto y cada frase se puede rastrear hasta un dato del inventario |
+| D43 | Las restricciones alimentarias son **del hogar**, no de cada usuario | Se cocina para todos en la misma cocina; y así no existe un dato de salud personal que otros miembros puedan deducir |
+| D44 | Lo que contiene una receta se **deriva** de sus ingredientes (`food_traits`), no se etiqueta a mano por receta | Una sola fuente de verdad: corregir un alimento corrige todas sus recetas, y ninguna receta puede quedar sin etiquetar |
+| D45 | Las restricciones son un **filtro previo** a la puntuación, no un factor | Una receta que el hogar no puede comer no debe aparecer nunca, por bien que encaje |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -164,7 +167,7 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 ## 4. Modelo de datos
 
 Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`, `V4__notifications.sql`,
-`V5__device_tokens.sql`, `V6__recipes.sql`):
+`V5__device_tokens.sql`, `V6__recipes.sql`, `V7__dietary_restrictions.sql`):
 
 ```text
 users ──< refresh_tokens
@@ -179,6 +182,8 @@ users ──< notification_item_alerts >── food_items
 users ──< device_tokens
 recipes ──< recipe_ingredients >── foods
 recipes ──< cooked_recipes >── households
+foods ──< food_traits
+households ── household_diets
 ```
 
 Entidades previstas por fase:
@@ -187,7 +192,7 @@ Entidades previstas por fase:
 |---|---|
 | 2 ✔ | `Food` (catálogo), `FoodItem`, `FoodOutcome` (consumo y desperdicio), `ProductEvent`; `FoodCategory` es un enum |
 | 3 ✔ | `ShelfLifeRule`, `Notification`, `NotificationPreference`, `DeviceToken` |
-| 4 | `Recipe`, `RecipeIngredient`, `CookedRecipe` (hechas); `UserPreference` pendiente |
+| 4 ✔ | `Recipe`, `RecipeIngredient`, `CookedRecipe`, `FoodTrait`, `HouseholdDiet`; `UserPreference` (gustos personales) pendiente |
 | 5 | `MealPlan`, `MealPlanEntry` |
 | 6 | `ShoppingList`, `ShoppingListItem` |
 | 7 | `Scan`, `ScanResult`, `Product` |
@@ -246,10 +251,11 @@ Fase 4:
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/recipes?q=&maxMinutes=&difficulty=&course=&lang=&page=&size=` | Catálogo de recetas |
+| GET | `/recipes?household=&q=&maxMinutes=&difficulty=&course=&lang=&page=&size=` | Catálogo de recetas; con `household`, sin lo que ese hogar no come |
 | GET | `/recipes/{id}?lang=` | Receta con ingredientes y pasos |
 | GET | `/households/{id}/recipes/recommendations?lang=&limit=` | Qué cocinar con lo que hay, con los datos que lo explican |
 | POST | `/households/{id}/recipes/{recipeId}/cooked` | El hogar ha cocinado la receta hoy |
+| GET / PUT | `/households/{id}/diet` | Ver / reemplazar lo que no se come en el hogar (cualquier miembro) |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).
@@ -288,6 +294,7 @@ Controller → caso de uso → AiService → AIProvider ─┬─ MockProvider  
 |---|---|---|---|
 | R1 | **Normalización de alimentos**: los tickets españoles abrevian ("TOM PERA 1K"); sin mapear a `Food` no hay recetas ni lista de la compra fiables | Alto | Catálogo canónico con alias desde Fase 2; revisión humana obligatoria; aprender alias de las correcciones del usuario |
 | R2 | **Calidad del OCR** en tickets arrugados o térmicos | Alto | OCR en dispositivo + estructuración posterior; la UI de revisión es el camino principal, no la excepción |
+| R13 | **Datos de alérgenos** escritos a mano: un error puede ocultar un alérgeno a una persona alérgica | Alto | Marcado prudente, aviso visible de que no es una garantía y de comprobar la etiqueta. **Pendiente:** contrastar con una fuente autorizada antes del lanzamiento |
 | R3 | **Fechas estimadas** erróneas (seguridad alimentaria, responsabilidad) | Alto | Siempre etiquetadas; reglas conservadoras; nunca pisan la fecha del usuario. **Pendiente:** contrastar los días con una fuente autorizada antes del lanzamiento |
 | R4 | **Conversión de unidades** (recuento ↔ masa: "2 tomates" vs "300 g") | Medio | Peso medio por unidad en el catálogo; cuando no exista, no se convierte y se avisa |
 | R5 | **Contenido de recetas**: licencias y normalización de ingredientes | Medio | Conjunto inicial propio y pequeño; no importar datasets sin revisar licencia |

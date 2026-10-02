@@ -10,6 +10,42 @@ export type Course = 'BREAKFAST' | 'MAIN' | 'DESSERT'
  */
 export type Availability = 'ENOUGH' | 'PARTIAL' | 'UNKNOWN_QUANTITY' | 'MISSING' | 'ASSUMED'
 
+/** Something a food contains that some people do not eat. */
+export type FoodTrait =
+  | 'MEAT'
+  | 'PORK'
+  | 'FISH'
+  | 'SHELLFISH'
+  | 'DAIRY'
+  | 'EGG'
+  | 'GLUTEN'
+  | 'NUTS'
+  | 'SOY'
+  | 'SESAME'
+  | 'ALCOHOL'
+export type DietType = 'NONE' | 'VEGETARIAN' | 'VEGAN'
+
+/** What is not cooked in a household: a diet plus anything else to avoid. A hard filter on recipes. */
+export interface Diet {
+  type: DietType
+  avoided: FoodTrait[]
+}
+
+export const DIET_TYPES: DietType[] = ['NONE', 'VEGETARIAN', 'VEGAN']
+export const AVOIDABLE_TRAITS: FoodTrait[] = [
+  'GLUTEN',
+  'DAIRY',
+  'EGG',
+  'NUTS',
+  'SOY',
+  'SESAME',
+  'FISH',
+  'SHELLFISH',
+  'MEAT',
+  'PORK',
+  'ALCOHOL',
+]
+
 export const COURSES: Course[] = ['MAIN', 'BREAKFAST', 'DESSERT']
 /** The time limits offered as a filter, in minutes. */
 export const TIME_LIMITS = [15, 30, 45]
@@ -24,6 +60,8 @@ export interface RecipeSummary {
   totalMinutes: number
   difficulty: Difficulty
   course: Course
+  /** What it contains that someone may not eat, staples included. */
+  contains: FoodTrait[]
 }
 
 export interface RecipeIngredient {
@@ -73,8 +111,14 @@ export const RECIPE_PAGE_SIZE = 20
 export const ALL_RECOMMENDATIONS = 50
 
 export const recipesApi = {
-  list: (filter: RecipeFilter, lang: Locale) => {
-    const params = new URLSearchParams({ lang, page: String(filter.page), size: String(RECIPE_PAGE_SIZE) })
+  /** The catalog without what the household does not eat. */
+  list: (householdId: string, filter: RecipeFilter, lang: Locale) => {
+    const params = new URLSearchParams({
+      household: householdId,
+      lang,
+      page: String(filter.page),
+      size: String(RECIPE_PAGE_SIZE),
+    })
     if (filter.text.trim()) params.set('q', filter.text.trim())
     if (filter.maxMinutes) params.set('maxMinutes', String(filter.maxMinutes))
     if (filter.course) params.set('course', filter.course)
@@ -87,4 +131,9 @@ export const recipesApi = {
     ),
   markCooked: (householdId: string, recipeId: string) =>
     api<void>(`/households/${householdId}/recipes/${recipeId}/cooked`, { method: 'POST' }),
+}
+
+export const dietApi = {
+  get: (householdId: string) => api<Diet>(`/households/${householdId}/diet`),
+  update: (householdId: string, diet: Diet) => api<Diet>(`/households/${householdId}/diet`, { method: 'PUT', body: diet }),
 }

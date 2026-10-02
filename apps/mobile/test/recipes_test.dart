@@ -33,6 +33,7 @@ Map<String, Object?> _recipe(
   'totalMinutes': minutes,
   'difficulty': difficulty,
   'course': 'MAIN',
+  'contains': <String>[],
 };
 
 Map<String, Object?> _matched(
@@ -112,6 +113,7 @@ void main() {
     'GET /households/h1/inventory': (_) => const FakeResponse.ok(_emptyInventory),
     'GET /households/h1/inventory/consume-first': (_) => const FakeResponse.ok(_nothingToConsumeFirst),
     _catalog: (_) => _page([_tortilla]),
+    'GET /households/h1/diet': (_) => const FakeResponse.ok({'type': 'NONE', 'avoided': <String>[]}),
     _recommendations: (_) => FakeResponse.ok([_recommendation(_pastaIngredients)]),
     _detail: (_) => FakeResponse.ok(_pastaDetail),
     ...extra,
@@ -157,7 +159,7 @@ void main() {
     testWidgets('filters the catalog by text, course and time', (tester) async {
       final backend = backendWith({_recommendations: (_) => const FakeResponse.ok(<Object>[])});
       await openRecipes(tester, backend);
-      expect(backend.last(_catalog).query, {'lang': 'es', 'size': '100'});
+      expect(backend.last(_catalog).query, {'household': 'h1', 'lang': 'es', 'size': '100'});
 
       await tester.enterText(find.byType(TextField), 'tort');
       await tester.pump(const Duration(milliseconds: 400));
@@ -174,6 +176,7 @@ void main() {
       await tester.tap(halfAnHour);
       await tester.pumpAndSettle();
       expect(backend.last(_catalog).query, {
+        'household': 'h1',
         'lang': 'es',
         'size': '100',
         'q': 'tort',
@@ -304,6 +307,7 @@ void main() {
         totalMinutes: 25,
         difficulty: Difficulty.easy,
         course: Course.main,
+        contains: [],
       ),
       score: 0.8,
       ingredients: ingredients,

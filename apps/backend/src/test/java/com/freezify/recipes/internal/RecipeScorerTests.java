@@ -254,6 +254,7 @@ class RecipeScorerTests {
                 difficulty,
                 Course.MAIN,
                 List.of(ingredients),
+                java.util.Set.of(),
                 List.of(),
                 List.of());
     }

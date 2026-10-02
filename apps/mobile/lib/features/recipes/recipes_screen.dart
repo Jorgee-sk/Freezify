@@ -51,8 +51,16 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
     final language = l10n.localeName;
     final recommendationsKey = (householdId: widget.householdId, language: language);
     final recommendations = ref.watch(recommendationsProvider(recommendationsKey));
-    final RecipeQuery query = (language: language, text: _text, maxMinutes: _maxMinutes, course: _course);
+    final RecipeQuery query = (
+      householdId: widget.householdId,
+      language: language,
+      text: _text,
+      maxMinutes: _maxMinutes,
+      course: _course,
+    );
     final catalog = ref.watch(recipeListProvider(query));
+    final diet = ref.watch(dietProvider(widget.householdId)).value;
+    final restrictions = diet == null ? null : dietSummary(l10n, diet);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.recipesTitle)),
@@ -61,6 +69,22 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // Says what is being left out, so that a short list is never a mystery.
+            if (diet != null)
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      restrictions == null ? l10n.dietNotSet : l10n.dietApplied(restrictions),
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/households/${widget.householdId}/diet'),
+                    child: Text(l10n.dietChange),
+                  ),
+                ],
+              ),
             Text(l10n.recommendedTitle, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             ...recommendations.when(

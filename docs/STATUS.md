@@ -8,7 +8,7 @@
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
 | 3 — Expiration Engine | 🟡 Código completo; **falta comprobar en un móvil Android que el push llega**, y hasta entonces no se da por cerrada |
-| 4 — Recipes | 🟡 En curso: catálogo, recomendador y pantallas de web y móvil hechos; faltan las restricciones alimentarias |
+| 4 — Recipes | 🟡 Funcionalidad completa, con los tests nuevos del móvil pendientes de CI. Antes de usuarios reales hay que revisar los datos de alérgenos |
 
 ## Fase 4 — Recipes 🟡
 
@@ -46,14 +46,30 @@
   - Detalle de receta: ingredientes con cantidad y, para este hogar, si lo tienes, tienes menos, hay que
     comprobar la cantidad o falta, más cuándo caduca lo que está a punto; pasos; y "La he cocinado".
 
+- **Restricciones alimentarias del hogar**, como filtro duro:
+  - Cada alimento del catálogo indica lo que contiene entre 11 rasgos (carne, cerdo, pescado, marisco,
+    lácteos, huevo, gluten, frutos secos, soja, sésamo, alcohol). Una receta contiene lo que contengan sus
+    ingredientes, incluidos los básicos.
+  - El hogar elige una dieta (ninguna, vegetariana, vegana) y, además, qué evitar. Una receta que contenga
+    algo de eso **no aparece** ni en las recomendaciones ni en el catálogo del hogar; el filtro se aplica en
+    el servidor, antes de puntuar.
+  - Las restricciones son **del hogar, no de una persona**: cualquier miembro las ve y las cambia. Así no
+    hay datos de salud personales que otros miembros descubran de rebote.
+  - Web y móvil: pantalla "Qué no se come en casa", línea que dice con qué se han filtrado las recetas,
+    "Contiene: …" en cada receta y un aviso si se abre una receta con algo que el hogar no come.
+  - La pantalla avisa de que es una ayuda y no una garantía, y de que hay que comprobar la etiqueta.
+
 ### Tests
 
 | Qué | Resultado |
 |---|---|
-| Backend `./mvnw verify` | ✅ 199 tests (33 nuevos: 16 del cálculo de puntuación y 17 de la API de recetas); 1 omitido, el que habla con Firebase real |
-| Web lint / test / build | ✅ sin avisos / 105 tests (20 de recetas) / correcto |
+| Backend `./mvnw verify` | ✅ 209 tests (10 de restricciones, 16 del cálculo de puntuación y 17 de la API de recetas); 1 omitido, el que habla con Firebase real |
+| Web lint / test / build | ✅ sin avisos / 116 tests (11 de restricciones y 20 de recetas) / correcto |
+| Restricciones, web contra el backend real | ✅ al guardar "vegetariana, sin huevo" las recomendaciones pasaron de cinco a una (crema de calabacín) y el catálogo de 25 a 6 recetas |
+| Restricciones, código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ mostró lo guardado desde la web, guardó "sin gluten" y, al volver, la lista ya no tenía recetas con pasta |
+| Migración `V7` sobre la base local con datos | ✅ aplicada; comprueba ella misma que entran los 69 rasgos |
 | Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
-| Mobile `flutter test` | 🟡 96 pasaron en CI (pull request #9); los **16 nuevos de recetas no se han ejecutado** (112 en total): correrán en la CI del próximo pull request |
+| Mobile `flutter test` | 🟡 112 pasaron en CI (pull request #11); los **11 nuevos de restricciones no se han ejecutado** (123 en total): correrán en la CI del próximo pull request |
 | Recetas, web contra el backend real | ✅ recomendaciones con sus motivos, detalle con lo que hay de cada ingrediente y "La he cocinado", que bajó la receta del 71 % al 59 % y añadió "La has cocinado hoy" |
 | Recetas, código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ recomendaciones con sus motivos y detalle de receta. No se pulsó "La he cocinado" ni se probaron los filtros en esta versión |
 | Recomendador contra el backend y la base locales reales | ✅ con calabacín (2 días), tomate, pasta, huevos, champiñones sin fecha y leche caducada: propone primero el revuelto de champiñones y la pasta con calabacín, marca la fecha de los champiñones como estimada y no usa la leche caducada |
@@ -61,7 +77,8 @@
 
 ### Pendiente en esta fase
 
-- **Restricciones alimentarias** (dietas y alergias) como filtro duro, y preferencias del usuario.
+- **Preferencias personales** (gustos, alimentos que no apetecen), que son el factor de la puntuación que
+  falta. No bloquean nada: hoy la puntuación reparte los otros cuatro pesos.
 - **Avisos de recetas** ("hay recetas que aprovechan lo que va a caducar").
 
 ### Known issues
@@ -71,8 +88,19 @@
   la página está abierta; se piden de nuevo cada vez que se entra.
 - **Los avisos de caducidad se redactan mal con nombres en plural** ("Huevos caduca hoy"); en las recetas ya
   está resuelto con frases que no dependen del número.
-- **Sin restricciones alimentarias todavía**: el recomendador puede proponer carne a una persona vegetariana
-  o un plato con gluten a una persona celíaca. No debe abrirse a usuarios hasta que exista ese filtro.
+- **Lo que contiene cada alimento está escrito a mano, no sale de etiquetas ni de una fuente oficial.** Es
+  deliberadamente prudente (la pasta cuenta como "con huevo", el jamón cocido como "con lácteos, gluten y
+  soja"), pero puede haber errores en los dos sentidos y no cubre trazas. Hay que revisarlo con una fuente
+  autorizada antes de abrir a usuarios reales; es el mismo tipo de riesgo que las fechas estimadas (R3).
+- **Por esa prudencia quedan pocas recetas con algunas restricciones**: 2 veganas, 12 vegetarianas y 15 sin
+  gluten de las 25.
+- **Solo 11 rasgos**: no hay apio, mostaza, sulfitos, altramuces, moluscos ni cacahuetes como categoría
+  propia (los 14 alérgenos de declaración obligatoria en la UE no están todos).
+- **Los alimentos escritos a mano no tienen rasgos**: no afectan al filtro porque las recetas solo usan
+  alimentos del catálogo, pero el inventario no avisa de nada sobre ellos.
+- **Las restricciones son por hogar**: no se puede decir "solo yo soy vegetariano".
+- **No queda registro de quién cambió las restricciones** más allá del último cambio, ni se avisa a los
+  demás miembros.
 - **Las recetas no llevan información nutricional ni imagen**: no hay una fuente fiable de la que sacarlas y
   no se inventan.
 - **Recetas escritas a mano y no probadas en cocina** una por una: cantidades y tiempos son orientativos.
@@ -378,6 +406,7 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request de las pantallas de recetas y confirmar en CI los 16 tests nuevos del móvil.
-2. Fase 4: restricciones alimentarias (dietas y alergias) como filtro duro, con las preferencias del usuario.
-3. Pendiente de la Fase 3: probar el push en un móvil Android.
+1. Abrir el pull request de las restricciones alimentarias y confirmar en CI los 11 tests nuevos del móvil.
+2. Fase 5 — Smart Planning: plan semanal de comidas a partir de las recetas y el inventario.
+3. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
+   con una fuente autorizada antes de abrir a usuarios reales.

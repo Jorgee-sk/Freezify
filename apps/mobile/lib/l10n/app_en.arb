@@ -566,5 +566,61 @@
   "markCooked": "I cooked it",
   "cookedSaved": "Noted",
   "cookedHelp": "It keeps the same recipe from being recommended every day. It does not change your inventory: consume the food you used.",
-  "errorRecipeNotFound": "This recipe does not exist."
+  "errorRecipeNotFound": "This recipe does not exist.",
+  "dietTitle": "What this household does not eat",
+  "dietShared": "These restrictions belong to the household: every member can see and change them. Recipes that contain any of this are not shown.",
+  "dietTypeLabel": "Diet",
+  "dietNone": "No diet",
+  "dietVegetarian": "Vegetarian",
+  "dietVegan": "Vegan",
+  "dietVegetarianName": "Vegetarian diet",
+  "dietVeganName": "Vegan diet",
+  "dietAvoidLabel": "Also avoid",
+  "dietWithout": "no {trait}",
+  "@dietWithout": {
+    "placeholders": {
+      "trait": {
+        "type": "String"
+      }
+    }
+  },
+  "dietDisclaimer": "This is a help, not a guarantee. What each food contains is indicative: a given product may have other ingredients or traces. With an allergy, always check the label.",
+  "dietSaved": "Restrictions saved",
+  "dietApplied": "Recipes filtered for this household: {restrictions}.",
+  "@dietApplied": {
+    "placeholders": {
+      "restrictions": {
+        "type": "String"
+      }
+    }
+  },
+  "dietNotSet": "This household has no dietary restrictions.",
+  "dietChange": "Change",
+  "dietConflict": "This recipe contains something this household does not eat: {traits}.",
+  "@dietConflict": {
+    "placeholders": {
+      "traits": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeContains": "Contains: {traits}.",
+  "@recipeContains": {
+    "placeholders": {
+      "traits": {
+        "type": "String"
+      }
+    }
+  },
+  "traitMeat": "meat",
+  "traitPork": "pork",
+  "traitFish": "fish",
+  "traitShellfish": "shellfish",
+  "traitDairy": "dairy",
+  "traitEgg": "egg",
+  "traitGluten": "gluten",
+  "traitNuts": "nuts",
+  "traitSoy": "soy",
+  "traitSesame": "sesame",
+  "traitAlcohol": "alcohol"
 }

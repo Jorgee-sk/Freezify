@@ -1,10 +1,16 @@
 package com.freezify.recipes.internal;
 
+import com.freezify.food.FoodTrait;
 import com.freezify.food.Quantity;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
-/** A recipe as the application reasons about it: texts in both languages and ingredients tied to the catalog. */
+/**
+ * A recipe as the application reasons about it: texts in both languages and ingredients tied to the catalog.
+ *
+ * @param contains everything its ingredients contain that someone may not eat, staples included
+ */
 public record Recipe(
         UUID id,
         String slug,
@@ -18,6 +24,7 @@ public record Recipe(
         Difficulty difficulty,
         Course course,
         List<Ingredient> ingredients,
+        Set<FoodTrait> contains,
         List<String> stepsEs,
         List<String> stepsEn) {
 
@@ -40,6 +47,7 @@ public record Recipe(
 
     public Recipe {
         ingredients = List.copyOf(ingredients);
+        contains = Set.copyOf(contains);
         stepsEs = List.copyOf(stepsEs);
         stepsEn = List.copyOf(stepsEn);
     }

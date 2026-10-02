@@ -52,6 +52,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
           for (final ingredient in recommendation.ingredients) ingredient.foodId: ingredient,
     };
     final muted = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final diet = ref.watch(dietProvider(widget.householdId)).value;
 
     return Scaffold(
       appBar: AppBar(title: Text(detail.value?.recipe.name ?? l10n.recipesTitle)),
@@ -69,6 +70,18 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
             Text(recipe.recipe.description),
             const SizedBox(height: 4),
             Text(recipeFacts(l10n, recipe.recipe), style: muted),
+            if (recipe.recipe.contains.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(l10n.recipeContains(traitList(l10n, recipe.recipe.contains)), style: muted),
+            ],
+            // A recipe opened some other way may contain what the household does not eat; the lists never show it.
+            if (diet != null && diet.conflictsWith(recipe.recipe.contains).isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.dietConflict(traitList(l10n, diet.conflictsWith(recipe.recipe.contains))),
+                style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.w600),
+              ),
+            ],
             const SizedBox(height: 16),
             Text(l10n.ingredientsTitle, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
