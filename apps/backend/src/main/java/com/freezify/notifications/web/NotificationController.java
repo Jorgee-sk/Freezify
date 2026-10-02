@@ -3,6 +3,8 @@ package com.freezify.notifications.web;
 import com.freezify.common.CurrentUser;
 import com.freezify.common.PageResponse;
 import com.freezify.food.FoodCategory;
+import com.freezify.notifications.internal.Devices;
+import com.freezify.notifications.internal.Devices.Platform;
 import com.freezify.notifications.internal.NotificationService;
 import com.freezify.notifications.internal.NotificationView;
 import com.freezify.notifications.internal.Preferences;
@@ -12,7 +14,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -35,9 +39,11 @@ import org.springframework.web.bind.annotation.RestController;
 class NotificationController {
 
     private final NotificationService notifications;
+    private final Devices devices;
 
-    NotificationController(NotificationService notifications) {
+    NotificationController(NotificationService notifications, Devices devices) {
         this.notifications = notifications;
+        this.devices = devices;
     }
 
     @GetMapping
@@ -83,7 +89,25 @@ class NotificationController {
                         request.mutedCategories()));
     }
 
+    /** The app tells where push notifications for this user go. Safe to repeat. */
+    @PutMapping("/devices")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void registerDevice(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody DeviceRequest request) {
+        devices.register(CurrentUser.id(jwt), request.token(), request.platform());
+    }
+
+    /** The app stops receiving push notifications for this user, e.g. on sign-out. */
+    @PostMapping("/devices/unregister")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void unregisterDevice(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody UnregisterRequest request) {
+        devices.unregister(CurrentUser.id(jwt), request.token());
+    }
+
     record UnreadCount(long count) {}
+
+    record DeviceRequest(@NotBlank @Size(max = 4096) String token, @NotNull Platform platform) {}
+
+    record UnregisterRequest(@NotBlank @Size(max = 4096) String token) {}
 
     record PreferencesRequest(
             @NotNull Boolean expirationAlerts,

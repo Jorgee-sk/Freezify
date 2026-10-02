@@ -110,5 +110,6 @@ Web en <http://localhost:3000>, API en <http://localhost:8080>.
 | `FREEZIFY_CORS_ALLOWED_ORIGINS` | No | Orígenes de navegador permitidos, separados por comas |
 | `FREEZIFY_PORT` | No | Puerto HTTP (8080) |
 | `FREEZIFY_TIME_ZONE` | No | Zona horaria para calcular el día de hoy (`Europe/Madrid`) |
+| `FREEZIFY_FCM_CREDENTIALS_FILE` | No | Ruta de la clave de la cuenta de servicio de Firebase. Sin ella no se envían notificaciones push |
 
 Ningún secreto se guarda en el repositorio.

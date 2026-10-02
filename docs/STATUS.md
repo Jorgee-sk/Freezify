@@ -7,7 +7,7 @@
 | 0 — Product Definition | ✅ Completada |
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
-| 3 — Expiration Engine | 🟡 En curso: falta solo el envío push; los avisos dentro de la app y sus preferencias están hechos |
+| 3 — Expiration Engine | 🟡 En curso: el servidor ya envía push; falta que la app móvil los reciba (sin probar en un dispositivo) |
 
 ## Fase 3 — Expiration Engine 🟡
 
@@ -65,27 +65,47 @@
     de ese hogar y lo marca como leído), "marcar todo como leído" y pantalla de preferencias.
   - Abrir un aviso por primera vez registra el evento de producto `notification_opened`.
 
+- **Envío push desde el servidor** (Firebase Cloud Messaging):
+  - Proyecto de Firebase `freezify-c50ea` creado, con la app Android `com.freezify.app` registrada. Google
+    Analytics y Gemini quedaron desactivados.
+  - La app Android pasa a identificarse como `com.freezify.app` (antes `com.freezify.freezify`).
+  - `PUT /notifications/devices` registra dónde recibe avisos un usuario y
+    `POST /notifications/devices/unregister` lo retira al cerrar sesión. Un teléfono pertenece a quien inició
+    sesión en él por última vez; solo su dueño puede retirarlo.
+  - Cada aviso nuevo se envía, una vez confirmado en base de datos, a todos los dispositivos de su usuario,
+    redactado en su idioma y con las fechas estimadas dichas como estimaciones. Un envío fallido no afecta al
+    aviso, que sigue en la app; un dispositivo que Firebase da por desaparecido se olvida.
+  - Sin la clave configurada (`FREEZIFY_FCM_CREDENTIALS_FILE`) no se envía nada y todo lo demás funciona.
+    Una clave configurada pero ilegible impide arrancar.
+
 ### Tests
 
 | Qué | Resultado |
 |---|---|
+| Envío push contra Firebase real (`FcmLiveTests`, solo se ejecuta con la clave configurada) | ✅ Google emite el token de acceso y Firebase acepta la petición para el proyecto; solo rechaza el dispositivo inventado (`400 INVALID_ARGUMENT`). No se ha entregado ningún mensaje |
+| Backend arrancado con la clave real | ✅ carga la clave ("sent through Firebase project freezify-c50ea") y aplica la migración `V5` sobre la base local |
+| APK debug con el identificador `com.freezify.app` | ✅ generado |
+| CI del pull request #7 (avisos dentro de la app) | ✅ los cuatro jobs; los 17 tests nuevos de Flutter pasan (85 en total) |
 | Avisos, web contra el backend real | ✅ con 5 alimentos en casa, al arrancar se creó un aviso con los 4 que tocaba (el de fecha estimada, redactado como tal); la campana marcó 1 sin leer, abrirlo llevó al inventario y lo marcó como leído, y las preferencias se guardaron |
 | Avisos, código de la app móvil contra el backend real (compilado para web en una copia temporal) | ✅ lo mismo: campana con 1 sin leer, lista, preferencias guardadas (hora y una categoría) y apertura del aviso hacia el inventario |
 | Comprobación del test de aislamiento de avisos | ✅ al quitar a propósito la comprobación de propietario, el test falla (204 en lugar de 404) |
 | Migración `V4` sobre la base local con datos | ✅ aplicada al arrancar |
 | Barrido contra la base local real | ✅ al arrancar marcó como caducado el único alimento pasado de fecha y no tocó los demás |
-| Backend `./mvnw verify` | ✅ 142 tests (20 de avisos, 5 del barrido, 7 de la función de estimación, 8 de estimación por la API, 14 de niveles y 5 de "consume primero") |
+| Backend `./mvnw verify` | ✅ 165 tests (23 de push: 9 de registro y despacho, 9 del cliente de Firebase contra un servidor local, 5 de redacción; 20 de avisos, 5 del barrido, 7 de la función de estimación, 8 de estimación por la API, 14 de niveles y 5 de "consume primero") |
 | Web lint / test / build | ✅ sin avisos / 85 tests (17 de avisos) / correcto |
 | Mobile `flutter analyze` y APK | ✅ sin avisos / generado |
-| Mobile `flutter test` | 🟡 68 pasaron en CI (pull request #6); los **17 nuevos de avisos no se han ejecutado** (85 en total): no pueden correr en esta máquina y lo harán en la CI del próximo pull request |
+| Mobile `flutter test` | ✅ 85 en CI (pull request #7) |
 | Migración `V3` sobre la base local con datos | ✅ aplicada; las fechas existentes pasan a ser "del usuario" sin cambios |
 | Web contra el backend real | ✅ un pollo sin fecha aparece con "Caduca hacia el… (fecha estimada)" y su prioridad |
 | Web y móvil contra el backend real | ✅ con alimentos caducados, que vencen hoy, urgentes y próximos: el panel y las etiquetas muestran el nivel y los días correctos |
 
 ### Pendiente en esta fase
 
-- **Envío push** al móvil (Firebase Cloud Messaging). Necesita un proyecto de Firebase y su configuración,
-  que solo puede crear el propietario del proyecto; para iOS, además, un Mac y una cuenta de Apple Developer.
+- **Recepción de push en la app móvil**: integrar Firebase Messaging, pedir permiso, registrar el dispositivo
+  en el backend y abrir los avisos al tocar la notificación. Hasta entonces no hay ningún dispositivo
+  registrado y, por tanto, no se envía nada en la práctica. Solo se puede comprobar en un móvil Android real
+  (o un emulador con servicios de Google).
+- **Push en iOS**: necesita un Mac y una cuenta de Apple Developer.
 - **Avisos de recetas y de compras**: llegarán con sus fases (4 y 6); hoy no hay nada de lo que avisar.
 
 ### Known issues
@@ -97,8 +117,18 @@
   abren.
 - **No se puede pedir "sin fecha"** para un alimento que tiene regla: si el usuario no da fecha, se estima.
 - **El formulario no muestra la estimación antes de guardar**; se ve después, en la lista.
-- **Los avisos solo se ven al abrir la app o la web**: hasta que exista el envío push, nadie recibe nada con
-  la aplicación cerrada.
+- **Ningún push se ha entregado todavía a un dispositivo**: lo comprobado es que Firebase acepta las
+  credenciales y el formato de la petición. La entrega real queda sin verificar hasta que la app registre un
+  dispositivo.
+- **Los avisos siguen viéndose solo al abrir la app o la web** mientras la app móvil no reciba push.
+- **La clave de la cuenta de servicio de Firebase da acceso de administrador a todo el proyecto de Firebase**,
+  no solo a enviar mensajes. Está fuera del repositorio; antes de producción conviene una cuenta de servicio
+  con el permiso mínimo.
+- **El envío es síncrono**: los push de cada aviso se envían uno a uno dentro de la comprobación horaria. Con
+  muchos usuarios habrá que sacarlo a una cola.
+- **No hay reintentos**: un push que falla (red, Firebase caído) no se vuelve a intentar.
+- **El identificador de la app iOS sigue siendo `com.freezify.freezify`**; solo se ha cambiado Android.
+- **Con Docker la clave no llega al contenedor**: `docker-compose.yml` aún no la monta.
 - **La hora de los avisos es la de `Europe/Madrid`** para todos los usuarios, y así se indica en la pantalla
   de preferencias.
 - **La comprobación de avisos lee de una vez todos los alimentos próximos a caducar de todos los hogares**,
@@ -255,6 +285,5 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request de los avisos y confirmar en CI los 17 tests nuevos del móvil.
-2. Envío push (FCM): registro de dispositivos, envío desde el servidor y recepción en la app. Requiere el
-   proyecto de Firebase. Es lo último de la Fase 3.
+1. Abrir el pull request del envío push desde el servidor y confirmar la CI.
+2. Recepción de push en la app móvil, que cierra la Fase 3; necesita un móvil Android para comprobarla.

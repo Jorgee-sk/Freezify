@@ -16,3 +16,8 @@ apps/backend/target/
 apps/backend/.local/
 
 # Web and mobile have their own .gitignore next to the code.
+
+# Firebase: the app configuration and, above all, service account keys stay out of the repository.
+google-services.json
+GoogleService-Info.plist
+*firebase-adminsdk*.json
