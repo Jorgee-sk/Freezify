@@ -315,7 +315,8 @@ class _ItemCard extends StatelessWidget {
           children: [
             Text(itemSummary(l10n, item)),
             if (item.status.isActive) PriorityLabel(item: item),
-            if (item.status != ItemStatus.available)
+            // An expired item already says so through its priority label.
+            if (item.status != ItemStatus.available && item.status != ItemStatus.expired)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(

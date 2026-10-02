@@ -264,6 +264,19 @@ void main() {
       expect(find.textContaining('150'), findsNothing);
     });
 
+testWidgets('says "expired" once for food the daily sweep has marked as expired', (tester) async {
+      await openInventory(tester, backendWith([{...expired, 'status': 'EXPIRED'}]));
+
+      expect(find.textContaining('Caducado'), findsOneWidget);
+      // It is still in the house: it can be eaten at one's own risk, thrown away, or its date corrected.
+      await tester.tap(find.byTooltip('Acciones'));
+      await tester.pumpAndSettle();
+      expect(find.text('Consumir'), findsOneWidget);
+      expect(find.text('Tirar'), findsOneWidget);
+      expect(find.text('Editar'), findsOneWidget);
+      expect(find.text('Marcar como abierto'), findsNothing);
+    });
+
     testWidgets('answers "what should I eat first?" at the top of the inventory', (tester) async {
       await openInventory(
         tester,

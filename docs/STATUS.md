@@ -7,7 +7,7 @@
 | 0 — Product Definition | ✅ Completada |
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
-| 3 — Expiration Engine | 🟡 En curso: prioridad, "consume primero" y estimación de fechas hechos; faltan el scheduler y las notificaciones |
+| 3 — Expiration Engine | 🟡 En curso: prioridad, "consume primero", estimación de fechas y scheduler hechos; faltan las notificaciones |
 
 ## Fase 3 — Expiration Engine 🟡
 
@@ -35,21 +35,31 @@
     indicación. Una estimación nunca vuelve al servidor como si la hubiera escrito el usuario.
   - La estimación se recalcula al crear, editar (cambio de ubicación, de categoría…) y abrir.
 
+- **Scheduler de caducidad**:
+  - Un barrido diario, poco después de medianoche (`Europe/Madrid`), marca como caducado (`EXPIRED`) todo
+    alimento que sigue en casa y ha pasado de fecha. También se ejecuta al arrancar, por si la aplicación
+    estaba parada a medianoche. Ejecutarlo dos veces no cambia nada.
+  - Los miembros con el inventario abierto reciben el aviso en tiempo real.
+  - El estado también se ajusta en cada escritura: un alimento añadido ya caducado nace como caducado, y
+    corregir la fecha de uno caducado lo devuelve a disponible o abierto.
+  - Un alimento caducado sigue en casa: se puede consumir, tirar o editar. Web y móvil lo muestran con una
+    sola etiqueta "Caducado".
+
 ### Tests
 
 | Qué | Resultado |
 |---|---|
-| Backend `./mvnw verify` | ✅ 117 tests (7 de la función de estimación, 8 de estimación por la API, 14 de niveles y 5 de "consume primero") |
-| Web lint / test / build | ✅ sin avisos / 67 tests / correcto |
+| Barrido contra la base local real | ✅ al arrancar marcó como caducado el único alimento pasado de fecha y no tocó los demás |
+| Backend `./mvnw verify` | ✅ 122 tests (5 del barrido, 7 de la función de estimación, 8 de estimación por la API, 14 de niveles y 5 de "consume primero") |
+| Web lint / test / build | ✅ sin avisos / 68 tests / correcto |
 | Mobile `flutter analyze` y APK | ✅ sin avisos / generado |
-| Mobile `flutter test` | 🟡 64 pasaron en CI (pull request #4); los **3 nuevos de fechas estimadas no se han ejecutado** (67 en total): correrán en la CI del próximo pull request |
+| Mobile `flutter test` | 🟡 67 pasaron en CI (pull request #5); **1 nuevo sin ejecutar** (68 en total): correrá en la CI del próximo pull request |
 | Migración `V3` sobre la base local con datos | ✅ aplicada; las fechas existentes pasan a ser "del usuario" sin cambios |
 | Web contra el backend real | ✅ un pollo sin fecha aparece con "Caduca hacia el… (fecha estimada)" y su prioridad |
 | Web y móvil contra el backend real | ✅ con alimentos caducados, que vencen hoy, urgentes y próximos: el panel y las etiquetas muestran el nivel y los días correctos |
 
 ### Pendiente en esta fase
 
-- **Scheduler diario**: marcar como caducado lo que ha pasado de fecha y preparar los avisos.
 - **Notificaciones** in-app y push, con preferencias y sin spam.
 
 ### Known issues
@@ -61,8 +71,11 @@
   abren.
 - **No se puede pedir "sin fecha"** para un alimento que tiene regla: si el usuario no da fecha, se estima.
 - **El formulario no muestra la estimación antes de guardar**; se ve después, en la lista.
-- **El estado `EXPIRED` aún no se asigna**: un alimento pasado de fecha se muestra como "Caducado" por su
-  prioridad, pero su estado sigue siendo "disponible" hasta que exista el scheduler.
+- **El barrido es global y de una sola instancia**: usa una única zona horaria para todos los hogares y no
+  tiene bloqueo entre instancias. Con varias instancias se ejecutaría en todas; es inofensivo, pero cada una
+  enviaría su aviso en tiempo real.
+- **Si el barrido falla, solo queda constancia en el log**; no hay alerta ni reintento hasta el día siguiente
+  o el próximo arranque.
 - **"Hoy" es el día en `Europe/Madrid`** para todos los hogares.
 
 ## Fase 2 — Inventory ✅
@@ -204,6 +217,5 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request de la estimación de fechas y confirmar en CI los tests nuevos del móvil.
-2. Scheduler diario: marcar como caducado lo que ha pasado de fecha.
-3. Notificaciones in-app y push, con preferencias.
+1. Abrir el pull request del scheduler y confirmar la CI.
+2. Notificaciones in-app y push, con preferencias y sin spam: es lo último de la Fase 3.

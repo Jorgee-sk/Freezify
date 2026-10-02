@@ -2,12 +2,10 @@ package com.freezify.auth.internal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-@Configuration
-@EnableScheduling
+@Component
 class RefreshTokenCleanupJob {
 
     private static final Logger log = LoggerFactory.getLogger(RefreshTokenCleanupJob.class);

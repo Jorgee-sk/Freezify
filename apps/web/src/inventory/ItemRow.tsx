@@ -83,7 +83,8 @@ export function ItemRow({ householdId, item, onEdit }: Props) {
         </div>
         <div className="item-badges">
           {active && <PriorityBadge item={item} />}
-          {item.status !== 'AVAILABLE' && (
+          {/* An expired item already says so through its priority badge. */}
+          {item.status !== 'AVAILABLE' && item.status !== 'EXPIRED' && (
             <span className={`badge status-${item.status.toLowerCase()}`}>{t(`inventory.status.${item.status}`)}</span>
           )}
         </div>

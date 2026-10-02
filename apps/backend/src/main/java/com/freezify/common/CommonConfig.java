@@ -8,8 +8,10 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
+@EnableScheduling
 class CommonConfig {
 
     private static final String BEARER = "bearer";

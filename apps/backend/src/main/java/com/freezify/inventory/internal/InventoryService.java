@@ -18,6 +18,7 @@ import com.freezify.inventory.ItemStatus;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +35,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,21 @@ interface FoodItemRepository extends JpaRepository<FoodItemEntity, UUID>, JpaSpe
 
     List<FoodItemEntity> findByHouseholdIdAndStatusInAndExpirationDateLessThanEqualOrderByExpirationDateAscSearchNameAsc(
             UUID householdId, Collection<ItemStatus> statuses, LocalDate until, Limit limit);
+
+    @Query("select distinct i.householdId from FoodItemEntity i"
+            + " where i.status in :statuses and i.expirationDate < :today")
+    List<UUID> householdsWithItemsPastTheirDate(
+            @Param("statuses") Collection<ItemStatus> statuses, @Param("today") LocalDate today);
+
+    /** "versioned" bumps the version, so a request that read the item before the sweep cannot overwrite it. */
+    @Modifying
+    @Query("update versioned FoodItemEntity i set i.status = :expired, i.updatedAt = :now"
+            + " where i.status in :statuses and i.expirationDate < :today")
+    int markPastTheirDate(
+            @Param("statuses") Collection<ItemStatus> statuses,
+            @Param("today") LocalDate today,
+            @Param("expired") ItemStatus expired,
+            @Param("now") Instant now);
 
     /** One entry per item still in the house; {@code null} for items without a date. */
     @Query("select i.expirationDate from FoodItemEntity i where i.householdId = :householdId and i.status in :statuses")
@@ -245,6 +262,25 @@ public class InventoryService {
         return item.toView(today.date());
     }
 
+    /**
+     * Marks as expired every item, of any household, whose date has passed. Called by the daily sweep, not by
+     * users; members who have the inventory open are told so that their screens refresh.
+     *
+     * @return how many items changed
+     */
+    @Transactional
+    public int markExpired() {
+        LocalDate day = today.date();
+        Collection<ItemStatus> notYetExpired = EnumSet.of(ItemStatus.AVAILABLE, ItemStatus.OPENED);
+        List<UUID> households = items.householdsWithItemsPastTheirDate(notYetExpired, day);
+        if (households.isEmpty()) {
+            return 0;
+        }
+        int changed = items.markPastTheirDate(notYetExpired, day, ItemStatus.EXPIRED, clock.instant());
+        households.forEach(householdId -> events.publishEvent(new InventoryChanged(householdId, null)));
+        return changed;
+    }
+
     private FoodItemEntity takeOut(
             UUID householdId,
             UUID userId,
@@ -284,7 +320,7 @@ public class InventoryService {
      * opening the food shortens its life. Called whenever something the estimate depends on may have changed.
      */
     private FoodItemEntity withExpiration(FoodItemEntity item) {
-        item.expiresOn(estimator.resolve(item.expirationInput()).orElse(null));
+        item.expiresOn(estimator.resolve(item.expirationInput()).orElse(null), today.date());
         return item;
     }
 
