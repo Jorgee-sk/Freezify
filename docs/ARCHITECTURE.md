@@ -131,6 +131,8 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D30 | El texto del push lo redacta **el servidor**, en el idioma guardado del usuario | Con la app cerrada no hay cliente que lo redacte. Dentro de la app siguen redactando los clientes (D25) |
 | D31 | El push se envía **tras el commit** del aviso y nunca lo deshace | El aviso es la fuente de verdad; el push es solo un medio de entrega |
 | D32 | La clave de Firebase se indica por **ruta de fichero** (`FREEZIFY_FCM_CREDENTIALS_FILE`); sin ella el push queda desactivado | El secreto no vive en el repositorio ni en la imagen; desarrollo y CI funcionan sin Firebase |
+| D33 | Al cerrar sesión la app **invalida su identificador de push** además de avisar al backend | Funciona también cuando la sesión caduca sola y ya no se puede llamar al backend; el servidor olvida el dispositivo cuando Firebase lo da por desaparecido |
+| D34 | El plugin de Google Services se aplica **solo si existe** `google-services.json` | El fichero no está en el repositorio (público); quien lo clone puede compilar la app, sin push |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad

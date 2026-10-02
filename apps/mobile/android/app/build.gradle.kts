@@ -4,6 +4,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Push notifications need the Firebase configuration of the project, which is not in the repository.
+// Without the file the app builds and works the same, only without pushes.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.freezify.app"
     compileSdk = flutter.compileSdkVersion

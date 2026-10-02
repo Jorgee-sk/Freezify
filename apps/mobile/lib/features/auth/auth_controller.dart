@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/providers.dart';
+import '../notifications/push_controller.dart';
 
 class User {
   const User({required this.id, required this.email, required this.displayName, required this.locale});
@@ -63,6 +64,8 @@ class AuthController extends AsyncNotifier<User?> {
   }
 
   Future<void> logout() async {
+    // While there is still a session to say it with: this phone stops receiving the pushes of this user.
+    await ref.read(pushControllerProvider).unregister();
     final refreshToken = await _api.clearSession();
     state = const AsyncData(null);
     if (refreshToken == null) return;

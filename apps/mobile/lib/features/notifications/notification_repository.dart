@@ -27,6 +27,12 @@ class NotificationRepository {
 
   Future<void> markAllRead() => _api.post('/notifications/read-all');
 
+  /// Only Android is configured in the Firebase project, so that is the only platform that registers.
+  Future<void> registerDevice(String token) =>
+      _api.put('/notifications/devices', body: {'token': token, 'platform': 'ANDROID'});
+
+  Future<void> unregisterDevice(String token) => _api.post('/notifications/devices/unregister', body: {'token': token});
+
   Future<NotificationPreferences> preferences() async =>
       NotificationPreferences.fromJson(await _api.get('/notifications/preferences') as Map<String, dynamic>);
 
