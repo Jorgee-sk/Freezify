@@ -1,12 +1,14 @@
 package com.freezify.inventory.internal;
 
+import com.freezify.expiration.ExpirationEstimator.Expiration;
+import com.freezify.expiration.ExpirationEstimator.Input;
 import com.freezify.expiration.ExpirationPriority;
 import com.freezify.food.FoodCatalog;
 import com.freezify.food.FoodCategory;
 import com.freezify.food.Quantity;
 import com.freezify.food.StorageLocation;
 import com.freezify.food.Unit;
-import com.freezify.inventory.ExpirationSource;
+import com.freezify.expiration.ExpirationSource;
 import com.freezify.inventory.ItemStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -74,6 +76,10 @@ class FoodItemEntity {
     @Column(name = "expiration_source")
     private @Nullable ExpirationSource expirationSource;
 
+    /** What the user typed. {@link #expirationDate} is the date that applies, which may be an estimate. */
+    @Column(name = "user_expiration_date")
+    private @Nullable LocalDate userExpirationDate;
+
     @Column(name = "opened_date")
     private @Nullable LocalDate openedDate;
 
@@ -119,9 +125,7 @@ class FoodItemEntity {
         this.unit = data.quantity().unit();
         this.storageLocation = data.storageLocation();
         this.purchaseDate = data.purchaseDate();
-        this.expirationDate = data.expirationDate();
-        // Phase 2 only knows dates typed by the user; estimates arrive with the expiration engine.
-        this.expirationSource = data.expirationDate() == null ? null : ExpirationSource.USER;
+        this.userExpirationDate = data.expirationDate();
         this.openedDate = data.openedDate();
         this.barcode = data.barcode();
         this.brand = data.brand();
@@ -132,6 +136,17 @@ class FoodItemEntity {
         } else if (status == ItemStatus.OPENED && openedDate == null) {
             status = ItemStatus.AVAILABLE;
         }
+    }
+
+    /** What the expiration estimator needs to know about this item. */
+    Input expirationInput() {
+        return new Input(foodId, category, storageLocation, purchaseDate, openedDate, userExpirationDate);
+    }
+
+    /** Sets the date that applies; {@code null} when there is neither a user date nor a rule to estimate one. */
+    void expiresOn(@Nullable Expiration expiration) {
+        this.expirationDate = expiration == null ? null : expiration.date();
+        this.expirationSource = expiration == null ? null : expiration.source();
     }
 
     void open(LocalDate today) {
@@ -211,6 +226,7 @@ class FoodItemEntity {
                 purchaseDate,
                 expirationDate,
                 expirationSource,
+                userExpirationDate,
                 daysLeft,
                 daysLeft == null ? null : ExpirationPriority.ofDaysLeft(daysLeft),
                 openedDate,

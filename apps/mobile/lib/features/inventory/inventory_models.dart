@@ -211,6 +211,7 @@ class InventoryItem {
     required this.purchaseDate,
     required this.expirationDate,
     required this.expirationSource,
+    required this.userExpirationDate,
     required this.daysUntilExpiration,
     required this.priority,
     required this.openedDate,
@@ -234,6 +235,7 @@ class InventoryItem {
       final String source => ExpirationSource.parse(source),
       _ => null,
     },
+    userExpirationDate: json['userExpirationDate'] as String?,
     daysUntilExpiration: json['daysUntilExpiration'] as int?,
     priority: switch (json['priority']) {
       final String priority => ExpirationPriority.parse(priority),
@@ -258,6 +260,9 @@ class InventoryItem {
   final String purchaseDate;
   final String? expirationDate;
   final ExpirationSource? expirationSource;
+
+  /// The date the user gave. [expirationDate] is the one that applies and may be an earlier estimate.
+  final String? userExpirationDate;
 
   /// Negative when the date has passed; `null` without a date.
   final int? daysUntilExpiration;

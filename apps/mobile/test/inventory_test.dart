@@ -29,6 +29,7 @@ Map<String, Object?> _item(String id, String name, [Map<String, Object?> overrid
   'purchaseDate': '2026-10-01',
   'expirationDate': null,
   'expirationSource': null,
+  'userExpirationDate': null,
   'openedDate': null,
   'barcode': null,
   'brand': null,
@@ -41,6 +42,7 @@ final _pollo = _item('i1', 'Pollo', {
   'quantity': {'amount': 1, 'unit': 'KILOGRAM'},
   'expirationDate': '2026-10-03',
   'expirationSource': 'USER',
+  'userExpirationDate': '2026-10-03',
 });
 
 /// What the consume-first endpoint answers for [items], counted by their priority.
@@ -518,6 +520,55 @@ void main() {
       expect(body['purchaseDate'], '2026-10-01');
       expect(body['openedDate'], '2026-10-01');
       expect(body['barcode'], '8412345678905');
+    });
+  });
+
+  group('estimated dates', () {
+    // Opened milk: the carton says December, but once opened it is estimated to last until the 7th.
+    final openedMilk = _item('m1', 'Leche', {
+      'status': 'OPENED',
+      'openedDate': '2026-10-04',
+      'expirationDate': '2026-10-07',
+      'expirationSource': 'ESTIMATED',
+      'userExpirationDate': '2026-12-24',
+    });
+    final chicken = _item('c1', 'Pollo', {'expirationDate': '2026-10-03', 'expirationSource': 'ESTIMATED'});
+
+    testWidgets('edits the date the user gave, not the estimate that replaced it', (tester) async {
+      const update = 'PUT /households/h1/inventory/m1';
+      final backend = backendWith([openedMilk], {update: (_) => FakeResponse.ok(openedMilk)});
+      await openInventory(tester, backend);
+      expect(find.textContaining('Caduca hacia el 07/10/2026 (fecha estimada)'), findsOneWidget);
+
+      await tester.tap(find.text('Leche'));
+      await tester.pumpAndSettle();
+      expect(find.text('24/12/2026'), findsOneWidget);
+      await save(tester);
+
+      expect((backend.last(update).body! as Map<String, dynamic>)['expirationDate'], '2026-12-24');
+    });
+
+    testWidgets('never sends an estimate back as if the user had typed it', (tester) async {
+      const update = 'PUT /households/h1/inventory/c1';
+      final backend = backendWith([chicken], {update: (_) => FakeResponse.ok(chicken)});
+      await openInventory(tester, backend);
+
+      await tester.tap(find.text('Pollo'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Ahora mismo estimamos el 03/10/2026'), findsOneWidget);
+      await save(tester);
+
+      final body = backend.last(update).body! as Map<String, dynamic>;
+      expect(body.containsKey('expirationDate'), isTrue);
+      expect(body['expirationDate'], isNull);
+    });
+
+    testWidgets('tells the user that an empty date will be estimated', (tester) async {
+      await openInventory(tester, backendWith([]));
+
+      await openForm(tester);
+
+      expect(find.textContaining('Si la dejas vacía, la estimamos'), findsOneWidget);
     });
   });
 

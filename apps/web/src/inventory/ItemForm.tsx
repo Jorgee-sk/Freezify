@@ -7,7 +7,7 @@ import type { Food, FoodCategory, InventoryItem, ItemInput, RecentFood, StorageL
 import { queryKeys } from '../api/queryKeys'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { currentLocale } from '../i18n'
-import { parseAmount, todayIso } from './format'
+import { formatDay, parseAmount, todayIso } from './format'
 import { useDebounced } from './useDebounced'
 
 interface Props {
@@ -29,7 +29,8 @@ export function ItemForm({ householdId, item, onDone }: Props) {
   const [amount, setAmount] = useState(item ? String(item.quantity.amount) : '1')
   const [unit, setUnit] = useState<Unit>(item?.quantity.unit ?? 'UNIT')
   const [location, setLocation] = useState<StorageLocation>(item?.storageLocation ?? 'REFRIGERATOR')
-  const [expirationDate, setExpirationDate] = useState(item?.expirationDate ?? '')
+  // Only the date the user gave is editable; an estimate is shown as a hint and recalculated on save.
+  const [expirationDate, setExpirationDate] = useState(item?.userExpirationDate ?? '')
   const [purchaseDate, setPurchaseDate] = useState(item?.purchaseDate ?? todayIso())
   const [brand, setBrand] = useState(item?.brand ?? '')
   const [price, setPrice] = useState(item?.estimatedPrice == null ? '' : String(item.estimatedPrice))
@@ -194,7 +195,17 @@ export function ItemForm({ householdId, item, onDone }: Props) {
           <span>
             {t('inventory.expirationDate')} <span className="muted">({t('inventory.optional')})</span>
           </span>
-          <input type="date" value={expirationDate} onChange={(event) => setExpirationDate(event.target.value)} />
+          <input
+            type="date"
+            aria-describedby="expiration-help"
+            value={expirationDate}
+            onChange={(event) => setExpirationDate(event.target.value)}
+          />
+          <small id="expiration-help" className="muted">
+            {item?.expirationSource === 'ESTIMATED' && item.expirationDate
+              ? t('inventory.currentEstimate', { date: formatDay(item.expirationDate) })
+              : t('inventory.estimateHelp')}
+          </small>
         </label>
 
         <details open={Boolean(item)}>

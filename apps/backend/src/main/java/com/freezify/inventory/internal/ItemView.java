@@ -4,7 +4,7 @@ import com.freezify.expiration.ExpirationPriority;
 import com.freezify.food.FoodCategory;
 import com.freezify.food.StorageLocation;
 import com.freezify.food.Unit;
-import com.freezify.inventory.ExpirationSource;
+import com.freezify.expiration.ExpirationSource;
 import com.freezify.inventory.ItemStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -24,6 +24,8 @@ public record ItemView(
         LocalDate purchaseDate,
         @Nullable LocalDate expirationDate,
         @Nullable ExpirationSource expirationSource,
+        /** The date the user gave, which may be later than {@code expirationDate} once the food is opened. */
+        @Nullable LocalDate userExpirationDate,
         /** Negative when the date has passed; {@code null} without a date. */
         @Nullable Long daysUntilExpiration,
         @Nullable ExpirationPriority priority,

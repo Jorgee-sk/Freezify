@@ -154,5 +154,7 @@
   "daysAgo": "{count, plural, =1{hace {count} día} other{hace {count} días}}",
   "consumeFirstTitle": "Consume primero",
   "consumeFirstCount": "{count, plural, =1{{count} alimento que no puede esperar} other{{count} alimentos que no pueden esperar}}",
-  "andMore": "y {count} más"
+  "andMore": "y {count} más",
+  "estimateHelp": "Si la dejas vacía, la estimamos según el alimento y dónde lo guardas.",
+  "currentEstimate": "Ahora mismo estimamos el {date}. Indica la fecha del envase si la sabes."
 }

@@ -1021,6 +1021,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'and {count} more'**
   String andMore(int count);
+
+  /// No description provided for @estimateHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave it empty and we will estimate it from the food and where you keep it.'**
+  String get estimateHelp;
+
+  /// No description provided for @currentEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Right now we estimate {date}. Enter the date on the package if you know it.'**
+  String currentEstimate(String date);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

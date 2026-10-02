@@ -19,6 +19,7 @@ function item(overrides: Partial<InventoryItem> & Pick<InventoryItem, 'id' | 'na
     purchaseDate: '2026-10-01',
     expirationDate: null,
     expirationSource: null,
+    userExpirationDate: null,
     daysUntilExpiration: null,
     priority: null,
     openedDate: null,
@@ -51,6 +52,7 @@ const POLLO = item({
   quantity: { amount: 1, unit: 'KILOGRAM' },
   expirationDate: '2026-10-03',
   expirationSource: 'USER',
+  userExpirationDate: '2026-10-03',
 })
 
 /** Routes every inventory test needs; `extra` adds or overrides. */
@@ -440,6 +442,60 @@ describe('adding and editing food', () => {
       openedDate: '2026-10-01',
       barcode: '8412345678905',
     })
+  })
+})
+
+describe('estimated dates', () => {
+  // Opened milk: the carton says December, but once opened it is estimated to last until the 7th.
+  const openedMilk = item({
+    id: 'm1',
+    name: 'Leche',
+    status: 'OPENED',
+    openedDate: '2026-10-04',
+    expirationDate: '2026-10-07',
+    expirationSource: 'ESTIMATED',
+    userExpirationDate: '2026-12-24',
+  })
+  const chicken = item({ id: 'c1', name: 'Pollo', expirationDate: '2026-10-03', expirationSource: 'ESTIMATED' })
+
+  it('edits the date the user gave, not the estimate that replaced it', async () => {
+    const api = server([openedMilk], { 'PUT /households/h1/inventory/m1': () => ({ body: openedMilk }) })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click((await findRow('Leche')).getByRole('button', { name: 'Editar' }))
+    expect(form().getByLabelText(/Fecha de caducidad/)).toHaveValue('2026-12-24')
+    expect(form().getByText(/Ahora mismo estimamos el 07\/10\/2026/)).toBeInTheDocument()
+
+    await user.click(form().getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(api.count('PUT /households/h1/inventory/m1')).toBe(1))
+    expect(api.last('PUT /households/h1/inventory/m1')!.body).toMatchObject({ expirationDate: '2026-12-24' })
+  })
+
+  it('never sends an estimate back as if the user had typed it', async () => {
+    const api = server([chicken], { 'PUT /households/h1/inventory/c1': () => ({ body: chicken }) })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click((await findRow('Pollo')).getByRole('button', { name: 'Editar' }))
+    expect(form().getByLabelText(/Fecha de caducidad/)).toHaveValue('')
+    expect(form().getByText(/Ahora mismo estimamos el 03\/10\/2026/)).toBeInTheDocument()
+
+    await user.click(form().getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() => expect(api.count('PUT /households/h1/inventory/c1')).toBe(1))
+    expect(api.last('PUT /households/h1/inventory/c1')!.body).toMatchObject({ expirationDate: null })
+  })
+
+  it('tells the user that an empty date will be estimated', async () => {
+    server([])
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir alimento' }))
+
+    expect(form().getByText(/Si la dejas vacía, la estimamos/)).toBeInTheDocument()
   })
 })
 

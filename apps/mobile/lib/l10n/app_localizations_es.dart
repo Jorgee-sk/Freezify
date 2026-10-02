@@ -524,4 +524,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String andMore(int count) {
     return 'y $count más';
   }
+
+  @override
+  String get estimateHelp => 'Si la dejas vacía, la estimamos según el alimento y dónde lo guardas.';
+
+  @override
+  String currentEstimate(String date) {
+    return 'Ahora mismo estimamos el $date. Indica la fecha del envase si la sabes.';
+  }
 }
