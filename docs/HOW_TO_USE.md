@@ -135,7 +135,17 @@ sin entregar ningún mensaje.
 ni la envíes por correo o chat. Si se filtra, bórrala en la consola de Firebase (Configuración del proyecto →
 Cuentas de servicio → Administrar permisos de cuentas de servicio) y genera otra.
 
-Hoy ningún dispositivo se registra todavía: la app móvil aún no recibe push.
+Para probarlo en un móvil Android (todavía sin hacer):
+
+1. Comprueba que `apps/mobile/android/app/google-services.json` existe; sin él la app compila sin push.
+2. Arranca el backend con la clave, como arriba, accesible desde el móvil (misma red wifi).
+3. Instala la app apuntando a ese backend:
+   `flutter run --dart-define=FREEZIFY_API_URL=http://<IP-de-tu-ordenador>:8080/api/v1`
+4. Inicia sesión y acepta el permiso de notificaciones. En la tabla `device_tokens` debe aparecer una fila.
+5. Añade un alimento que caduque mañana y reinicia el backend: al arrancar crea el aviso y envía el push.
+   Solo hay un aviso por hogar y día, así que para repetir la prueba usa otro hogar u otro usuario.
+
+La web no recibe push.
 
 ### 2.5 Probar la API a mano
 
@@ -395,7 +405,7 @@ Estos puntos ya están identificados en `docs/STATUS.md` y bloquean un lanzamien
 | URL de la API | Se fija al compilar: `--dart-define=FREEZIFY_API_URL=https://api.tudominio.com/api/v1` |
 | Android | Firmar la app con una clave propia (que **no** va al repositorio) y subirla a Google Play; empezar por la pista de pruebas internas |
 | iOS | Requiere un Mac y una cuenta de Apple Developer; hoy no se puede ni compilar desde la máquina de desarrollo |
-| Notificaciones push | El servidor ya las envía (sección 2.4); falta que la app las reciba y, para iOS, un certificado de APNs. En producción la clave se monta como fichero y se indica con `FREEZIFY_FCM_CREDENTIALS_FILE` |
+| Notificaciones push | Servidor y app Android listos (sección 2.4), sin probar aún en un dispositivo; para iOS falta un certificado de APNs. En producción la clave se monta como fichero y se indica con `FREEZIFY_FCM_CREDENTIALS_FILE` |
 
 ### 6.5 Orden propuesto
 

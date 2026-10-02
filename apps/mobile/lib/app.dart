@@ -11,6 +11,7 @@ import 'features/households/households_screen.dart';
 import 'features/inventory/inventory_screen.dart';
 import 'features/notifications/notification_preferences_screen.dart';
 import 'features/notifications/notifications_screen.dart';
+import 'features/notifications/push_controller.dart';
 import 'l10n/app_localizations.dart';
 
 const _seedColor = Color(0xFF1F9D63);
@@ -20,7 +21,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.listen(authControllerProvider, (_, _) => authChanges.value++);
   ref.onDispose(authChanges.dispose);
 
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: '/',
     refreshListenable: authChanges,
     redirect: (context, state) {
@@ -60,6 +61,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  // Tapping a push notification leads to the notifications, whatever was on screen.
+  final opens = ref.watch(pushControllerProvider).opens.listen((_) => router.go('/notifications'));
+  ref.onDispose(opens.cancel);
+  return router;
 });
 
 class FreezifyApp extends ConsumerWidget {
@@ -94,11 +99,7 @@ ThemeData _theme(Brightness brightness) {
         side: BorderSide(color: scheme.outlineVariant),
       ),
     ),
-    inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-    ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-    ),
+    inputDecorationTheme: InputDecorationTheme(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+    filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48))),
   );
 }

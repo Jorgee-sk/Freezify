@@ -7,7 +7,7 @@
 | 0 — Product Definition | ✅ Completada |
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
-| 3 — Expiration Engine | 🟡 En curso: el servidor ya envía push; falta que la app móvil los reciba (sin probar en un dispositivo) |
+| 3 — Expiration Engine | 🟡 Código completo; **falta comprobar en un móvil Android que el push llega**, y hasta entonces no se da por cerrada |
 
 ## Fase 3 — Expiration Engine 🟡
 
@@ -78,10 +78,26 @@
   - Sin la clave configurada (`FREEZIFY_FCM_CREDENTIALS_FILE`) no se envía nada y todo lo demás funciona.
     Una clave configurada pero ilegible impide arrancar.
 
+- **Recepción de push en la app móvil** (Android):
+  - Al iniciar sesión la app pide permiso de notificaciones, obtiene su identificador en Firebase y registra
+    el teléfono en el backend; vuelve a registrarlo si Firebase cambia el identificador.
+  - Tocar una notificación abre la pantalla de avisos. Si llega con la app en pantalla, se actualiza la
+    campana (Android no muestra la notificación en ese caso).
+  - Al cerrar sesión la app retira el teléfono del backend y además invalida su identificador. Si la sesión
+    caduca sola, lo invalida igualmente: un teléfono no sigue recibiendo los avisos de quien lo usó antes.
+  - Si el teléfono no puede recibir push (sin permiso, sin configuración de Firebase, otra plataforma), la
+    app funciona igual, sin ellos.
+  - El proyecto Android aplica la configuración de Firebase solo si `google-services.json` está presente; sin
+    el fichero la app compila y funciona sin push.
+
 ### Tests
 
 | Qué | Resultado |
 |---|---|
+| APK debug con Firebase Messaging y la configuración real | ✅ generado; la configuración de Firebase llega a la compilación |
+| APK debug **sin** `google-services.json` | ✅ generado |
+| Código de la app móvil contra el backend real (compilado para web, donde no hay push) | ✅ arranca con sesión, cierra sesión e inicia sesión de nuevo con el código nuevo |
+| **Push en un dispositivo Android** | ❌ **sin probar**: no hay dispositivo ni emulador. No se ha comprobado el permiso, el registro del teléfono, la llegada de la notificación ni la apertura al tocarla |
 | Envío push contra Firebase real (`FcmLiveTests`, solo se ejecuta con la clave configurada) | ✅ Google emite el token de acceso y Firebase acepta la petición para el proyecto; solo rechaza el dispositivo inventado (`400 INVALID_ARGUMENT`). No se ha entregado ningún mensaje |
 | Backend arrancado con la clave real | ✅ carga la clave ("sent through Firebase project freezify-c50ea") y aplica la migración `V5` sobre la base local |
 | APK debug con el identificador `com.freezify.app` | ✅ generado |
@@ -94,17 +110,16 @@
 | Backend `./mvnw verify` | ✅ 165 tests (23 de push: 9 de registro y despacho, 9 del cliente de Firebase contra un servidor local, 5 de redacción; 20 de avisos, 5 del barrido, 7 de la función de estimación, 8 de estimación por la API, 14 de niveles y 5 de "consume primero") |
 | Web lint / test / build | ✅ sin avisos / 85 tests (17 de avisos) / correcto |
 | Mobile `flutter analyze` y APK | ✅ sin avisos / generado |
-| Mobile `flutter test` | ✅ 85 en CI (pull request #7) |
+| Mobile `flutter test` | ❌ dos ejecuciones en CI (pull request #9). Primera: 5 fallos de 96; cerrar sesión lanzaba un error de dependencia circular entre el controlador de sesión y el de push, que solo salta en modo de depuración (corregido y comprobado en una compilación de depuración en el navegador). Segunda: 3 fallos, los tres tests en los que la app descarta el identificador de push; el código esperaba a cancelar unas suscripciones y esa espera no termina bajo el reloj simulado de los tests (reproducido en la máquina de Dart y corregido; en un dispositivo no afectaba). Pendiente de volver a ejecutar |
 | Migración `V3` sobre la base local con datos | ✅ aplicada; las fechas existentes pasan a ser "del usuario" sin cambios |
 | Web contra el backend real | ✅ un pollo sin fecha aparece con "Caduca hacia el… (fecha estimada)" y su prioridad |
 | Web y móvil contra el backend real | ✅ con alimentos caducados, que vencen hoy, urgentes y próximos: el panel y las etiquetas muestran el nivel y los días correctos |
 
 ### Pendiente en esta fase
 
-- **Recepción de push en la app móvil**: integrar Firebase Messaging, pedir permiso, registrar el dispositivo
-  en el backend y abrir los avisos al tocar la notificación. Hasta entonces no hay ningún dispositivo
-  registrado y, por tanto, no se envía nada en la práctica. Solo se puede comprobar en un móvil Android real
-  (o un emulador con servicios de Google).
+- **Comprobar el push de extremo a extremo en un móvil Android** (o un emulador con servicios de Google):
+  instalar la app, iniciar sesión, aceptar el permiso y ver llegar una notificación. Es lo único que falta
+  para cerrar la fase.
 - **Push en iOS**: necesita un Mac y una cuenta de Apple Developer.
 - **Avisos de recetas y de compras**: llegarán con sus fases (4 y 6); hoy no hay nada de lo que avisar.
 
@@ -118,9 +133,13 @@
 - **No se puede pedir "sin fecha"** para un alimento que tiene regla: si el usuario no da fecha, se estima.
 - **El formulario no muestra la estimación antes de guardar**; se ve después, en la lista.
 - **Ningún push se ha entregado todavía a un dispositivo**: lo comprobado es que Firebase acepta las
-  credenciales y el formato de la petición. La entrega real queda sin verificar hasta que la app registre un
-  dispositivo.
-- **Los avisos siguen viéndose solo al abrir la app o la web** mientras la app móvil no reciba push.
+  credenciales y el formato de la petición, y que la app compila con Firebase. El código que habla con
+  Firebase en el teléfono (`FirebasePushMessaging`) no se ha ejecutado nunca.
+- **El permiso de notificaciones se pide nada más iniciar sesión**, sin explicación previa.
+- **La web no recibe push**: solo avisos dentro de la aplicación.
+- **El icono de la notificación es el de la app por defecto**; no hay icono ni canal de notificación propios.
+- **Al cerrar sesión la app hace dos peticiones que acaban en 401** (hogares y avisos sin leer se vuelven a
+  pedir ya sin sesión). No tiene efecto visible; el de hogares ya ocurría antes.
 - **La clave de la cuenta de servicio de Firebase da acceso de administrador a todo el proyecto de Firebase**,
   no solo a enviar mensajes. Está fuera del repositorio; antes de producción conviene una cuenta de servicio
   con el permiso mínimo.
@@ -285,5 +304,6 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request del envío push desde el servidor y confirmar la CI.
-2. Recepción de push en la app móvil, que cierra la Fase 3; necesita un móvil Android para comprobarla.
+1. Subir la corrección al pull request #9 y dejar en verde los tests del móvil.
+2. Probar el push en un móvil Android; con eso se cierra la Fase 3.
+3. Fase 4 — Recipes.
