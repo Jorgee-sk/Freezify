@@ -1,6 +1,7 @@
 import { ApiError, openStream } from '../api/client'
 
-export type HouseholdEvent = 'inventory-changed'
+/** `reconnected` is not sent by the server: it says that anything may have been missed while disconnected. */
+export type HouseholdEvent = 'inventory-changed' | 'meal-plan-changed' | 'reconnected'
 
 interface Options {
   /** First wait before reconnecting; doubles after every failed attempt. */
@@ -14,7 +15,7 @@ interface Options {
  * Listens to what happens in a household and calls `onEvent` for each event, reconnecting for as long as the
  * subscription lives. Events carry no data: the listener is expected to fetch again.
  *
- * After a reconnection `onEvent` is called once for every kind of event, because anything may have been missed
+ * After a reconnection `onEvent` is called once with `reconnected`, because anything may have been missed
  * while disconnected.
  *
  * @returns a function that ends the subscription
@@ -33,11 +34,11 @@ export function subscribeToHousehold(
     while (!signal.aborted) {
       try {
         const response = await openStream(`/households/${householdId}/events`, signal)
-        if (connectedBefore) onEvent('inventory-changed')
+        if (connectedBefore) onEvent('reconnected')
         connectedBefore = true
         delay = retryDelayMs
         await readEvents(response, signal, idleTimeoutMs, (name) => {
-          if (name === 'inventory-changed') onEvent(name)
+          if (name === 'inventory-changed' || name === 'meal-plan-changed') onEvent(name)
         })
       } catch (error) {
         // No longer a member, or the household is gone: asking again will not change the answer.

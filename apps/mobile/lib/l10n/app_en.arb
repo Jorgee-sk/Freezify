@@ -622,5 +622,144 @@
   "traitNuts": "nuts",
   "traitSoy": "soy",
   "traitSesame": "sesame",
-  "traitAlcohol": "alcohol"
+  "traitAlcohol": "alcohol",
+  "planTitle": "Plan for the week",
+  "planPreviousWeek": "Previous week",
+  "planNextWeek": "Next week",
+  "planThisWeek": "This week",
+  "planWeekRange": "{from} – {to}",
+  "@planWeekRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "planToday": "Today",
+  "planPastWeek": "This week is over.",
+  "planLunch": "Lunch",
+  "planDinner": "Dinner",
+  "planEmpty": "Nothing planned",
+  "planChoose": "Choose a recipe",
+  "planChange": "Change",
+  "planMove": "Move",
+  "planRemove": "Remove",
+  "planMealActions": "Meal options",
+  "planSuggested": "Suggested",
+  "planGenerate": "Fill the gaps",
+  "planRegenerate": "Suggest again",
+  "planGenerateHelp": "Fills the empty meals, from today on, using first what expires first. What you chose yourself is left alone.",
+  "planRegenerateConfirm": "The meals suggested automatically for this week will be replaced. The ones you chose are kept.",
+  "planFilled": "{count, plural, =1{{count} meal has been planned.} other{{count} meals have been planned.}}",
+  "@planFilled": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "planNothingFilled": "No new meal has been planned.",
+  "planUnfilled": "{count, plural, =1{{count} meal stays empty: no more recipes fit without too much repetition.} other{{count} meals stay empty: no more recipes fit without too much repetition.}}",
+  "@planUnfilled": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "planNoteUses": "Uses {food}, due to expire on {date}.",
+  "@planNoteUses": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "planNoteUsesEstimated": "Uses {food}, estimated to expire on {date}.",
+  "@planNoteUsesEstimated": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "planNoteHaveAll": "Every ingredient will be at home.",
+  "planNoteMissing": "To buy: {foods}.",
+  "@planNoteMissing": {
+    "placeholders": {
+      "foods": {
+        "type": "String"
+      }
+    }
+  },
+  "planNotePartial": "There will be less {food} than the recipe asks for.",
+  "@planNotePartial": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      }
+    }
+  },
+  "planUnusedTitle": "The plan lets these expire",
+  "planUnusedHelp": "They expire before the week is over and no planned meal uses them up.",
+  "planUnusedItem": "{food} ({quantity}), due to expire on {date}",
+  "@planUnusedItem": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "planUnusedItemEstimated": "{food} ({quantity}), estimated to expire on {date}",
+  "@planUnusedItemEstimated": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "planPickerTitle": "Choose a recipe",
+  "planMoveTitle": "Move to",
+  "planMovePlace": "{day} · {slot}",
+  "@planMovePlace": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "slot": {
+        "type": "String"
+      }
+    }
+  },
+  "planMoveSwap": "Swaps with {recipe}",
+  "@planMoveSwap": {
+    "placeholders": {
+      "recipe": {
+        "type": "String"
+      }
+    }
+  },
+  "errorMealNotFound": "That meal is no longer in the plan.",
+  "errorWeekInThePast": "A week that is over cannot be planned."
 }

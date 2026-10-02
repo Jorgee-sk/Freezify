@@ -1651,6 +1651,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'alcohol'**
   String get traitAlcohol;
+
+  /// No description provided for @planTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan for the week'**
+  String get planTitle;
+
+  /// No description provided for @planPreviousWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous week'**
+  String get planPreviousWeek;
+
+  /// No description provided for @planNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week'**
+  String get planNextWeek;
+
+  /// No description provided for @planThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get planThisWeek;
+
+  /// No description provided for @planWeekRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} – {to}'**
+  String planWeekRange(String from, String to);
+
+  /// No description provided for @planToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get planToday;
+
+  /// No description provided for @planPastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week is over.'**
+  String get planPastWeek;
+
+  /// No description provided for @planLunch.
+  ///
+  /// In en, this message translates to:
+  /// **'Lunch'**
+  String get planLunch;
+
+  /// No description provided for @planDinner.
+  ///
+  /// In en, this message translates to:
+  /// **'Dinner'**
+  String get planDinner;
+
+  /// No description provided for @planEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing planned'**
+  String get planEmpty;
+
+  /// No description provided for @planChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a recipe'**
+  String get planChoose;
+
+  /// No description provided for @planChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get planChange;
+
+  /// No description provided for @planMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get planMove;
+
+  /// No description provided for @planRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get planRemove;
+
+  /// No description provided for @planMealActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal options'**
+  String get planMealActions;
+
+  /// No description provided for @planSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested'**
+  String get planSuggested;
+
+  /// No description provided for @planGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill the gaps'**
+  String get planGenerate;
+
+  /// No description provided for @planRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest again'**
+  String get planRegenerate;
+
+  /// No description provided for @planGenerateHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Fills the empty meals, from today on, using first what expires first. What you chose yourself is left alone.'**
+  String get planGenerateHelp;
+
+  /// No description provided for @planRegenerateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The meals suggested automatically for this week will be replaced. The ones you chose are kept.'**
+  String get planRegenerateConfirm;
+
+  /// No description provided for @planFilled.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} meal has been planned.} other{{count} meals have been planned.}}'**
+  String planFilled(int count);
+
+  /// No description provided for @planNothingFilled.
+  ///
+  /// In en, this message translates to:
+  /// **'No new meal has been planned.'**
+  String get planNothingFilled;
+
+  /// No description provided for @planUnfilled.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} meal stays empty: no more recipes fit without too much repetition.} other{{count} meals stay empty: no more recipes fit without too much repetition.}}'**
+  String planUnfilled(int count);
+
+  /// No description provided for @planNoteUses.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses {food}, due to expire on {date}.'**
+  String planNoteUses(String food, String date);
+
+  /// No description provided for @planNoteUsesEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses {food}, estimated to expire on {date}.'**
+  String planNoteUsesEstimated(String food, String date);
+
+  /// No description provided for @planNoteHaveAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Every ingredient will be at home.'**
+  String get planNoteHaveAll;
+
+  /// No description provided for @planNoteMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'To buy: {foods}.'**
+  String planNoteMissing(String foods);
+
+  /// No description provided for @planNotePartial.
+  ///
+  /// In en, this message translates to:
+  /// **'There will be less {food} than the recipe asks for.'**
+  String planNotePartial(String food);
+
+  /// No description provided for @planUnusedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The plan lets these expire'**
+  String get planUnusedTitle;
+
+  /// No description provided for @planUnusedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'They expire before the week is over and no planned meal uses them up.'**
+  String get planUnusedHelp;
+
+  /// No description provided for @planUnusedItem.
+  ///
+  /// In en, this message translates to:
+  /// **'{food} ({quantity}), due to expire on {date}'**
+  String planUnusedItem(String food, String quantity, String date);
+
+  /// No description provided for @planUnusedItemEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'{food} ({quantity}), estimated to expire on {date}'**
+  String planUnusedItemEstimated(String food, String quantity, String date);
+
+  /// No description provided for @planPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a recipe'**
+  String get planPickerTitle;
+
+  /// No description provided for @planMoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to'**
+  String get planMoveTitle;
+
+  /// No description provided for @planMovePlace.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} · {slot}'**
+  String planMovePlace(String day, String slot);
+
+  /// No description provided for @planMoveSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Swaps with {recipe}'**
+  String planMoveSwap(String recipe);
+
+  /// No description provided for @errorMealNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That meal is no longer in the plan.'**
+  String get errorMealNotFound;
+
+  /// No description provided for @errorWeekInThePast.
+  ///
+  /// In en, this message translates to:
+  /// **'A week that is over cannot be planned.'**
+  String get errorWeekInThePast;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

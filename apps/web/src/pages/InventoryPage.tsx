@@ -76,6 +76,9 @@ export function InventoryPage() {
         <Link to={`/households/${householdId}/recipes`} className="button">
           {t('recipes.title')}
         </Link>
+        <Link to={`/households/${householdId}/plan`} className="button">
+          {t('plan.open')}
+        </Link>
         <Link to={`/households/${householdId}/settings`} className="button ghost">
           {t('households.settings')}
         </Link>

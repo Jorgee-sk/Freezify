@@ -81,7 +81,9 @@
     "INCOMPATIBLE_UNIT": "That unit is not compatible with the unit of the food.",
     "QUANTITY_EXCEEDS_AVAILABLE": "There is less left than the quantity given.",
     "NOTIFICATION_NOT_FOUND": "This notification no longer exists.",
-    "RECIPE_NOT_FOUND": "This recipe does not exist."
+    "RECIPE_NOT_FOUND": "This recipe does not exist.",
+    "MEAL_NOT_FOUND": "That meal is no longer in the plan.",
+    "WEEK_IN_THE_PAST": "A week that is over cannot be planned."
   },
   "inventory": {
     "title": "Inventory",
@@ -373,5 +375,51 @@
     "none": "This household has no dietary restrictions.",
     "change": "Change",
     "conflict": "This recipe contains something this household does not eat: {{traits}}."
+  },
+  "plan": {
+    "title": "Plan for the week",
+    "open": "Weekly plan",
+    "week": "Week",
+    "weekRange": "{{from}} – {{to}}",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "thisWeek": "This week",
+    "today": "Today",
+    "pastWeek": "This week is over.",
+    "slot": {
+      "LUNCH": "Lunch",
+      "DINNER": "Dinner"
+    },
+    "empty": "Nothing planned",
+    "choose": "Choose a recipe",
+    "change": "Change",
+    "move": "Move",
+    "remove": "Remove",
+    "generatedBadge": "Suggested",
+    "generate": "Fill the gaps",
+    "regenerate": "Suggest again",
+    "generateHelp": "Fills the empty meals, from today on, using first what expires first. What you chose yourself is left alone.",
+    "regenerateConfirm": "The meals suggested automatically for this week will be replaced. The ones you chose are kept. Continue?",
+    "filled_one": "{{count}} meal has been planned.",
+    "filled_other": "{{count}} meals have been planned.",
+    "nothingFilled": "No new meal has been planned.",
+    "unfilled_one": "{{count}} meal stays empty: no more recipes fit without too much repetition.",
+    "unfilled_other": "{{count}} meals stay empty: no more recipes fit without too much repetition.",
+    "note": {
+      "uses": "Uses {{food}}, due to expire on {{date}}.",
+      "usesEstimated": "Uses {{food}}, estimated to expire on {{date}}.",
+      "haveAll": "Every ingredient will be at home.",
+      "missing": "To buy: {{foods}}.",
+      "partial": "There will be less {{food}} than the recipe asks for."
+    },
+    "unusedTitle": "The plan lets these expire",
+    "unusedHelp": "They expire before the week is over and no planned meal uses them up.",
+    "unusedItem": "{{food}} ({{quantity}}), due to expire on {{date}}",
+    "unusedItemEstimated": "{{food}} ({{quantity}}), estimated to expire on {{date}}",
+    "pickerTitle": "Choose a recipe",
+    "moveTitle": "Move to",
+    "moveChoose": "Choose a day and a meal…",
+    "movePlace": "{{day}} · {{slot}}",
+    "moveSwap": "{{place}} (swaps with {{recipe}})"
   }
 }
