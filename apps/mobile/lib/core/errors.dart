@@ -23,6 +23,7 @@ String errorMessage(AppLocalizations l10n, Object error) {
     'INCOMPATIBLE_UNIT' => l10n.errorIncompatibleUnit,
     'QUANTITY_EXCEEDS_AVAILABLE' => l10n.errorQuantityExceeds,
     'CONCURRENT_MODIFICATION' => l10n.errorConcurrentModification,
+    'NOTIFICATION_NOT_FOUND' => l10n.errorNotificationNotFound,
     _ => l10n.errorGeneric,
   };
 }

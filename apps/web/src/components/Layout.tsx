@@ -3,6 +3,7 @@ import { Link, Outlet } from 'react-router-dom'
 import type { Locale } from '../api/endpoints'
 import { useAuth } from '../auth/useAuth'
 import { LOCALES, currentLocale } from '../i18n'
+import { NotificationBell } from '../notifications/NotificationBell'
 
 export function Layout() {
   const { t } = useTranslation()
@@ -29,6 +30,7 @@ export function Layout() {
           </select>
           {auth.status === 'authenticated' && (
             <>
+              <NotificationBell />
               <span className="muted user-name">{auth.user.displayName}</span>
               <button type="button" className="button ghost" onClick={() => void auth.logout()}>
                 {t('nav.logout')}

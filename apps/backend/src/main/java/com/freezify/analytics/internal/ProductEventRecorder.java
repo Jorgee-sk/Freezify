@@ -3,6 +3,7 @@ package com.freezify.analytics.internal;
 import com.freezify.inventory.InventoryEvents.FoodItemAdded;
 import com.freezify.inventory.InventoryEvents.FoodItemConsumed;
 import com.freezify.inventory.InventoryEvents.FoodItemDiscarded;
+import com.freezify.notifications.NotificationEvents.NotificationOpened;
 import com.freezify.users.UserRegistered;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -92,6 +93,11 @@ class ProductEventRecorder {
     @TransactionalEventListener
     void on(FoodItemDiscarded event) {
         record("food_discarded", event.userId(), event.householdId());
+    }
+
+    @TransactionalEventListener
+    void on(NotificationOpened event) {
+        record("notification_opened", event.userId(), event.householdId());
     }
 
     private void record(String name, @Nullable UUID userId, @Nullable UUID householdId) {

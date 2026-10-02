@@ -2,6 +2,7 @@ package com.freezify.households.internal;
 
 import com.freezify.common.ApiException;
 import com.freezify.households.HouseholdAccess;
+import com.freezify.households.HouseholdDirectory;
 import com.freezify.households.HouseholdEvents.HouseholdDeleted;
 import com.freezify.households.HouseholdEvents.MemberRemoved;
 import com.freezify.households.HouseholdRole;
@@ -10,6 +11,7 @@ import com.freezify.users.UserAccount;
 import com.freezify.users.Users;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,7 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class HouseholdService implements HouseholdAccess {
+public class HouseholdService implements HouseholdAccess, HouseholdDirectory {
 
     private final HouseholdRepository households;
     private final HouseholdMemberRepository members;
@@ -67,6 +69,21 @@ public class HouseholdService implements HouseholdAccess {
         if (requireMember(householdId, userId) != HouseholdRole.OWNER) {
             throw ApiException.forbidden("NOT_HOUSEHOLD_OWNER", "Only the household owner can do this.");
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UUID> memberIds(UUID householdId) {
+        return members.findByHouseholdIdOrderByJoinedAtAsc(householdId).stream()
+                .map(HouseholdMemberEntity::userId)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, String> names(Collection<UUID> householdIds) {
+        return households.findAllById(householdIds).stream()
+                .collect(Collectors.toMap(HouseholdEntity::id, HouseholdEntity::name));
     }
 
     @Transactional

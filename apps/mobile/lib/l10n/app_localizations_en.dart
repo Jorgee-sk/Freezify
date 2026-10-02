@@ -527,4 +527,135 @@ class AppLocalizationsEn extends AppLocalizations {
   String currentEstimate(String date) {
     return 'Right now we estimate $date. Enter the date on the package if you know it.';
   }
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String notificationsUnread(int count) {
+    return 'Notifications: $count unread';
+  }
+
+  @override
+  String get notificationsEmpty => 'You have no notifications. We will tell you when something is about to expire.';
+
+  @override
+  String get markAllRead => 'Mark all as read';
+
+  @override
+  String get notificationNew => 'New';
+
+  @override
+  String get notificationPreferences => 'Notification preferences';
+
+  @override
+  String notificationSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You have $count foods you should eat soon',
+      one: 'You have $count food you should eat soon',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifiedExpired(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name expired $count days ago',
+      one: '$name expired $count day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifiedToday(String name) {
+    return '$name expires today';
+  }
+
+  @override
+  String notifiedLeft(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name expires in $count days',
+      one: '$name expires in $count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifiedExpiredEstimated(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name probably expired $count days ago (estimated date)',
+      one: '$name probably expired $count day ago (estimated date)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifiedTodayEstimated(String name) {
+    return '$name probably expires today (estimated date)';
+  }
+
+  @override
+  String notifiedLeftEstimated(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name expires in about $count days (estimated date)',
+      one: '$name expires in about $count day (estimated date)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prefEnabled => 'Tell me about food that is about to expire';
+
+  @override
+  String get prefAntiSpam =>
+      'At most one notification a day per household, and only when there is something new to tell you.';
+
+  @override
+  String get prefHour => 'From';
+
+  @override
+  String get prefHourHelp => 'Spanish mainland time.';
+
+  @override
+  String get prefFrequency => 'At most';
+
+  @override
+  String get prefFrequencyDaily => 'Once a day';
+
+  @override
+  String get prefFrequencyEveryThreeDays => 'Every 3 days';
+
+  @override
+  String get prefFrequencyWeekly => 'Once a week';
+
+  @override
+  String get prefThreshold => 'Tell me when a food';
+
+  @override
+  String get prefThresholdToday => 'Expires today';
+
+  @override
+  String get prefThresholdUrgent => 'Expires in 2 days or less';
+
+  @override
+  String get prefThresholdSoon => 'Expires in 5 days or less';
+
+  @override
+  String get prefCategories => 'Tell me about these categories';
+
+  @override
+  String get preferencesSaved => 'Preferences saved';
+
+  @override
+  String get errorNotificationNotFound => 'This notification no longer exists.';
 }

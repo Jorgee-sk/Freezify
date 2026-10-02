@@ -292,5 +292,101 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notificationsTitle": "Notifications",
+  "notificationsUnread": "Notifications: {count} unread",
+  "@notificationsUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsEmpty": "You have no notifications. We will tell you when something is about to expire.",
+  "markAllRead": "Mark all as read",
+  "notificationNew": "New",
+  "notificationPreferences": "Notification preferences",
+  "notificationSummary": "{count, plural, =1{You have {count} food you should eat soon} other{You have {count} foods you should eat soon}}",
+  "@notificationSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifiedExpired": "{count, plural, =1{{name} expired {count} day ago} other{{name} expired {count} days ago}}",
+  "@notifiedExpired": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifiedToday": "{name} expires today",
+  "@notifiedToday": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifiedLeft": "{count, plural, =1{{name} expires in {count} day} other{{name} expires in {count} days}}",
+  "@notifiedLeft": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifiedExpiredEstimated": "{count, plural, =1{{name} probably expired {count} day ago (estimated date)} other{{name} probably expired {count} days ago (estimated date)}}",
+  "@notifiedExpiredEstimated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifiedTodayEstimated": "{name} probably expires today (estimated date)",
+  "@notifiedTodayEstimated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifiedLeftEstimated": "{count, plural, =1{{name} expires in about {count} day (estimated date)} other{{name} expires in about {count} days (estimated date)}}",
+  "@notifiedLeftEstimated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prefEnabled": "Tell me about food that is about to expire",
+  "prefAntiSpam": "At most one notification a day per household, and only when there is something new to tell you.",
+  "prefHour": "From",
+  "prefHourHelp": "Spanish mainland time.",
+  "prefFrequency": "At most",
+  "prefFrequencyDaily": "Once a day",
+  "prefFrequencyEveryThreeDays": "Every 3 days",
+  "prefFrequencyWeekly": "Once a week",
+  "prefThreshold": "Tell me when a food",
+  "prefThresholdToday": "Expires today",
+  "prefThresholdUrgent": "Expires in 2 days or less",
+  "prefThresholdSoon": "Expires in 5 days or less",
+  "prefCategories": "Tell me about these categories",
+  "preferencesSaved": "Preferences saved",
+  "errorNotificationNotFound": "This notification no longer exists."
 }

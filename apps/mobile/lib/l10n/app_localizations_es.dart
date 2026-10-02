@@ -532,4 +532,134 @@ class AppLocalizationsEs extends AppLocalizations {
   String currentEstimate(String date) {
     return 'Ahora mismo estimamos el $date. Indica la fecha del envase si la sabes.';
   }
+
+  @override
+  String get notificationsTitle => 'Avisos';
+
+  @override
+  String notificationsUnread(int count) {
+    return 'Avisos: $count sin leer';
+  }
+
+  @override
+  String get notificationsEmpty => 'No tienes avisos. Te avisaremos cuando algo esté a punto de caducar.';
+
+  @override
+  String get markAllRead => 'Marcar todo como leído';
+
+  @override
+  String get notificationNew => 'Nuevo';
+
+  @override
+  String get notificationPreferences => 'Preferencias de avisos';
+
+  @override
+  String notificationSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tienes $count alimentos que deberías consumir pronto',
+      one: 'Tienes $count alimento que deberías consumir pronto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifiedExpired(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name caducó hace $count días',
+      one: '$name caducó hace $count día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifiedToday(String name) {
+    return '$name caduca hoy';
+  }
+
+  @override
+  String notifiedLeft(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name caduca en $count días',
+      one: '$name caduca en $count día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifiedExpiredEstimated(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name probablemente caducó hace $count días (fecha estimada)',
+      one: '$name probablemente caducó hace $count día (fecha estimada)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifiedTodayEstimated(String name) {
+    return '$name probablemente caduca hoy (fecha estimada)';
+  }
+
+  @override
+  String notifiedLeftEstimated(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$name caduca en aproximadamente $count días (fecha estimada)',
+      one: '$name caduca en aproximadamente $count día (fecha estimada)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prefEnabled => 'Avisarme de los alimentos que van a caducar';
+
+  @override
+  String get prefAntiSpam => 'Como mucho un aviso al día por hogar, y solo cuando haya algo nuevo que contarte.';
+
+  @override
+  String get prefHour => 'A partir de las';
+
+  @override
+  String get prefHourHelp => 'Hora peninsular española.';
+
+  @override
+  String get prefFrequency => 'Como mucho';
+
+  @override
+  String get prefFrequencyDaily => 'Una vez al día';
+
+  @override
+  String get prefFrequencyEveryThreeDays => 'Cada 3 días';
+
+  @override
+  String get prefFrequencyWeekly => 'Una vez a la semana';
+
+  @override
+  String get prefThreshold => 'Avisarme cuando un alimento';
+
+  @override
+  String get prefThresholdToday => 'Caduque hoy';
+
+  @override
+  String get prefThresholdUrgent => 'Caduque en 2 días o menos';
+
+  @override
+  String get prefThresholdSoon => 'Caduque en 5 días o menos';
+
+  @override
+  String get prefCategories => 'Avisarme de estas categorías';
+
+  @override
+  String get preferencesSaved => 'Preferencias guardadas';
+
+  @override
+  String get errorNotificationNotFound => 'Este aviso ya no existe.';
 }

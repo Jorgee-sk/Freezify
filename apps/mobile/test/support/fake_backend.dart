@@ -32,8 +32,8 @@ class RecordedCall {
 typedef FakeHandler = FakeResponse Function(RecordedCall call);
 
 /// Stands in for the HTTP transport. Routes are keyed by "METHOD /path" (without the query string); an
-/// unexpected request fails the test, except for event streams: unless a test serves one, they stay open and
-/// silent.
+/// unexpected request fails the test, except for what every signed-in screen asks for: unless a test serves
+/// them, event streams stay open and silent, and there are no unread notifications.
 class FakeBackend implements HttpClientAdapter {
   FakeBackend(this.routes);
 
@@ -71,8 +71,10 @@ class FakeBackend implements HttpClientAdapter {
     if (handler == null && path.endsWith('/events')) {
       return _eventStream(StreamController<Uint8List>().stream);
     }
-    if (handler == null) throw StateError('Unexpected request: ${call.route}');
-    final response = handler(call);
+    if (handler == null && call.route != 'GET /notifications/unread-count') {
+      throw StateError('Unexpected request: ${call.route}');
+    }
+    final response = handler == null ? const FakeResponse.ok({'count': 0}) : handler(call);
     if (response.stream != null) return _eventStream(response.stream!);
     return ResponseBody.fromString(
       response.body == null ? '' : jsonEncode(response.body),

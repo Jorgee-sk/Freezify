@@ -3,6 +3,7 @@ package com.freezify.common;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,11 @@ public class Today {
     }
 
     public LocalDate date() {
-        return clock.instant().atZone(zone).toLocalDate();
+        return now().toLocalDate();
+    }
+
+    /** The current moment on the clock users look at. */
+    public ZonedDateTime now() {
+        return clock.instant().atZone(zone);
     }
 }

@@ -9,6 +9,8 @@ import 'features/auth/splash_screen.dart';
 import 'features/households/household_detail_screen.dart';
 import 'features/households/households_screen.dart';
 import 'features/inventory/inventory_screen.dart';
+import 'features/notifications/notification_preferences_screen.dart';
+import 'features/notifications/notifications_screen.dart';
 import 'l10n/app_localizations.dart';
 
 const _seedColor = Color(0xFF1F9D63);
@@ -39,6 +41,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/',
         builder: (_, _) => const HouseholdsScreen(),
         routes: [
+          GoRoute(
+            path: 'notifications',
+            builder: (_, _) => const NotificationsScreen(),
+            routes: [GoRoute(path: 'preferences', builder: (_, _) => const NotificationPreferencesScreen())],
+          ),
           GoRoute(
             path: 'households/:id',
             builder: (_, state) => InventoryScreen(householdId: state.pathParameters['id']!),

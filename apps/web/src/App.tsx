@@ -10,6 +10,8 @@ import { HouseholdDetailPage } from './pages/HouseholdDetailPage'
 import { HouseholdsPage } from './pages/HouseholdsPage'
 import { InventoryPage } from './pages/InventoryPage'
 import { LoginPage } from './pages/LoginPage'
+import { NotificationPreferencesPage } from './pages/NotificationPreferencesPage'
+import { NotificationsPage } from './pages/NotificationsPage'
 import { RegisterPage } from './pages/RegisterPage'
 
 function createQueryClient() {
@@ -50,6 +52,8 @@ export function AppRoutes() {
           <Route path="/" element={<HouseholdsPage />} />
           <Route path="/households/:householdId" element={<InventoryPage />} />
           <Route path="/households/:householdId/settings" element={<HouseholdDetailPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/notifications/preferences" element={<NotificationPreferencesPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

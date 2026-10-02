@@ -79,7 +79,8 @@
     "ITEM_NOT_ACTIVE": "Este alimento ya se había consumido o tirado.",
     "FOOD_NOT_FOUND": "Ese alimento no existe en el catálogo.",
     "INCOMPATIBLE_UNIT": "Esa unidad no es compatible con la del alimento.",
-    "QUANTITY_EXCEEDS_AVAILABLE": "Queda menos cantidad de la indicada."
+    "QUANTITY_EXCEEDS_AVAILABLE": "Queda menos cantidad de la indicada.",
+    "NOTIFICATION_NOT_FOUND": "Este aviso ya no existe."
   },
   "inventory": {
     "title": "Inventario",
@@ -203,5 +204,50 @@
     "count_other": "{{count}} alimentos que no pueden esperar",
     "more_one": "y {{count}} más",
     "more_other": "y {{count}} más"
+  },
+  "notifications": {
+    "title": "Avisos",
+    "bellUnread_one": "Avisos: {{count}} sin leer",
+    "bellUnread_other": "Avisos: {{count}} sin leer",
+    "empty": "No tienes avisos. Te avisaremos cuando algo esté a punto de caducar.",
+    "markAllRead": "Marcar todo como leído",
+    "new": "Nuevo",
+    "preferences": "Preferencias",
+    "preferencesTitle": "Preferencias de avisos",
+    "backToList": "Volver a los avisos",
+    "summary_one": "Tienes {{count}} alimento que deberías consumir pronto",
+    "summary_other": "Tienes {{count}} alimentos que deberías consumir pronto",
+    "item": {
+      "expired_one": "{{name}} caducó hace {{count}} día",
+      "expired_other": "{{name}} caducó hace {{count}} días",
+      "today": "{{name}} caduca hoy",
+      "left_one": "{{name}} caduca en {{count}} día",
+      "left_other": "{{name}} caduca en {{count}} días",
+      "expiredEstimated_one": "{{name}} probablemente caducó hace {{count}} día (fecha estimada)",
+      "expiredEstimated_other": "{{name}} probablemente caducó hace {{count}} días (fecha estimada)",
+      "todayEstimated": "{{name}} probablemente caduca hoy (fecha estimada)",
+      "leftEstimated_one": "{{name}} caduca en aproximadamente {{count}} día (fecha estimada)",
+      "leftEstimated_other": "{{name}} caduca en aproximadamente {{count}} días (fecha estimada)"
+    },
+    "pref": {
+      "enabled": "Avisarme de los alimentos que van a caducar",
+      "antiSpam": "Como mucho un aviso al día por hogar, y solo cuando haya algo nuevo que contarte.",
+      "hour": "A partir de las",
+      "hourHelp": "Hora peninsular española.",
+      "frequency": "Como mucho",
+      "frequencyOption": {
+        "DAILY": "Una vez al día",
+        "EVERY_THREE_DAYS": "Cada 3 días",
+        "WEEKLY": "Una vez a la semana"
+      },
+      "threshold": "Avisarme cuando un alimento",
+      "thresholdOption": {
+        "TODAY": "Caduque hoy",
+        "URGENT": "Caduque en 2 días o menos",
+        "SOON": "Caduque en 5 días o menos"
+      },
+      "categories": "Avisarme de estas categorías",
+      "saved": "Preferencias guardadas"
+    }
   }
 }

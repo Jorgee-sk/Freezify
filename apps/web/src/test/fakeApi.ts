@@ -19,8 +19,8 @@ export interface RecordedCall {
 
 /**
  * Replaces `fetch` with a router keyed by "METHOD /path" (path relative to /api/v1, without query string).
- * An unexpected request fails the test instead of silently hanging, except for event streams: unless a test
- * serves one, they stay open and silent.
+ * An unexpected request fails the test instead of silently hanging, except for what every signed-in page asks
+ * for: unless a test serves them, event streams stay open and silent, and there are no unread notifications.
  */
 export function fakeApi(routes: Record<string, Handler>) {
   const calls: RecordedCall[] = []
@@ -35,6 +35,7 @@ export function fakeApi(routes: Record<string, Handler>) {
 
     const handler = routes[route]
     if (!handler && route.endsWith('/events')) return eventStream().response
+    if (!handler && route === 'GET /notifications/unread-count') return Response.json({ count: 0 })
     if (!handler) throw new Error(`Unexpected request: ${route}`)
     const result = handler(body, { headers, query })
     if (result.response) return result.response

@@ -9,4 +9,8 @@ export const queryKeys = {
   recentFoods: (householdId: string) => ['inventory', householdId, 'recent'] as const,
   consumeFirst: (householdId: string) => ['inventory', householdId, 'consume-first'] as const,
   foodSearch: (text: string, lang: string) => ['foods', lang, text] as const,
+  notifications: ['notifications'] as const,
+  notificationList: (page: number) => ['notifications', 'list', page] as const,
+  unreadNotifications: ['notifications', 'unread'] as const,
+  notificationPreferences: ['notifications', 'preferences'] as const,
 }
