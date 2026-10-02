@@ -7,7 +7,7 @@
 | 0 — Product Definition | ✅ Completada |
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
-| 3 — Expiration Engine | 🟡 En curso: prioridad y "consume primero" hechos; faltan la estimación de fechas, el scheduler y las notificaciones |
+| 3 — Expiration Engine | 🟡 En curso: prioridad, "consume primero" y estimación de fechas hechos; faltan el scheduler y las notificaciones |
 
 ## Fase 3 — Expiration Engine 🟡
 
@@ -23,24 +23,44 @@
   cada alimento. No hay etiqueta cuando queda mucho tiempo o no hay fecha, para que siga significando algo.
   El panel se actualiza con cada cambio, también con los que llegan en tiempo real.
 
+- **Estimación de fechas por reglas**:
+  - 57 reglas de vida útil (20 por categoría y 37 de alimentos concretos) según dónde se guarda el alimento:
+    días desde la compra y, cuando abrirlo cambia las cosas, días desde que se abre.
+  - La regla del alimento gana a la de su categoría. Si no hay regla, **no se inventa fecha**: el alimento
+    queda sin fecha.
+  - Un alimento sin fecha del usuario recibe una estimada. Abrir un alimento acorta su fecha si la regla lo
+    dice (leche abierta: 3 días), aunque el envase marque una fecha posterior; abrirlo nunca la alarga.
+  - La fecha que dio el usuario **se conserva siempre** (`userExpirationDate`) aparte de la que se aplica
+    (`expirationDate` + `expirationSource`); el formulario edita la del usuario y muestra la estimada como
+    indicación. Una estimación nunca vuelve al servidor como si la hubiera escrito el usuario.
+  - La estimación se recalcula al crear, editar (cambio de ubicación, de categoría…) y abrir.
+
 ### Tests
 
 | Qué | Resultado |
 |---|---|
-| Backend `./mvnw verify` | ✅ 102 tests (14 de niveles de prioridad y 5 de "consume primero" nuevos) |
-| Web lint / test / build | ✅ sin avisos / 64 tests (5 nuevos) / correcto |
+| Backend `./mvnw verify` | ✅ 117 tests (7 de la función de estimación, 8 de estimación por la API, 14 de niveles y 5 de "consume primero") |
+| Web lint / test / build | ✅ sin avisos / 67 tests / correcto |
 | Mobile `flutter analyze` y APK | ✅ sin avisos / generado |
-| Mobile `flutter test` | ❌ **5 tests nuevos sin ejecutar** (64 en total): correrán en la CI del próximo pull request |
+| Mobile `flutter test` | 🟡 64 pasaron en CI (pull request #4); los **3 nuevos de fechas estimadas no se han ejecutado** (67 en total): correrán en la CI del próximo pull request |
+| Migración `V3` sobre la base local con datos | ✅ aplicada; las fechas existentes pasan a ser "del usuario" sin cambios |
+| Web contra el backend real | ✅ un pollo sin fecha aparece con "Caduca hacia el… (fecha estimada)" y su prioridad |
 | Web y móvil contra el backend real | ✅ con alimentos caducados, que vencen hoy, urgentes y próximos: el panel y las etiquetas muestran el nivel y los días correctos |
 
 ### Pendiente en esta fase
 
-- **Estimación de fechas** por reglas (alimento × ubicación × abierto), siempre etiquetada como estimada.
 - **Scheduler diario**: marcar como caducado lo que ha pasado de fecha y preparar los avisos.
 - **Notificaciones** in-app y push, con preferencias y sin spam.
 
 ### Known issues
 
+- **Los días de las reglas no salen de una fuente oficial**: son valores conservadores de conocimiento
+  general, escritos a mano. Hay que contrastarlos con una fuente autorizada (AESAN, FoodKeeper) antes de
+  abrir a usuarios reales; es el riesgo R3 de `ARCHITECTURE.md`.
+- **Los alimentos sin fecha añadidos antes de esta versión no reciben estimación** hasta que se editan o se
+  abren.
+- **No se puede pedir "sin fecha"** para un alimento que tiene regla: si el usuario no da fecha, se estima.
+- **El formulario no muestra la estimación antes de guardar**; se ve después, en la lista.
 - **El estado `EXPIRED` aún no se asigna**: un alimento pasado de fecha se muestra como "Caducado" por su
   prioridad, pero su estado sigue siendo "disponible" hasta que exista el scheduler.
 - **"Hoy" es el día en `Europe/Madrid`** para todos los hogares.
@@ -184,6 +204,6 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request de la prioridad de caducidad y confirmar en CI los tests nuevos del móvil.
-2. Estimación de fechas de caducidad por reglas.
-3. Scheduler diario y notificaciones.
+1. Abrir el pull request de la estimación de fechas y confirmar en CI los tests nuevos del móvil.
+2. Scheduler diario: marcar como caducado lo que ha pasado de fecha.
+3. Notificaciones in-app y push, con preferencias.

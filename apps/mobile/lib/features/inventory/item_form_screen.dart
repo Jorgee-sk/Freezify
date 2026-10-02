@@ -35,7 +35,8 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
   late FoodCategory? _category = widget.item?.category;
   late Unit _unit = widget.item?.quantity.unit ?? Unit.unit;
   late StorageLocation _location = widget.item?.storageLocation ?? StorageLocation.refrigerator;
-  late String? _expirationDate = widget.item?.expirationDate;
+  // Only the date the user gave is editable; an estimate is shown as a hint and recalculated on save.
+  late String? _expirationDate = widget.item?.userExpirationDate;
   late String _purchaseDate = widget.item?.purchaseDate ?? toIsoDay(DateTime.now());
 
   List<Food> _suggestions = const [];
@@ -240,7 +241,12 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
               _DayTile(
                 label: l10n.expirationDate,
                 value: _expirationDate,
-                emptyText: l10n.noDateSet,
+                // Without a date from the user the backend estimates one; say so, and show the current estimate.
+                emptyText: switch (widget.item) {
+                  InventoryItem(expirationSource: ExpirationSource.estimated, :final expirationDate?) =>
+                    l10n.currentEstimate(formatDay(expirationDate)),
+                  _ => l10n.estimateHelp,
+                },
                 clearTooltip: l10n.clearDate,
                 onPick: () async {
                   final day = await _pickDay(_expirationDate);

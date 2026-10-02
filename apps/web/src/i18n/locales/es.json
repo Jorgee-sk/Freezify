@@ -147,7 +147,9 @@
     "next": "Siguiente",
     "pageOf": "Página {{page}} de {{total}}",
     "count_one": "{{count}} alimento",
-    "count_other": "{{count}} alimentos"
+    "count_other": "{{count}} alimentos",
+    "estimateHelp": "Si la dejas vacía, la estimamos según el alimento y dónde lo guardas.",
+    "currentEstimate": "Ahora mismo estimamos el {{date}}. Escribe la fecha del envase si la sabes."
   },
   "units": {
     "GRAM": "g",

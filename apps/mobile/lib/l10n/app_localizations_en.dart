@@ -519,4 +519,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String andMore(int count) {
     return 'and $count more';
   }
+
+  @override
+  String get estimateHelp => 'Leave it empty and we will estimate it from the food and where you keep it.';
+
+  @override
+  String currentEstimate(String date) {
+    return 'Right now we estimate $date. Enter the date on the package if you know it.';
+  }
 }

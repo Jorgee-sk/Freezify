@@ -3,6 +3,7 @@ package com.freezify.inventory.internal;
 import com.freezify.common.ApiException;
 import com.freezify.common.PageResponse;
 import com.freezify.common.Today;
+import com.freezify.expiration.ExpirationEstimator;
 import com.freezify.expiration.ExpirationPriority;
 import com.freezify.food.FoodCatalog;
 import com.freezify.food.FoodCategory;
@@ -105,6 +106,7 @@ public class InventoryService {
     private final FoodOutcomeRepository outcomes;
     private final HouseholdAccess access;
     private final FoodCatalog catalog;
+    private final ExpirationEstimator estimator;
     private final ApplicationEventPublisher events;
     private final Today today;
     private final Clock clock;
@@ -114,6 +116,7 @@ public class InventoryService {
             FoodOutcomeRepository outcomes,
             HouseholdAccess access,
             FoodCatalog catalog,
+            ExpirationEstimator estimator,
             ApplicationEventPublisher events,
             Today today,
             Clock clock) {
@@ -121,6 +124,7 @@ public class InventoryService {
         this.outcomes = outcomes;
         this.access = access;
         this.catalog = catalog;
+        this.estimator = estimator;
         this.events = events;
         this.today = today;
         this.clock = clock;
@@ -185,7 +189,7 @@ public class InventoryService {
     public ItemView create(UUID householdId, UUID userId, ItemData data) {
         access.requireMember(householdId, userId);
         requireKnownFood(data);
-        FoodItemEntity item = items.saveAndFlush(new FoodItemEntity(householdId, userId, data));
+        FoodItemEntity item = items.saveAndFlush(withExpiration(new FoodItemEntity(householdId, userId, data)));
         events.publishEvent(new FoodItemAdded(householdId, userId, item.id()));
         events.publishEvent(new InventoryChanged(householdId, userId));
         return item.toView(today.date());
@@ -197,6 +201,7 @@ public class InventoryService {
         requireKnownFood(data);
         FoodItemEntity item = loadActive(householdId, itemId);
         item.apply(data);
+        withExpiration(item);
         events.publishEvent(new InventoryChanged(householdId, userId));
         return items.saveAndFlush(item).toView(today.date());
     }
@@ -214,6 +219,7 @@ public class InventoryService {
         access.requireMember(householdId, userId);
         FoodItemEntity item = loadActive(householdId, itemId);
         item.open(today.date());
+        withExpiration(item);
         events.publishEvent(new InventoryChanged(householdId, userId));
         return items.saveAndFlush(item).toView(today.date());
     }
@@ -271,6 +277,15 @@ public class InventoryService {
         outcomes.save(new FoodOutcomeEntity(item, type, reason, used, value, userId, clock.instant()));
         events.publishEvent(new InventoryChanged(householdId, userId));
         return items.saveAndFlush(item);
+    }
+
+    /**
+     * Works out the date that applies to the item: the user's, or an estimate when there is none or when
+     * opening the food shortens its life. Called whenever something the estimate depends on may have changed.
+     */
+    private FoodItemEntity withExpiration(FoodItemEntity item) {
+        item.expiresOn(estimator.resolve(item.expirationInput()).orElse(null));
+        return item;
     }
 
     private void requireKnownFood(ItemData data) {

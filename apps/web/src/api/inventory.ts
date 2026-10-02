@@ -67,6 +67,8 @@ export interface InventoryItem {
   expirationDate: string | null
   /** Whether the date was typed by the user or estimated by the app. Estimates must be labelled as such. */
   expirationSource: 'USER' | 'ESTIMATED' | null
+  /** The date the user gave. `expirationDate` is the one that applies and may be an earlier estimate. */
+  userExpirationDate: string | null
   /** Negative when the date has passed; null without a date. */
   daysUntilExpiration: number | null
   priority: ExpirationPriority | null
@@ -79,7 +81,10 @@ export interface InventoryItem {
   updatedAt: string
 }
 
-/** What the user can set on an item. The backend replaces the whole item with it. */
+/**
+ * What the user can set on an item. The backend replaces the whole item with it.
+ * `expirationDate` is the date the user gives; when it is null the backend estimates one if it can.
+ */
 export interface ItemInput {
   foodId: string | null
   name: string

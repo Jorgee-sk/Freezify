@@ -283,5 +283,14 @@
         "type": "int"
       }
     }
+  },
+  "estimateHelp": "Leave it empty and we will estimate it from the food and where you keep it.",
+  "currentEstimate": "Right now we estimate {date}. Enter the date on the package if you know it.",
+  "@currentEstimate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   }
 }

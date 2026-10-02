@@ -66,7 +66,7 @@ tipos internos de otro.
 | `households` | Hogares, miembros, invitaciones, **control de acceso por hogar** | users, common | 1 |
 | `food` | Catálogo canónico de alimentos, categorías, unidades y cantidades | common | 2 ✔ |
 | `inventory` | Alimentos del hogar, consumo y descarte | households, food | 2 ✔ |
-| `expiration` | Niveles de prioridad (hecho) y estimación de fechas | food | 3 ✔ |
+| `expiration` | Niveles de prioridad y estimación de fechas por reglas de vida útil | food | 3 ✔ |
 | `notifications` | Preferencias, generación y envío | households, inventory, expiration | 3 |
 | `recipes` | Recetas y recomendador | food, inventory, expiration | 4 |
 | `mealplanning` | Plan semanal y generador | recipes, inventory | 5 |
@@ -121,6 +121,8 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D19 | El catálogo de alimentos se carga y se **busca en memoria** | Pequeño y estático entre despliegues; ignora acentos sin extensiones de PostgreSQL |
 | D20 | Los eventos entre módulos se escuchan **tras el commit**, en transacción propia | Un fallo al registrar una métrica nunca deshace la operación del usuario |
 | D21 | Los eventos SSE **no llevan datos**: solo avisan de que algo cambió | Los datos siempre salen de la API autorizada; un evento filtrado no revela nada y no hay que versionar su contenido |
+| D23 | La fecha del usuario y la fecha que se aplica se guardan **por separado** | Estimar o acortar por apertura nunca pisa lo que el usuario escribió; el origen (`USER` / `ESTIMATED`) describe la fecha que se aplica |
+| D24 | Las reglas de vida útil son **datos** (tabla sembrada por migración), no código | Se corrigen sin tocar la lógica; la regla del alimento gana a la de su categoría y, sin regla, no hay fecha |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -143,13 +145,14 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 
 ## 4. Modelo de datos
 
-Implementado (`V1__foundation.sql`, `V2__inventory.sql`):
+Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`):
 
 ```text
 users ──< refresh_tokens
 users ──< household_members >── households ──< household_invitations
 foods ──< food_items >── households
 food_items ──< food_outcomes >── households
+foods ──< shelf_life_rules
 product_events
 ```
 
@@ -239,7 +242,7 @@ Controller → caso de uso → AiService → AIProvider ─┬─ MockProvider  
 |---|---|---|---|
 | R1 | **Normalización de alimentos**: los tickets españoles abrevian ("TOM PERA 1K"); sin mapear a `Food` no hay recetas ni lista de la compra fiables | Alto | Catálogo canónico con alias desde Fase 2; revisión humana obligatoria; aprender alias de las correcciones del usuario |
 | R2 | **Calidad del OCR** en tickets arrugados o térmicos | Alto | OCR en dispositivo + estructuración posterior; la UI de revisión es el camino principal, no la excepción |
-| R3 | **Fechas estimadas** erróneas (seguridad alimentaria, responsabilidad) | Alto | Siempre etiquetadas; reglas conservadoras; nunca sustituyen a la fecha del envase |
+| R3 | **Fechas estimadas** erróneas (seguridad alimentaria, responsabilidad) | Alto | Siempre etiquetadas; reglas conservadoras; nunca pisan la fecha del usuario. **Pendiente:** contrastar los días con una fuente autorizada antes del lanzamiento |
 | R4 | **Conversión de unidades** (recuento ↔ masa: "2 tomates" vs "300 g") | Medio | Peso medio por unidad en el catálogo; cuando no exista, no se convierte y se avisa |
 | R5 | **Contenido de recetas**: licencias y normalización de ingredientes | Medio | Conjunto inicial propio y pequeño; no importar datasets sin revisar licencia |
 | R6 | **Coste y latencia de IA** | Medio | `AIProvider` intercambiable, caché, límites por usuario, determinista por defecto |

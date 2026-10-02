@@ -217,8 +217,10 @@ class InventoryApiTests extends ApiTestSupport {
                 .andExpect(jsonPath("$.quantity.amount").value(1.5))
                 .andExpect(jsonPath("$.quantity.unit").value("KILOGRAM"))
                 .andExpect(jsonPath("$.storageLocation").value("PANTRY"))
-                .andExpect(jsonPath("$.expirationDate", nullValue()))
-                .andExpect(jsonPath("$.expirationSource", nullValue()));
+                // The user's date was removed, so the date is now an estimate: 5 days from the purchase.
+                .andExpect(jsonPath("$.userExpirationDate", nullValue()))
+                .andExpect(jsonPath("$.expirationDate").value("2026-10-05"))
+                .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"));
 
         list(jorge, "?q=pera").andExpect(jsonPath("$.items", hasSize(1)));
     }
@@ -477,6 +479,142 @@ class InventoryApiTests extends ApiTestSupport {
 
         expectHouseholdNotFound(mvc.perform(as(stranger, get(consumeFirst()))));
         mvc.perform(get(consumeFirst())).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void freshFoodWithoutADateGetsAnEstimateLabelledAsSuch() throws Exception {
+        add(jorge, """
+                {"foodId": "%s", "name": "Pechuga de pollo", "quantity": {"amount": 500, "unit": "GRAM"},
+                 "storageLocation": "REFRIGERATOR", "purchaseDate": "2026-10-01"}
+                """.formatted(catalogFoodId("pechuga")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.expirationDate").value("2026-10-03"))
+                .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"))
+                .andExpect(jsonPath("$.userExpirationDate", nullValue()));
+    }
+
+    @Test
+    void theEstimateDependsOnWhereTheFoodIsKept() throws Exception {
+        String chicken = catalogFoodId("pechuga");
+        String body = """
+                {"foodId": "%s", "name": "Pechuga de pollo", "quantity": {"amount": 500, "unit": "GRAM"},
+                 "storageLocation": "%s", "purchaseDate": "2026-10-01"}
+                """;
+        String itemId = JsonPath.read(
+                add(jorge, body.formatted(chicken, "REFRIGERATOR"))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString(),
+                "$.id");
+
+        // Moved to the freezer: three months instead of two days.
+        mvc.perform(as(jorge, json(put(item(itemId)), body.formatted(chicken, "FREEZER"))))
+                .andExpect(jsonPath("$.expirationDate").value("2026-12-30"))
+                .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"));
+
+        // Nobody knows how long chicken keeps in a pantry: no rule, so no date rather than an invented one.
+        mvc.perform(as(jorge, json(put(item(itemId)), body.formatted(chicken, "PANTRY"))))
+                .andExpect(jsonPath("$.expirationDate", nullValue()))
+                .andExpect(jsonPath("$.expirationSource", nullValue()));
+    }
+
+    @Test
+    void aFoodsOwnRuleWinsOverTheRuleOfItsCategory() throws Exception {
+        // Vegetables keep 7 days in the fridge, but carrots keep 21.
+        add(jorge, """
+                {"foodId": "%s", "name": "Zanahoria", "quantity": {"amount": 6, "unit": "UNIT"},
+                 "storageLocation": "REFRIGERATOR", "purchaseDate": "2026-10-01"}
+                """.formatted(catalogFoodId("zanahoria")))
+                .andExpect(jsonPath("$.expirationDate").value("2026-10-22"));
+
+        // Not from the catalog, but filed as a vegetable by the user: the category rule applies.
+        add(jorge, """
+                {"name": "Pak choi", "category": "VEGETABLES", "quantity": {"amount": 1, "unit": "UNIT"},
+                 "storageLocation": "REFRIGERATOR", "purchaseDate": "2026-10-01"}
+                """)
+                .andExpect(jsonPath("$.expirationDate").value("2026-10-08"))
+                .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"));
+    }
+
+    @Test
+    void theDateTheUserGivesIsNeverReplacedByAnEstimate() throws Exception {
+        add(jorge, """
+                {"foodId": "%s", "name": "Pechuga de pollo", "quantity": {"amount": 500, "unit": "GRAM"},
+                 "storageLocation": "REFRIGERATOR", "purchaseDate": "2026-10-01", "expirationDate": "2026-10-09"}
+                """.formatted(catalogFoodId("pechuga")))
+                .andExpect(jsonPath("$.expirationDate").value("2026-10-09"))
+                .andExpect(jsonPath("$.expirationSource").value("USER"))
+                .andExpect(jsonPath("$.userExpirationDate").value("2026-10-09"));
+    }
+
+    @Test
+    void packagedFoodHasNoDateUntilTheUserGivesOneOrOpensIt() throws Exception {
+        String body = add(jorge, """
+                        {"foodId": "%s", "name": "Leche", "quantity": {"amount": 1, "unit": "LITER"},
+                         "storageLocation": "REFRIGERATOR"}
+                        """.formatted(catalogFoodId("leche")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.expirationDate", nullValue()))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String itemId = JsonPath.read(body, "$.id");
+
+        mvc.perform(as(jorge, post(item(itemId) + "/open")))
+                .andExpect(jsonPath("$.expirationDate").value(inDays(3)))
+                .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"))
+                .andExpect(jsonPath("$.priority").value("SOON"));
+    }
+
+    @Test
+    void openingShortensTheDateOnThePackageWithoutForgettingIt() throws Exception {
+        String farAway = inDays(60);
+        String body = add(jorge, """
+                        {"foodId": "%s", "name": "Leche", "quantity": {"amount": 1, "unit": "LITER"},
+                         "storageLocation": "REFRIGERATOR", "expirationDate": "%s"}
+                        """.formatted(catalogFoodId("leche"), farAway))
+                .andExpect(jsonPath("$.expirationSource").value("USER"))
+                .andExpect(jsonPath("$.priority").value("OK"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String itemId = JsonPath.read(body, "$.id");
+
+        mvc.perform(as(jorge, post(item(itemId) + "/open")))
+                .andExpect(jsonPath("$.expirationDate").value(inDays(3)))
+                .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"))
+                .andExpect(jsonPath("$.userExpirationDate").value(farAway))
+                .andExpect(jsonPath("$.priority").value("SOON"));
+
+        // It now belongs in "consume first", which is the whole point.
+        mvc.perform(as(jorge, get(consumeFirst())))
+                .andExpect(jsonPath("$.items[*].name").value(contains("Leche")))
+                .andExpect(jsonPath("$.counts.SOON").value(1));
+    }
+
+    @Test
+    void openingDoesNotExtendADateThatIsCloser() throws Exception {
+        String tomorrow = inDays(1);
+        String body = add(jorge, """
+                        {"foodId": "%s", "name": "Leche", "quantity": {"amount": 1, "unit": "LITER"},
+                         "storageLocation": "REFRIGERATOR", "expirationDate": "%s"}
+                        """.formatted(catalogFoodId("leche"), tomorrow))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        mvc.perform(as(jorge, post(item(JsonPath.read(body, "$.id")) + "/open")))
+                .andExpect(jsonPath("$.expirationDate").value(tomorrow))
+                .andExpect(jsonPath("$.expirationSource").value("USER"));
+    }
+
+    @Test
+    void everyShelfLifeRuleOfTheMigrationWasLoaded() {
+        // The food rules are inserted by joining on the catalog slug; a typo there would silently drop a rule.
+        assertThat(jdbc.queryForObject("select count(*) from shelf_life_rules where food_id is not null", Integer.class))
+                .isEqualTo(37);
+        assertThat(jdbc.queryForObject("select count(*) from shelf_life_rules where category is not null", Integer.class))
+                .isEqualTo(20);
     }
 
     private String consumeFirst() {

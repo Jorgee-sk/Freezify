@@ -147,7 +147,9 @@
     "next": "Next",
     "pageOf": "Page {{page}} of {{total}}",
     "count_one": "{{count}} food",
-    "count_other": "{{count}} foods"
+    "count_other": "{{count}} foods",
+    "estimateHelp": "Leave it empty and we will estimate it from the food and where you keep it.",
+    "currentEstimate": "Right now we estimate {{date}}. Enter the date on the package if you know it."
   },
   "units": {
     "GRAM": "g",
