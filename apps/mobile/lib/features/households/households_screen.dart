@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../auth/auth_controller.dart';
 import '../notifications/notification_bell.dart';
 import '../notifications/notification_repository.dart';
+import '../notifications/push_controller.dart';
 import 'dialogs.dart';
 import 'households_repository.dart';
 
@@ -57,6 +58,14 @@ class HouseholdsScreen extends ConsumerWidget {
     }
   }
 
+  /// The phone is withdrawn first, while there is still a session to say it with. It is done here and not
+  /// inside the auth controller because the push controller already depends on it.
+  Future<void> _logout(WidgetRef ref) async {
+    final auth = ref.read(authControllerProvider.notifier);
+    await ref.read(pushControllerProvider).unregister();
+    await auth.logout();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -71,7 +80,7 @@ class HouseholdsScreen extends ConsumerWidget {
           const NotificationBell(),
           PopupMenuButton<String>(
             onSelected: (value) => switch (value) {
-              'logout' => ref.read(authControllerProvider.notifier).logout(),
+              'logout' => _logout(ref),
               _ => _changeLocale(context, ref, value),
             },
             itemBuilder: (context) => [

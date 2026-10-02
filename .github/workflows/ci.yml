@@ -61,7 +61,11 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test
+      - run: flutter test --file-reporter json:test-results.json
+      # The job log needs a GitHub login; annotations do not. Each failed test is named with its error.
+      - name: Report failed tests
+        if: failure()
+        run: python3 ../../.github/scripts/report_flutter_failures.py test-results.json
 
   docker:
     runs-on: ubuntu-latest
