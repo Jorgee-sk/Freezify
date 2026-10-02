@@ -1,4 +1,4 @@
-package com.freezify.recipes.internal;
+package com.freezify.recipes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -6,13 +6,13 @@ import static org.assertj.core.api.Assertions.within;
 
 import com.freezify.food.Quantity;
 import com.freezify.food.Unit;
-import com.freezify.recipes.internal.Recipe.Course;
-import com.freezify.recipes.internal.Recipe.Difficulty;
-import com.freezify.recipes.internal.Recipe.Ingredient;
-import com.freezify.recipes.internal.RecipeScorer.Availability;
-import com.freezify.recipes.internal.RecipeScorer.FoodStock;
-import com.freezify.recipes.internal.RecipeScorer.Scored;
-import com.freezify.recipes.internal.RecipeScorer.Weights;
+import com.freezify.recipes.Recipe.Course;
+import com.freezify.recipes.Recipe.Difficulty;
+import com.freezify.recipes.Recipe.Ingredient;
+import com.freezify.recipes.RecipeScorer.Availability;
+import com.freezify.recipes.RecipeScorer.FoodStock;
+import com.freezify.recipes.RecipeScorer.Scored;
+import com.freezify.recipes.RecipeScorer.Weights;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;

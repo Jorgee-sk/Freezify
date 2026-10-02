@@ -1,5 +1,8 @@
 package com.freezify.recipes.internal;
 
+import com.freezify.recipes.RecipeScorer;
+import com.freezify.recipes.Recipe;
+import com.freezify.recipes.RecipeCatalog;
 import com.freezify.common.ApiException;
 import com.freezify.common.PageResponse;
 import com.freezify.common.Today;
@@ -12,11 +15,11 @@ import com.freezify.inventory.HouseholdStock;
 import com.freezify.inventory.HouseholdStock.StockItem;
 import com.freezify.recipes.RecipeEvents.RecipeCooked;
 import com.freezify.recipes.RecipeEvents.RecipeViewed;
-import com.freezify.recipes.internal.Recipe.Course;
-import com.freezify.recipes.internal.Recipe.Difficulty;
-import com.freezify.recipes.internal.RecipeScorer.FoodStock;
-import com.freezify.recipes.internal.RecipeScorer.IngredientMatch;
-import com.freezify.recipes.internal.RecipeScorer.Scored;
+import com.freezify.recipes.Recipe.Course;
+import com.freezify.recipes.Recipe.Difficulty;
+import com.freezify.recipes.RecipeScorer.FoodStock;
+import com.freezify.recipes.RecipeScorer.IngredientMatch;
+import com.freezify.recipes.RecipeScorer.Scored;
 import com.freezify.recipes.internal.RecipeViews.IngredientView;
 import com.freezify.recipes.internal.RecipeViews.MatchedIngredient;
 import com.freezify.recipes.internal.RecipeViews.Recommendation;
@@ -31,6 +34,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
@@ -43,7 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 record RecipeProperties(RecipeScorer.Weights weights) {}
 
 @Service
-public class RecipeService {
+public class RecipeService implements RecipeCatalog {
 
     /**
      * Which recipes of the catalog to list.
@@ -114,7 +118,7 @@ public class RecipeService {
 
     @Transactional(readOnly = true)
     public RecipeDetail get(UUID recipeId, UUID userId, String language) {
-        Recipe recipe = find(recipeId);
+        Recipe recipe = require(recipeId);
         events.publishEvent(new RecipeViewed(userId, recipeId));
         return new RecipeDetail(
                 RecipeSummary.of(recipe, language),
@@ -138,10 +142,7 @@ public class RecipeService {
         Diet diet = dietOf(householdId, userId);
         LocalDate day = today.date();
         Map<UUID, FoodStock> available = availableFood(householdId, day);
-        Map<UUID, LocalDate> lastCooked = cooked.lastCookedByRecipe(householdId).stream()
-                .collect(Collectors.toMap(
-                        CookedRecipeRepository.LastCooked::getRecipeId,
-                        CookedRecipeRepository.LastCooked::getLastCooked));
+        Map<UUID, LocalDate> lastCooked = lastCooked(householdId);
 
         return book.all().stream()
                 // A hard filter, applied before anything is scored: what the household does not eat is never offered.
@@ -155,6 +156,27 @@ public class RecipeService {
                 .limit(limit)
                 .map(scored -> toRecommendation(scored, language, day))
                 .toList();
+    }
+
+    @Override
+    public Optional<Recipe> find(UUID recipeId) {
+        return book.find(recipeId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Recipe> eatenBy(UUID householdId) {
+        Diet diet = diets.findById(householdId).map(HouseholdDietEntity::toDiet).orElseGet(Diet::none);
+        return book.all().stream().filter(diet::allows).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, LocalDate> lastCooked(UUID householdId) {
+        return cooked.lastCookedByRecipe(householdId).stream()
+                .collect(Collectors.toMap(
+                        CookedRecipeRepository.LastCooked::getRecipeId,
+                        CookedRecipeRepository.LastCooked::getLastCooked));
     }
 
     /** What the household does not eat. Any member can see it. */
@@ -179,7 +201,7 @@ public class RecipeService {
     @Transactional
     public void markCooked(UUID householdId, UUID userId, UUID recipeId) {
         access.requireMember(householdId, userId);
-        find(recipeId);
+        require(recipeId);
         // Saying it twice on the same day, or two members saying it at once, counts once.
         if (cooked.recordOnce(householdId, recipeId, userId, today.date(), clock.instant()) == 1) {
             events.publishEvent(new RecipeCooked(userId, householdId, recipeId));
@@ -255,7 +277,7 @@ public class RecipeService {
         return catalog.findById(foodId).map(food -> food.name(language)).orElse("");
     }
 
-    private Recipe find(UUID recipeId) {
+    private Recipe require(UUID recipeId) {
         return book.find(recipeId).orElseThrow(() -> ApiException.notFound("RECIPE_NOT_FOUND", "Recipe not found."));
     }
 

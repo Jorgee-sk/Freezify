@@ -69,6 +69,14 @@ freezify:
       expiry-urgency: 0.30
       convenience: 0.10
       novelty: 0.10
+  meal-planning:
+    # How much each factor counts when the generator chooses the recipe of a meal. Only their proportions matter.
+    weights:
+      waste: 0.35
+      pantry: 0.25
+      variety: 0.20
+      novelty: 0.10
+      effort: 0.10
   push:
     # Path of the Firebase service account key. Without it nothing is sent and notifications are only seen
     # inside the app. The key itself never goes into the repository or an image.

@@ -1,12 +1,14 @@
 package com.freezify.recipes.internal;
 
+import com.freezify.recipes.RecipeScorer;
+import com.freezify.recipes.Recipe;
 import com.freezify.expiration.ExpirationPriority;
 import com.freezify.food.FoodTrait;
 import com.freezify.food.Unit;
-import com.freezify.recipes.internal.Recipe.Course;
-import com.freezify.recipes.internal.Recipe.Difficulty;
-import com.freezify.recipes.internal.RecipeScorer.Availability;
-import com.freezify.recipes.internal.RecipeScorer.Factors;
+import com.freezify.recipes.Recipe.Course;
+import com.freezify.recipes.Recipe.Difficulty;
+import com.freezify.recipes.RecipeScorer.Availability;
+import com.freezify.recipes.RecipeScorer.Factors;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;

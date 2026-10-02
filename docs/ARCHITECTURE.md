@@ -69,12 +69,12 @@ tipos internos de otro.
 | `expiration` | Niveles de prioridad y estimación de fechas por reglas de vida útil | food | 3 ✔ |
 | `notifications` | Avisos de caducidad dentro de la app, preferencias, dispositivos y envío push por FCM | households, inventory, expiration, food, users | 3 ✔ |
 | `recipes` | Catálogo de recetas, recomendador y registro de lo cocinado | food, inventory, expiration, households | 4 ✔ |
-| `mealplanning` | Plan semanal y generador | recipes, inventory | 5 |
+| `mealplanning` | Plan semanal, simulación de la despensa y generador | recipes, inventory, food, expiration, households | 5 (backend ✔) |
 | `shopping` | Listas de la compra | mealplanning, inventory, food | 6 |
 | `ai` | `AIProvider`, `AiService`, casos de uso de IA | common | 7 |
 | `integrations` | `ProductCatalogProvider` y fuentes externas | food | 7+ |
-| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory`, `notifications` y `recipes` | 2 ✔ / 8 |
-| `realtime` | Flujos de eventos (SSE) por hogar | households; escucha eventos de `inventory` y `households` | 2 ✔ |
+| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory`, `notifications`, `recipes` y `mealplanning` | 2 ✔ / 8 |
+| `realtime` | Flujos de eventos (SSE) por hogar | households; escucha eventos de `inventory`, `mealplanning` y `households` | 2 ✔ |
 
 Los módulos marcados con ✔, además de los cuatro de la Fase 1, existen en el código. Los de fases futuras **no existen todavía**: se crean cuando tienen contenido real.
 
@@ -144,6 +144,13 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D43 | Las restricciones alimentarias son **del hogar**, no de cada usuario | Se cocina para todos en la misma cocina; y así no existe un dato de salud personal que otros miembros puedan deducir |
 | D44 | Lo que contiene una receta se **deriva** de sus ingredientes (`food_traits`), no se etiqueta a mano por receta | Una sola fuente de verdad: corregir un alimento corrige todas sus recetas, y ninguna receta puede quedar sin etiquetar |
 | D45 | Las restricciones son un **filtro previo** a la puntuación, no un factor | Una receta que el hogar no puede comer no debe aparecer nunca, por bien que encaje |
+| D46 | `MealPlan` no es una tabla: un plan es la semana de un hogar y solo se guardan sus comidas (`meal_plan_entries`) | La semana no tiene datos propios; una tabla más solo añadiría una creación concurrente que resolver |
+| D47 | El plan **simula** la despensa (qué queda cada día) y nunca escribe en el inventario | Planificar no es consumir: descontar a ciegas perdería datos (como D41) |
+| D48 | Lo que habrá de cada ingrediente se **recalcula al leer** el plan, no se guarda al generarlo | El inventario cambia cada día; una explicación guardada quedaría obsoleta y sería falsa |
+| D49 | El generador es **voraz y determinista**: comida a comida, en orden cronológico | Explicable y testeable (D15); un optimizador global no se justifica con 21 platos principales |
+| D50 | La variedad es una **regla** (qué recetas pueden entrar) antes que un factor, con una excepción: aprovechar algo a punto de caducar | Con mucha cantidad de un alimento, ningún peso evita repetirlo cada día; pero evitar el desperdicio es el objetivo del producto |
+| D51 | Generar **no toca lo que eligió una persona**, y solo reemplaza lo generado si se pide | Una operación automática no debe perder decisiones del usuario |
+| D52 | Un alimento medido de forma no comparable con la receta **no se descuenta** | No se sabe cuánto se usa; afirmar que se acaba o que sobra sería inventar un dato |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -167,7 +174,7 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 ## 4. Modelo de datos
 
 Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`, `V4__notifications.sql`,
-`V5__device_tokens.sql`, `V6__recipes.sql`, `V7__dietary_restrictions.sql`):
+`V5__device_tokens.sql`, `V6__recipes.sql`, `V7__dietary_restrictions.sql`, `V8__meal_plan.sql`):
 
 ```text
 users ──< refresh_tokens
@@ -184,6 +191,7 @@ recipes ──< recipe_ingredients >── foods
 recipes ──< cooked_recipes >── households
 foods ──< food_traits
 households ── household_diets
+households ──< meal_plan_entries >── recipes
 ```
 
 Entidades previstas por fase:
@@ -193,7 +201,7 @@ Entidades previstas por fase:
 | 2 ✔ | `Food` (catálogo), `FoodItem`, `FoodOutcome` (consumo y desperdicio), `ProductEvent`; `FoodCategory` es un enum |
 | 3 ✔ | `ShelfLifeRule`, `Notification`, `NotificationPreference`, `DeviceToken` |
 | 4 ✔ | `Recipe`, `RecipeIngredient`, `CookedRecipe`, `FoodTrait`, `HouseholdDiet`; `UserPreference` (gustos personales) pendiente |
-| 5 | `MealPlan`, `MealPlanEntry` |
+| 5 | `MealPlanEntry` (hecha); `MealPlan` es la semana de un hogar, sin tabla (D46) |
 | 6 | `ShoppingList`, `ShoppingListItem` |
 | 7 | `Scan`, `ScanResult`, `Product` |
 
@@ -233,7 +241,7 @@ Fase 2 (todo bajo `/households/{id}/inventory` salvo el catálogo):
 | POST | `/inventory/{itemId}/consume` | Consumir todo o una cantidad |
 | POST | `/inventory/{itemId}/discard` | Tirar todo o una cantidad, con motivo |
 | GET | `/inventory/consume-first` | Cuántos alimentos hay en cada nivel de prioridad y cuáles comer primero |
-| GET | `/households/{id}/events` | Flujo SSE: `inventory-changed` cuando cambia el inventario (sin datos) |
+| GET | `/households/{id}/events` | Flujo SSE: `inventory-changed` cuando cambia el inventario y `meal-plan-changed` cuando cambia el plan (sin datos) |
 
 Fase 3 (avisos del usuario que hace la petición):
 
@@ -256,6 +264,10 @@ Fase 4:
 | GET | `/households/{id}/recipes/recommendations?lang=&limit=` | Qué cocinar con lo que hay, con los datos que lo explican |
 | POST | `/households/{id}/recipes/{recipeId}/cooked` | El hogar ha cocinado la receta hoy |
 | GET / PUT | `/households/{id}/diet` | Ver / reemplazar lo que no se come en el hogar (cualquier miembro) |
+| GET | `/households/{id}/meal-plan?week=&lang=` | La semana (lunes a domingo) que contiene esa fecha: comidas, lo que habrá de cada ingrediente y lo que el plan deja caducar |
+| PUT / DELETE | `/households/{id}/meal-plan/{date}/{slot}` | Elegir o sustituir / quitar la receta de una comida (`LUNCH`, `DINNER`) |
+| POST | `/households/{id}/meal-plan/{date}/{slot}/move` | Mover la comida a otro día o comida; si está ocupada, se intercambian |
+| POST | `/households/{id}/meal-plan/generate` | Rellenar las comidas vacías de una semana, de hoy en adelante |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).
