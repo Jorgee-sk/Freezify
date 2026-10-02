@@ -9,8 +9,7 @@ El estado detallado de cada entrega está en [STATUS.md](STATUS.md).
 | 1 | Foundation | ✅ Completada |
 | 2 | Inventory | ✅ Completada |
 | 3 | Expiration Engine | 🟡 Código completo; falta probar el push en un móvil Android |
-| 4 | Recipes | 🟡 En curso: catálogo y recomendador en el servidor |
-| 4 | Recipes | ⏳ Pendiente |
+| 4 | Recipes | 🟡 En curso: faltan las restricciones alimentarias |
 | 5 | Smart Planning | ⏳ Pendiente |
 | 6 | Shopping | ⏳ Pendiente |
 | 7 | AI / OCR | ⏳ Pendiente |

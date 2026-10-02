@@ -12,6 +12,8 @@ import { InventoryPage } from './pages/InventoryPage'
 import { LoginPage } from './pages/LoginPage'
 import { NotificationPreferencesPage } from './pages/NotificationPreferencesPage'
 import { NotificationsPage } from './pages/NotificationsPage'
+import { RecipeDetailPage } from './pages/RecipeDetailPage'
+import { RecipesPage } from './pages/RecipesPage'
 import { RegisterPage } from './pages/RegisterPage'
 
 function createQueryClient() {
@@ -52,6 +54,8 @@ export function AppRoutes() {
           <Route path="/" element={<HouseholdsPage />} />
           <Route path="/households/:householdId" element={<InventoryPage />} />
           <Route path="/households/:householdId/settings" element={<HouseholdDetailPage />} />
+          <Route path="/households/:householdId/recipes" element={<RecipesPage />} />
+          <Route path="/households/:householdId/recipes/:recipeId" element={<RecipeDetailPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/notifications/preferences" element={<NotificationPreferencesPage />} />
         </Route>

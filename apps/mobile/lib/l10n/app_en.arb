@@ -388,5 +388,183 @@
   "prefThresholdSoon": "Expires in 5 days or less",
   "prefCategories": "Tell me about these categories",
   "preferencesSaved": "Preferences saved",
-  "errorNotificationNotFound": "This notification no longer exists."
+  "errorNotificationNotFound": "This notification no longer exists.",
+  "recipesTitle": "Recipes",
+  "recommendedTitle": "What to cook with what you have",
+  "noRecommendations": "No recipe uses what is in your inventory. Add some food and look again.",
+  "catalogTitle": "All recipes",
+  "searchRecipes": "Search recipes…",
+  "anyCourse": "All",
+  "courseMain": "Main course",
+  "courseBreakfast": "Breakfast",
+  "courseDessert": "Dessert",
+  "difficultyEasy": "Easy",
+  "difficultyMedium": "Medium",
+  "difficultyHard": "Hard",
+  "recipeMinutes": "{count} min",
+  "@recipeMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipeServings": "{count, plural, =1{{count} serving} other{{count} servings}}",
+  "@recipeServings": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "upToMinutes": "Up to {count} min",
+  "@upToMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recipesEmptyFiltered": "No recipe matches the filter.",
+  "recipeFit": "{percent}% match",
+  "@recipeFit": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "recommendedBecause": "Recommended because:",
+  "reasonExpires": "{count, plural, =1{You have {food} due to expire in {count} day.} other{You have {food} due to expire in {count} days.}}",
+  "@reasonExpires": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reasonExpiresEstimated": "{count, plural, =1{You have {food} estimated to expire in about {count} day.} other{You have {food} estimated to expire in about {count} days.}}",
+  "@reasonExpiresEstimated": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reasonExpiresToday": "You have {food} due to expire today.",
+  "@reasonExpiresToday": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonExpiresTodayEstimated": "You have {food} estimated to expire today.",
+  "@reasonExpiresTodayEstimated": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonHaveAll": "You have every ingredient.",
+  "reasonHave": "{count, plural, =1{You have {have} of {count} ingredient.} other{You have {have} of {count} ingredients.}}",
+  "@reasonHave": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reasonMissing": "{count, plural, =1{You only need: {foods}.} other{You need: {foods}.}}",
+  "@reasonMissing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "foods": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonMissingMany": "{count, plural, =1{You need {count} more ingredient.} other{You need {count} more ingredients.}}",
+  "@reasonMissingMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reasonPartial": "You have less {food} than the recipe asks for.",
+  "@reasonPartial": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonUnknownQuantity": "Check how much {food} you have: it cannot be compared with the recipe.",
+  "@reasonUnknownQuantity": {
+    "placeholders": {
+      "food": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonTime": "About {minutes} min.",
+  "@reasonTime": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "reasonCookedToday": "You cooked it today.",
+  "reasonCooked": "{count, plural, =1{You cooked it {count} day ago.} other{You cooked it {count} days ago.}}",
+  "@reasonCooked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ingredientsTitle": "Ingredients",
+  "stapleLabel": "kitchen staple",
+  "stepsTitle": "Method",
+  "nothingAtHome": "None of the ingredients of this recipe is in your inventory.",
+  "availabilityEnough": "You have it",
+  "availabilityPartial": "You have less",
+  "availabilityUnknown": "Check the amount",
+  "availabilityMissing": "Missing",
+  "badgeToday": "Expires today",
+  "badgeTodayEstimated": "Expires today (estimated)",
+  "badgeDays": "{count, plural, =1{Expires in {count} day} other{Expires in {count} days}}",
+  "@badgeDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "badgeDaysEstimated": "{count, plural, =1{Expires in about {count} day (estimated)} other{Expires in about {count} days (estimated)}}",
+  "@badgeDaysEstimated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "markCooked": "I cooked it",
+  "cookedSaved": "Noted",
+  "cookedHelp": "It keeps the same recipe from being recommended every day. It does not change your inventory: consume the food you used.",
+  "errorRecipeNotFound": "This recipe does not exist."
 }

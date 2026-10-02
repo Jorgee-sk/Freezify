@@ -8,7 +8,7 @@
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
 | 3 — Expiration Engine | 🟡 Código completo; **falta comprobar en un móvil Android que el push llega**, y hasta entonces no se da por cerrada |
-| 4 — Recipes | 🟡 En curso: catálogo y recomendador hechos en el servidor; faltan las pantallas de web y móvil y las restricciones alimentarias |
+| 4 — Recipes | 🟡 En curso: catálogo, recomendador y pantallas de web y móvil hechos; faltan las restricciones alimentarias |
 
 ## Fase 4 — Recipes 🟡
 
@@ -37,23 +37,40 @@
 - **"La he cocinado"** (`POST /households/{id}/recipes/{recipeId}/cooked`): se anota una vez por hogar,
   receta y día, y baja esa receta en las recomendaciones durante dos semanas. No toca el inventario.
 - Eventos de producto `recipe_viewed` y `recipe_cooked`.
+- **Pantallas de recetas en web y móvil**, con acceso desde el inventario del hogar:
+  - "Qué cocinar con lo que tienes": las cinco mejores recomendaciones, cada una con su encaje y sus motivos
+    en frases ("Tienes calabacín con caducidad en 2 días", "Solo te falta: mozzarella", "Tiempo aproximado:
+    25 min"). Las frases se construyen en el cliente con los datos de la recomendación; una fecha estimada
+    se dice siempre como estimada.
+  - Catálogo con búsqueda y filtros por tiempo y tipo.
+  - Detalle de receta: ingredientes con cantidad y, para este hogar, si lo tienes, tienes menos, hay que
+    comprobar la cantidad o falta, más cuándo caduca lo que está a punto; pasos; y "La he cocinado".
 
 ### Tests
 
 | Qué | Resultado |
 |---|---|
 | Backend `./mvnw verify` | ✅ 199 tests (33 nuevos: 16 del cálculo de puntuación y 17 de la API de recetas); 1 omitido, el que habla con Firebase real |
+| Web lint / test / build | ✅ sin avisos / 105 tests (20 de recetas) / correcto |
+| Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
+| Mobile `flutter test` | 🟡 96 pasaron en CI (pull request #9); los **16 nuevos de recetas no se han ejecutado** (112 en total): correrán en la CI del próximo pull request |
+| Recetas, web contra el backend real | ✅ recomendaciones con sus motivos, detalle con lo que hay de cada ingrediente y "La he cocinado", que bajó la receta del 71 % al 59 % y añadió "La has cocinado hoy" |
+| Recetas, código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ recomendaciones con sus motivos y detalle de receta. No se pulsó "La he cocinado" ni se probaron los filtros en esta versión |
 | Recomendador contra el backend y la base locales reales | ✅ con calabacín (2 días), tomate, pasta, huevos, champiñones sin fecha y leche caducada: propone primero el revuelto de champiñones y la pasta con calabacín, marca la fecha de los champiñones como estimada y no usa la leche caducada |
 | Migración `V6` sobre la base local con datos | ✅ aplicada; comprueba ella misma que entran las 25 recetas y sus 153 ingredientes |
 
 ### Pendiente en esta fase
 
-- **Pantallas de recetas en web y móvil**: hoy solo existe la API.
 - **Restricciones alimentarias** (dietas y alergias) como filtro duro, y preferencias del usuario.
 - **Avisos de recetas** ("hay recetas que aprovechan lo que va a caducar").
 
 ### Known issues
 
+- **La app móvil pide el catálogo entero de una vez** (hasta 100 recetas) en lugar de paginar; la web pagina.
+- **La web no actualiza las recomendaciones en tiempo real** si otro miembro cambia el inventario mientras
+  la página está abierta; se piden de nuevo cada vez que se entra.
+- **Los avisos de caducidad se redactan mal con nombres en plural** ("Huevos caduca hoy"); en las recetas ya
+  está resuelto con frases que no dependen del número.
 - **Sin restricciones alimentarias todavía**: el recomendador puede proponer carne a una persona vegetariana
   o un plato con gluten a una persona celíaca. No debe abrirse a usuarios hasta que exista ese filtro.
 - **Las recetas no llevan información nutricional ni imagen**: no hay una fuente fiable de la que sacarlas y
@@ -361,6 +378,6 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request del servidor de recetas y confirmar la CI.
-2. Fase 4: pantallas de recetas y recomendaciones en web y móvil; después, restricciones alimentarias.
+1. Abrir el pull request de las pantallas de recetas y confirmar en CI los 16 tests nuevos del móvil.
+2. Fase 4: restricciones alimentarias (dietas y alergias) como filtro duro, con las preferencias del usuario.
 3. Pendiente de la Fase 3: probar el push en un móvil Android.

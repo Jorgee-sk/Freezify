@@ -24,6 +24,7 @@ String errorMessage(AppLocalizations l10n, Object error) {
     'QUANTITY_EXCEEDS_AVAILABLE' => l10n.errorQuantityExceeds,
     'CONCURRENT_MODIFICATION' => l10n.errorConcurrentModification,
     'NOTIFICATION_NOT_FOUND' => l10n.errorNotificationNotFound,
+    'RECIPE_NOT_FOUND' => l10n.errorRecipeNotFound,
     _ => l10n.errorGeneric,
   };
 }

@@ -80,7 +80,8 @@
     "FOOD_NOT_FOUND": "Ese alimento no existe en el catálogo.",
     "INCOMPATIBLE_UNIT": "Esa unidad no es compatible con la del alimento.",
     "QUANTITY_EXCEEDS_AVAILABLE": "Queda menos cantidad de la indicada.",
-    "NOTIFICATION_NOT_FOUND": "Este aviso ya no existe."
+    "NOTIFICATION_NOT_FOUND": "Este aviso ya no existe.",
+    "RECIPE_NOT_FOUND": "Esta receta no existe."
   },
   "inventory": {
     "title": "Inventario",
@@ -249,5 +250,79 @@
       "categories": "Avisarme de estas categorías",
       "saved": "Preferencias guardadas"
     }
+  },
+  "recipes": {
+    "title": "Recetas",
+    "recommendedTitle": "Qué cocinar con lo que tienes",
+    "noRecommendations": "Ninguna receta usa lo que hay en tu inventario. Añade alimentos y vuelve a mirar.",
+    "catalogTitle": "Todas las recetas",
+    "search": "Buscar receta",
+    "searchPlaceholder": "Buscar receta…",
+    "time": "Tiempo",
+    "anyTime": "Cualquier duración",
+    "upTo_one": "Hasta {{count}} minuto",
+    "upTo_other": "Hasta {{count}} minutos",
+    "course": "Tipo",
+    "anyCourse": "Todos los tipos",
+    "courseOption": {
+      "MAIN": "Plato principal",
+      "BREAKFAST": "Desayuno",
+      "DESSERT": "Postre"
+    },
+    "difficulty": {
+      "EASY": "Fácil",
+      "MEDIUM": "Media",
+      "HARD": "Difícil"
+    },
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "servings_one": "{{count}} ración",
+    "servings_other": "{{count}} raciones",
+    "emptyFiltered": "Ninguna receta coincide con el filtro.",
+    "fit": "Encaje {{percent}} %",
+    "because": "Recomendada porque:",
+    "reason": {
+      "expires_one": "Tienes {{food}} con caducidad en {{count}} día.",
+      "expires_other": "Tienes {{food}} con caducidad en {{count}} días.",
+      "expiresEstimated_one": "Tienes {{food}} con caducidad estimada en {{count}} día.",
+      "expiresEstimated_other": "Tienes {{food}} con caducidad estimada en {{count}} días.",
+      "expiresToday": "Tienes {{food}} con caducidad hoy.",
+      "expiresTodayEstimated": "Tienes {{food}} con caducidad estimada hoy.",
+      "haveAll": "Tienes todos los ingredientes.",
+      "have_one": "Tienes {{have}} de {{count}} ingrediente.",
+      "have_other": "Tienes {{have}} de {{count}} ingredientes.",
+      "missing_one": "Solo te falta: {{foods}}.",
+      "missing_other": "Te faltan: {{foods}}.",
+      "missingMany_one": "Te falta {{count}} ingrediente.",
+      "missingMany_other": "Te faltan {{count}} ingredientes.",
+      "partial": "Tienes menos {{food}} de lo que pide la receta.",
+      "unknownQuantity": "Comprueba la cantidad de {{food}}: no podemos compararla con la de la receta.",
+      "time": "Tiempo aproximado: {{minutes}} min.",
+      "cookedToday": "La has cocinado hoy.",
+      "cooked_one": "La cocinaste hace {{count}} día.",
+      "cooked_other": "La cocinaste hace {{count}} días."
+    },
+    "backToRecipes": "Volver a las recetas",
+    "ingredients": "Ingredientes",
+    "staple": "básico de cocina",
+    "steps": "Preparación",
+    "nothingAtHome": "No tienes en el inventario ninguno de los ingredientes de esta receta.",
+    "availability": {
+      "ENOUGH": "Lo tienes",
+      "PARTIAL": "Tienes menos",
+      "UNKNOWN_QUANTITY": "Tienes; comprueba la cantidad",
+      "MISSING": "Te falta"
+    },
+    "badge": {
+      "today": "Caduca hoy",
+      "todayEstimated": "Caduca hoy (estimada)",
+      "days_one": "Caduca en {{count}} día",
+      "days_other": "Caduca en {{count}} días",
+      "daysEstimated_one": "Caduca en unos {{count}} día (estimada)",
+      "daysEstimated_other": "Caduca en unos {{count}} días (estimada)"
+    },
+    "markCooked": "La he cocinado",
+    "cookedSaved": "Anotado",
+    "cookedHelp": "Sirve para no recomendarte lo mismo cada día. No cambia tu inventario: consume los alimentos que hayas usado."
   }
 }

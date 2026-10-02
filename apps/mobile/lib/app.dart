@@ -12,6 +12,8 @@ import 'features/inventory/inventory_screen.dart';
 import 'features/notifications/notification_preferences_screen.dart';
 import 'features/notifications/notifications_screen.dart';
 import 'features/notifications/push_controller.dart';
+import 'features/recipes/recipe_detail_screen.dart';
+import 'features/recipes/recipes_screen.dart';
 import 'l10n/app_localizations.dart';
 
 const _seedColor = Color(0xFF1F9D63);
@@ -54,6 +56,19 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'settings',
                 builder: (_, state) => HouseholdDetailScreen(householdId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: 'recipes',
+                builder: (_, state) => RecipesScreen(householdId: state.pathParameters['id']!),
+                routes: [
+                  GoRoute(
+                    path: ':recipeId',
+                    builder: (_, state) => RecipeDetailScreen(
+                      householdId: state.pathParameters['id']!,
+                      recipeId: state.pathParameters['recipeId']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

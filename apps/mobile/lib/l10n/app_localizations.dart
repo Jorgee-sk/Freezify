@@ -1201,6 +1201,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This notification no longer exists.'**
   String get errorNotificationNotFound;
+
+  /// No description provided for @recipesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipes'**
+  String get recipesTitle;
+
+  /// No description provided for @recommendedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What to cook with what you have'**
+  String get recommendedTitle;
+
+  /// No description provided for @noRecommendations.
+  ///
+  /// In en, this message translates to:
+  /// **'No recipe uses what is in your inventory. Add some food and look again.'**
+  String get noRecommendations;
+
+  /// No description provided for @catalogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All recipes'**
+  String get catalogTitle;
+
+  /// No description provided for @searchRecipes.
+  ///
+  /// In en, this message translates to:
+  /// **'Search recipes…'**
+  String get searchRecipes;
+
+  /// No description provided for @anyCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get anyCourse;
+
+  /// No description provided for @courseMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Main course'**
+  String get courseMain;
+
+  /// No description provided for @courseBreakfast.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakfast'**
+  String get courseBreakfast;
+
+  /// No description provided for @courseDessert.
+  ///
+  /// In en, this message translates to:
+  /// **'Dessert'**
+  String get courseDessert;
+
+  /// No description provided for @difficultyEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get difficultyEasy;
+
+  /// No description provided for @difficultyMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get difficultyMedium;
+
+  /// No description provided for @difficultyHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard'**
+  String get difficultyHard;
+
+  /// No description provided for @recipeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String recipeMinutes(int count);
+
+  /// No description provided for @recipeServings.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} serving} other{{count} servings}}'**
+  String recipeServings(int count);
+
+  /// No description provided for @upToMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {count} min'**
+  String upToMinutes(int count);
+
+  /// No description provided for @recipesEmptyFiltered.
+  ///
+  /// In en, this message translates to:
+  /// **'No recipe matches the filter.'**
+  String get recipesEmptyFiltered;
+
+  /// No description provided for @recipeFit.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% match'**
+  String recipeFit(int percent);
+
+  /// No description provided for @recommendedBecause.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended because:'**
+  String get recommendedBecause;
+
+  /// No description provided for @reasonExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You have {food} due to expire in {count} day.} other{You have {food} due to expire in {count} days.}}'**
+  String reasonExpires(String food, int count);
+
+  /// No description provided for @reasonExpiresEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You have {food} estimated to expire in about {count} day.} other{You have {food} estimated to expire in about {count} days.}}'**
+  String reasonExpiresEstimated(String food, int count);
+
+  /// No description provided for @reasonExpiresToday.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {food} due to expire today.'**
+  String reasonExpiresToday(String food);
+
+  /// No description provided for @reasonExpiresTodayEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {food} estimated to expire today.'**
+  String reasonExpiresTodayEstimated(String food);
+
+  /// No description provided for @reasonHaveAll.
+  ///
+  /// In en, this message translates to:
+  /// **'You have every ingredient.'**
+  String get reasonHaveAll;
+
+  /// No description provided for @reasonHave.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You have {have} of {count} ingredient.} other{You have {have} of {count} ingredients.}}'**
+  String reasonHave(int have, int count);
+
+  /// No description provided for @reasonMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You only need: {foods}.} other{You need: {foods}.}}'**
+  String reasonMissing(int count, String foods);
+
+  /// No description provided for @reasonMissingMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You need {count} more ingredient.} other{You need {count} more ingredients.}}'**
+  String reasonMissingMany(int count);
+
+  /// No description provided for @reasonPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'You have less {food} than the recipe asks for.'**
+  String reasonPartial(String food);
+
+  /// No description provided for @reasonUnknownQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Check how much {food} you have: it cannot be compared with the recipe.'**
+  String reasonUnknownQuantity(String food);
+
+  /// No description provided for @reasonTime.
+  ///
+  /// In en, this message translates to:
+  /// **'About {minutes} min.'**
+  String reasonTime(int minutes);
+
+  /// No description provided for @reasonCookedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'You cooked it today.'**
+  String get reasonCookedToday;
+
+  /// No description provided for @reasonCooked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You cooked it {count} day ago.} other{You cooked it {count} days ago.}}'**
+  String reasonCooked(int count);
+
+  /// No description provided for @ingredientsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredients'**
+  String get ingredientsTitle;
+
+  /// No description provided for @stapleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'kitchen staple'**
+  String get stapleLabel;
+
+  /// No description provided for @stepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Method'**
+  String get stepsTitle;
+
+  /// No description provided for @nothingAtHome.
+  ///
+  /// In en, this message translates to:
+  /// **'None of the ingredients of this recipe is in your inventory.'**
+  String get nothingAtHome;
+
+  /// No description provided for @availabilityEnough.
+  ///
+  /// In en, this message translates to:
+  /// **'You have it'**
+  String get availabilityEnough;
+
+  /// No description provided for @availabilityPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'You have less'**
+  String get availabilityPartial;
+
+  /// No description provided for @availabilityUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the amount'**
+  String get availabilityUnknown;
+
+  /// No description provided for @availabilityMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing'**
+  String get availabilityMissing;
+
+  /// No description provided for @badgeToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires today'**
+  String get badgeToday;
+
+  /// No description provided for @badgeTodayEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires today (estimated)'**
+  String get badgeTodayEstimated;
+
+  /// No description provided for @badgeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Expires in {count} day} other{Expires in {count} days}}'**
+  String badgeDays(int count);
+
+  /// No description provided for @badgeDaysEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Expires in about {count} day (estimated)} other{Expires in about {count} days (estimated)}}'**
+  String badgeDaysEstimated(int count);
+
+  /// No description provided for @markCooked.
+  ///
+  /// In en, this message translates to:
+  /// **'I cooked it'**
+  String get markCooked;
+
+  /// No description provided for @cookedSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Noted'**
+  String get cookedSaved;
+
+  /// No description provided for @cookedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'It keeps the same recipe from being recommended every day. It does not change your inventory: consume the food you used.'**
+  String get cookedHelp;
+
+  /// No description provided for @errorRecipeNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This recipe does not exist.'**
+  String get errorRecipeNotFound;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

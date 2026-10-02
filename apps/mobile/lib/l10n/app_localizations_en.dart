@@ -658,4 +658,229 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorNotificationNotFound => 'This notification no longer exists.';
+
+  @override
+  String get recipesTitle => 'Recipes';
+
+  @override
+  String get recommendedTitle => 'What to cook with what you have';
+
+  @override
+  String get noRecommendations => 'No recipe uses what is in your inventory. Add some food and look again.';
+
+  @override
+  String get catalogTitle => 'All recipes';
+
+  @override
+  String get searchRecipes => 'Search recipes…';
+
+  @override
+  String get anyCourse => 'All';
+
+  @override
+  String get courseMain => 'Main course';
+
+  @override
+  String get courseBreakfast => 'Breakfast';
+
+  @override
+  String get courseDessert => 'Dessert';
+
+  @override
+  String get difficultyEasy => 'Easy';
+
+  @override
+  String get difficultyMedium => 'Medium';
+
+  @override
+  String get difficultyHard => 'Hard';
+
+  @override
+  String recipeMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String recipeServings(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count servings', one: '$count serving');
+    return '$_temp0';
+  }
+
+  @override
+  String upToMinutes(int count) {
+    return 'Up to $count min';
+  }
+
+  @override
+  String get recipesEmptyFiltered => 'No recipe matches the filter.';
+
+  @override
+  String recipeFit(int percent) {
+    return '$percent% match';
+  }
+
+  @override
+  String get recommendedBecause => 'Recommended because:';
+
+  @override
+  String reasonExpires(String food, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You have $food due to expire in $count days.',
+      one: 'You have $food due to expire in $count day.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reasonExpiresEstimated(String food, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You have $food estimated to expire in about $count days.',
+      one: 'You have $food estimated to expire in about $count day.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reasonExpiresToday(String food) {
+    return 'You have $food due to expire today.';
+  }
+
+  @override
+  String reasonExpiresTodayEstimated(String food) {
+    return 'You have $food estimated to expire today.';
+  }
+
+  @override
+  String get reasonHaveAll => 'You have every ingredient.';
+
+  @override
+  String reasonHave(int have, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You have $have of $count ingredients.',
+      one: 'You have $have of $count ingredient.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reasonMissing(int count, String foods) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You need: $foods.',
+      one: 'You only need: $foods.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reasonMissingMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You need $count more ingredients.',
+      one: 'You need $count more ingredient.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reasonPartial(String food) {
+    return 'You have less $food than the recipe asks for.';
+  }
+
+  @override
+  String reasonUnknownQuantity(String food) {
+    return 'Check how much $food you have: it cannot be compared with the recipe.';
+  }
+
+  @override
+  String reasonTime(int minutes) {
+    return 'About $minutes min.';
+  }
+
+  @override
+  String get reasonCookedToday => 'You cooked it today.';
+
+  @override
+  String reasonCooked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'You cooked it $count days ago.',
+      one: 'You cooked it $count day ago.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ingredientsTitle => 'Ingredients';
+
+  @override
+  String get stapleLabel => 'kitchen staple';
+
+  @override
+  String get stepsTitle => 'Method';
+
+  @override
+  String get nothingAtHome => 'None of the ingredients of this recipe is in your inventory.';
+
+  @override
+  String get availabilityEnough => 'You have it';
+
+  @override
+  String get availabilityPartial => 'You have less';
+
+  @override
+  String get availabilityUnknown => 'Check the amount';
+
+  @override
+  String get availabilityMissing => 'Missing';
+
+  @override
+  String get badgeToday => 'Expires today';
+
+  @override
+  String get badgeTodayEstimated => 'Expires today (estimated)';
+
+  @override
+  String badgeDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Expires in $count days',
+      one: 'Expires in $count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String badgeDaysEstimated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Expires in about $count days (estimated)',
+      one: 'Expires in about $count day (estimated)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get markCooked => 'I cooked it';
+
+  @override
+  String get cookedSaved => 'Noted';
+
+  @override
+  String get cookedHelp =>
+      'It keeps the same recipe from being recommended every day. It does not change your inventory: consume the food you used.';
+
+  @override
+  String get errorRecipeNotFound => 'This recipe does not exist.';
 }
