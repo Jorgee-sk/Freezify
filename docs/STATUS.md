@@ -110,7 +110,7 @@
 | Backend `./mvnw verify` | ✅ 165 tests (23 de push: 9 de registro y despacho, 9 del cliente de Firebase contra un servidor local, 5 de redacción; 20 de avisos, 5 del barrido, 7 de la función de estimación, 8 de estimación por la API, 14 de niveles y 5 de "consume primero") |
 | Web lint / test / build | ✅ sin avisos / 85 tests (17 de avisos) / correcto |
 | Mobile `flutter analyze` y APK | ✅ sin avisos / generado |
-| Mobile `flutter test` | ❌ dos ejecuciones en CI (pull request #9). Primera: 5 fallos de 96; cerrar sesión lanzaba un error de dependencia circular entre el controlador de sesión y el de push, que solo salta en modo de depuración (corregido y comprobado en una compilación de depuración en el navegador). Segunda: 3 fallos, los tres tests en los que la app descarta el identificador de push; el código esperaba a cancelar unas suscripciones y esa espera no termina bajo el reloj simulado de los tests (reproducido en la máquina de Dart y corregido; en un dispositivo no afectaba). Pendiente de volver a ejecutar |
+| Mobile `flutter test` | ✅ 96 en CI (pull request #9), a la tercera ejecución. Primera: 5 fallos de 96; cerrar sesión lanzaba un error de dependencia circular entre el controlador de sesión y el de push, que solo salta en modo de depuración (corregido y comprobado en una compilación de depuración en el navegador). Segunda: 3 fallos, los tres tests en los que la app descarta el identificador de push; el código esperaba a cancelar unas suscripciones y esa espera no termina bajo el reloj simulado de los tests (reproducido en la máquina de Dart y corregido; en un dispositivo no afectaba). Los tests sustituyen a Firebase por un doble: no prueban la integración real |
 | Migración `V3` sobre la base local con datos | ✅ aplicada; las fechas existentes pasan a ser "del usuario" sin cambios |
 | Web contra el backend real | ✅ un pollo sin fecha aparece con "Caduca hacia el… (fecha estimada)" y su prioridad |
 | Web y móvil contra el backend real | ✅ con alimentos caducados, que vencen hoy, urgentes y próximos: el panel y las etiquetas muestran el nivel y los días correctos |
@@ -304,6 +304,6 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Subir la corrección al pull request #9 y dejar en verde los tests del móvil.
+1. Fusionar el pull request #9.
 2. Probar el push en un móvil Android; con eso se cierra la Fase 3.
 3. Fase 4 — Recipes.
