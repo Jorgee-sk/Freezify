@@ -3,6 +3,7 @@ package com.freezify.realtime.internal;
 import com.freezify.households.HouseholdEvents.HouseholdDeleted;
 import com.freezify.households.HouseholdEvents.MemberRemoved;
 import com.freezify.inventory.InventoryEvents.InventoryChanged;
+import com.freezify.mealplanning.MealPlanEvents.MealPlanChanged;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -11,6 +12,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 class HouseholdEventRelay {
 
     static final String INVENTORY_CHANGED = "inventory-changed";
+    static final String MEAL_PLAN_CHANGED = "meal-plan-changed";
 
     private final HouseholdEventStreams streams;
 
@@ -21,6 +23,11 @@ class HouseholdEventRelay {
     @TransactionalEventListener
     void on(InventoryChanged event) {
         streams.publish(event.householdId(), INVENTORY_CHANGED);
+    }
+
+    @TransactionalEventListener
+    void on(MealPlanChanged event) {
+        streams.publish(event.householdId(), MEAL_PLAN_CHANGED);
     }
 
     /** Someone who is no longer a member must stop hearing about the household at once. */

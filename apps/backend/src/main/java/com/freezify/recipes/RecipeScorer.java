@@ -1,8 +1,8 @@
-package com.freezify.recipes.internal;
+package com.freezify.recipes;
 
 import com.freezify.expiration.ExpirationPriority;
 import com.freezify.food.Unit;
-import com.freezify.recipes.internal.Recipe.Ingredient;
+import com.freezify.recipes.Recipe.Ingredient;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -21,20 +21,20 @@ import org.jspecify.annotations.Nullable;
  * score = Σ weight · factor / Σ weight        (every factor and the score are between 0 and 1)
  * </pre>
  */
-final class RecipeScorer {
+public final class RecipeScorer {
 
     /** A recipe this quick or quicker is as convenient as it gets; one this long or longer is not at all. */
-    static final int QUICK_MINUTES = 15;
+    public static final int QUICK_MINUTES = 15;
 
-    static final int LONG_MINUTES = 90;
+    public static final int LONG_MINUTES = 90;
     /** After this many days a recipe feels new again. */
-    static final int NOVELTY_DAYS = 14;
+    public static final int NOVELTY_DAYS = 14;
 
     /**
      * How much each factor counts. Only the proportions matter.
      */
-    record Weights(double ingredientMatch, double expiryUrgency, double convenience, double novelty) {
-        Weights {
+    public record Weights(double ingredientMatch, double expiryUrgency, double convenience, double novelty) {
+        public Weights {
             if (ingredientMatch < 0 || expiryUrgency < 0 || convenience < 0 || novelty < 0) {
                 throw new IllegalArgumentException("Weights cannot be negative");
             }
@@ -51,10 +51,10 @@ final class RecipeScorer {
      * @param soonestExpiration the earliest date among those items; {@code null} when none has a date
      * @param soonestEstimated  whether that date is an estimate
      */
-    record FoodStock(
+    public record FoodStock(
             Map<Unit.Dimension, BigDecimal> amounts, @Nullable LocalDate soonestExpiration, boolean soonestEstimated) {}
 
-    enum Availability {
+    public enum Availability {
         /** The household has at least what the recipe asks for. */
         ENOUGH,
         /** It has some, but less than the recipe asks for. */
@@ -65,7 +65,7 @@ final class RecipeScorer {
         /** A staple: assumed to be in the kitchen, not looked for in the inventory. */
         ASSUMED;
 
-        boolean atHome() {
+        public boolean atHome() {
             return this == ENOUGH || this == PARTIAL || this == UNKNOWN_QUANTITY;
         }
     }
@@ -73,15 +73,15 @@ final class RecipeScorer {
     /**
      * @param expirationDate the earliest date of the household's stock of this food, when it has any with a date
      */
-    record IngredientMatch(
+    public record IngredientMatch(
             Ingredient ingredient, Availability availability, @Nullable LocalDate expirationDate, boolean estimated) {}
 
-    record Factors(double ingredientMatch, double expiryUrgency, double convenience, double novelty) {}
+    public record Factors(double ingredientMatch, double expiryUrgency, double convenience, double novelty) {}
 
     /**
      * @param daysSinceCooked {@code null} when the household never cooked it
      */
-    record Scored(
+    public record Scored(
             Recipe recipe,
             double score,
             Factors factors,
@@ -89,14 +89,19 @@ final class RecipeScorer {
             @Nullable Long daysSinceCooked) {
 
         /** Whether the household has at least one of the ingredients it would have to look for. */
-        boolean usesSomethingAtHome() {
+        public boolean usesSomethingAtHome() {
             return ingredients.stream().anyMatch(match -> match.availability().atHome());
         }
     }
 
+    /**
+     * @param daysSinceCooked {@code null} when the household never cooked it
+     */
+    public record Assessment(Factors factors, List<IngredientMatch> ingredients, @Nullable Long daysSinceCooked) {}
+
     private final Weights weights;
 
-    RecipeScorer(Weights weights) {
+    public RecipeScorer(Weights weights) {
         this.weights = weights;
     }
 
@@ -104,7 +109,24 @@ final class RecipeScorer {
      * @param stock      what the household has, by food; food past its date must already be left out
      * @param lastCooked the last day the household cooked this recipe, if ever
      */
-    Scored score(Recipe recipe, Map<UUID, FoodStock> stock, @Nullable LocalDate lastCooked, LocalDate today) {
+    public Scored score(Recipe recipe, Map<UUID, FoodStock> stock, @Nullable LocalDate lastCooked, LocalDate today) {
+        Assessment assessment = assess(recipe, stock, lastCooked, today);
+        Factors factors = assessment.factors();
+        double total = weights.ingredientMatch() + weights.expiryUrgency() + weights.convenience() + weights.novelty();
+        double score = (weights.ingredientMatch() * factors.ingredientMatch()
+                        + weights.expiryUrgency() * factors.expiryUrgency()
+                        + weights.convenience() * factors.convenience()
+                        + weights.novelty() * factors.novelty())
+                / total;
+        return new Scored(recipe, score, factors, assessment.ingredients(), assessment.daysSinceCooked());
+    }
+
+    /**
+     * The factors of a recipe on a given day, without weighing them: what the recommender and the meal planner
+     * have in common. The planner asks for the day of the meal rather than for today.
+     */
+    public static Assessment assess(
+            Recipe recipe, Map<UUID, FoodStock> stock, @Nullable LocalDate lastCooked, LocalDate today) {
         List<IngredientMatch> matches = new ArrayList<>();
         double matched = 0;
         int required = 0;
@@ -135,13 +157,7 @@ final class RecipeScorer {
                 1 - notUrgent,
                 convenience(recipe),
                 daysSinceCooked == null ? 1 : clamp((double) daysSinceCooked / NOVELTY_DAYS));
-        double total = weights.ingredientMatch() + weights.expiryUrgency() + weights.convenience() + weights.novelty();
-        double score = (weights.ingredientMatch() * factors.ingredientMatch()
-                        + weights.expiryUrgency() * factors.expiryUrgency()
-                        + weights.convenience() * factors.convenience()
-                        + weights.novelty() * factors.novelty())
-                / total;
-        return new Scored(recipe, score, factors, List.copyOf(matches), daysSinceCooked);
+        return new Assessment(factors, List.copyOf(matches), daysSinceCooked);
     }
 
     private static Availability availability(Ingredient ingredient, @Nullable FoodStock have) {
@@ -161,7 +177,7 @@ final class RecipeScorer {
      * How much using a food at this level helps against waste. The urgencies of several foods combine like
      * independent chances, so two urgent foods count for more than one without ever passing 1.
      */
-    static double urgency(ExpirationPriority priority) {
+    public static double urgency(ExpirationPriority priority) {
         return switch (priority) {
             case TODAY -> 0.7;
             case URGENT -> 0.5;

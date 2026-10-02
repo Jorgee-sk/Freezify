@@ -1,10 +1,11 @@
 package com.freezify.recipes.internal;
 
+import com.freezify.recipes.Recipe;
 import com.freezify.food.FoodTrait;
 import com.freezify.food.Quantity;
 import com.freezify.food.Unit;
-import com.freezify.recipes.internal.Recipe.Course;
-import com.freezify.recipes.internal.Recipe.Difficulty;
+import com.freezify.recipes.Recipe.Course;
+import com.freezify.recipes.Recipe.Difficulty;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;

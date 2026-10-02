@@ -1,4 +1,4 @@
-package com.freezify.recipes.internal;
+package com.freezify.recipes;
 
 import com.freezify.food.FoodTrait;
 import com.freezify.food.Quantity;

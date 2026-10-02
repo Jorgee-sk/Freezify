@@ -1,5 +1,6 @@
 package com.freezify.recipes.internal;
 
+import com.freezify.recipes.Recipe;
 import com.freezify.food.Food;
 import com.freezify.food.FoodCatalog;
 import com.freezify.food.FoodTrait;

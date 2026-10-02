@@ -10,7 +10,7 @@ El estado detallado de cada entrega está en [STATUS.md](STATUS.md).
 | 2 | Inventory | ✅ Completada |
 | 3 | Expiration Engine | 🟡 Código completo; falta probar el push en un móvil Android |
 | 4 | Recipes | 🟡 Funcionalidad completa; pendiente revisar los datos de alérgenos antes de usuarios reales |
-| 5 | Smart Planning | ⏳ Pendiente |
+| 5 | Smart Planning | 🟡 En curso: backend hecho; faltan las pantallas de web y móvil |
 | 6 | Shopping | ⏳ Pendiente |
 | 7 | AI / OCR | ⏳ Pendiente |
 | 8 | Analytics | ⏳ Pendiente |

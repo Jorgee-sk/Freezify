@@ -8,7 +8,84 @@
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
 | 3 — Expiration Engine | 🟡 Código completo; **falta comprobar en un móvil Android que el push llega**, y hasta entonces no se da por cerrada |
-| 4 — Recipes | 🟡 Funcionalidad completa, con los tests nuevos del móvil pendientes de CI. Antes de usuarios reales hay que revisar los datos de alérgenos |
+| 4 — Recipes | 🟡 Funcionalidad completa (CI en verde en el pull request #12). Antes de usuarios reales hay que revisar los datos de alérgenos |
+| 5 — Smart Planning | 🟡 En curso: el backend del plan semanal y su generador están hechos; faltan las pantallas de web y móvil |
+
+## Fase 5 — Smart Planning 🟡
+
+### Completed
+
+- **Plan semanal del hogar** (solo backend por ahora): una receta por día y comida (comida y cena), de lunes
+  a domingo.
+  - `GET /households/{id}/meal-plan?week=` devuelve la semana que contiene esa fecha (la actual si no se
+    indica).
+  - `PUT /households/{id}/meal-plan/{fecha}/{LUNCH|DINNER}` elige o sustituye la receta de una comida;
+    `DELETE` la quita; `POST …/move` la mueve a otro día o comida y, si allí ya hay algo, las intercambia.
+  - Cualquier miembro ve y cambia el plan; nadie de fuera del hogar puede verlo ni tocarlo.
+- **Lo que habrá en casa ese día**: cada comida, de hoy en adelante, dice por ingrediente si lo habrá
+  (suficiente, parte, cantidad no comparable) o si falta, contando con que las comidas planificadas antes ya
+  se han llevado lo suyo y con que un alimento deja de contar el día después de su fecha. Si la fecha de un
+  alimento es estimada, se indica como estimada. Es una simulación: **el inventario no se toca**.
+- **Lo que el plan deja caducar**: la semana incluye la lista de alimentos de casa que caducan antes de que
+  acabe y que las comidas planificadas hasta su fecha no usan o no terminan, con la cantidad que sobraría.
+- **Generación automática** (`POST /households/{id}/meal-plan/generate`): rellena las comidas vacías de la
+  semana, de hoy en adelante.
+  - Determinista: con la misma casa, los mismos alimentos y el mismo día sale el mismo plan.
+  - Las comidas se rellenan en el orden en que se van a comer. Para cada una se puntúan las recetas contra lo
+    que quedaría en casa ese día y se elige la mejor; sus ingredientes salen de la despensa simulada antes de
+    mirar la comida siguiente. Así se usa primero lo que caduca primero y nunca se cuenta con un alimento
+    pasado de fecha.
+  - Factores, cada uno entre 0 y 1, con pesos configurables (`freezify.meal-planning.weights`): aprovechar
+    lo que va a caducar (0,35), comprar poco que no se vaya a comprar ya para otra comida del plan (0,25),
+    variedad (0,20), novedad (0,10) y poco esfuerzo (0,10).
+  - **Variedad como regla**: no se repite receta mientras queden otras; no se pone el mismo tipo de plato dos
+    veces el mismo día, ni en días seguidos salvo que así se aproveche un alimento al que le quedan dos días
+    o menos. Dos platos son del mismo tipo si comparten su ingrediente base o su carne, pescado o huevo.
+  - Solo propone platos principales y **nunca** nada que el hogar no coma (las restricciones de la Fase 4).
+  - **Lo que eligió una persona no se toca**. Lo generado antes solo se sustituye si se pide expresamente.
+  - Si no quedan recetas sin repetir demasiado (dietas muy restrictivas), deja comidas vacías y dice cuántas.
+- Cada cambio del plan avisa en tiempo real a los miembros conectados (`meal-plan-changed`) y la primera
+  comida planificada de una semana registra el evento de producto `meal_plan_created`.
+- Para que el planificador pueda usarlas, las recetas y el cálculo de disponibilidad pasan a ser la interfaz
+  pública del módulo de recetas (`Recipe`, `RecipeScorer`, `RecipeCatalog`); su comportamiento no cambia.
+
+### Tests
+
+| Qué | Resultado |
+|---|---|
+| Backend `./mvnw verify` | ✅ 259 tests (50 nuevos: 8 de la despensa simulada, 17 del generador y 25 de la API del plan); 1 omitido, el que habla con Firebase real |
+| Comprobación del test de aislamiento del plan | ✅ al quitar a propósito la comprobación de pertenencia al hogar, el test falla (204 en lugar de 404) |
+| Límites entre módulos (`ModularityTests`) | ✅ el módulo nuevo solo usa las interfaces públicas de recetas, inventario, alimentos y hogares |
+| Migración `V8` sobre la base local con datos | ✅ aplicada al arrancar |
+| Generador contra el backend y la base locales reales | ✅ con pollo (600 g, 2 días), tomates (3 días), lechuga (4), calabacín (5), arroz, huevos, champiñones sin fecha y yogur (1 día): planificó las seis comidas que quedaban de la semana, usó todo el pollo antes de su fecha en dos platos distintos, marcó la fecha de los champiñones como estimada y señaló el yogur como lo único que el plan deja caducar. Para la semana siguiente rellenó las 14 comidas con 14 platos distintos |
+| Web y móvil | ⏳ sin pantallas todavía |
+
+### Pendiente en esta fase
+
+- **Pantallas del plan semanal en web y móvil**: ver la semana, elegir, mover, sustituir y quitar comidas,
+  generar el plan y ver qué falta y qué se deja caducar.
+- **Preferencias del usuario** como factor: no existen todavía (viene de la Fase 4).
+
+### Known issues
+
+- **El generador es voraz**: elige comida a comida, sin volver atrás. Da un buen plan, no el mejor posible, y
+  puede dejar sin usar algo que otro orden habría aprovechado; en ese caso lo señala.
+- **El coste no se calcula con precios**: no los hay para las recetas. "Comprar poco" hace de coste y de
+  reutilización de ingredientes a la vez.
+- **Cantidades que no se pueden comparar** (la receta pide "2 tomates" y hay "500 g"): se cuenta con que el
+  alimento está, pero no se descuenta ni se afirma cuánto queda; es el riesgo R4.
+- **Las raciones no se ajustan** al número de personas del hogar.
+- **"Mismo tipo de plato" es una regla sencilla** (ingrediente base o carne, pescado o huevo en común); el
+  ingrediente base es el primero de la receta.
+- **Solo comida y cena**: no se planifican desayunos ni postres, aunque se pueden poner a mano.
+- **Marcar una comida del plan como cocinada no existe**: "La he cocinado" sigue estando en la receta y el
+  plan no lo refleja.
+- **No hay "vaciar la semana"** ni copia de una semana a otra.
+- **Dos miembros que eligen a la vez la misma comida vacía**: la segunda petición falla con un error genérico
+  en lugar de un mensaje claro. Sin test.
+- **Los alimentos fuera del catálogo** no encajan en ninguna receta: aparecen siempre como "el plan no los
+  usa" si caducan en la semana.
+- **El día es el de `Europe/Madrid`** para todos los hogares, como en el resto de la aplicación.
 
 ## Fase 4 — Recipes 🟡
 
@@ -69,7 +146,7 @@
 | Restricciones, código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ mostró lo guardado desde la web, guardó "sin gluten" y, al volver, la lista ya no tenía recetas con pasta |
 | Migración `V7` sobre la base local con datos | ✅ aplicada; comprueba ella misma que entran los 69 rasgos |
 | Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
-| Mobile `flutter test` | 🟡 112 pasaron en CI (pull request #11); los **11 nuevos de restricciones no se han ejecutado** (123 en total): correrán en la CI del próximo pull request |
+| Mobile `flutter test` | ✅ en CI (pull request #12), con los 11 nuevos de restricciones |
 | Recetas, web contra el backend real | ✅ recomendaciones con sus motivos, detalle con lo que hay de cada ingrediente y "La he cocinado", que bajó la receta del 71 % al 59 % y añadió "La has cocinado hoy" |
 | Recetas, código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ recomendaciones con sus motivos y detalle de receta. No se pulsó "La he cocinado" ni se probaron los filtros en esta versión |
 | Recomendador contra el backend y la base locales reales | ✅ con calabacín (2 días), tomate, pasta, huevos, champiñones sin fecha y leche caducada: propone primero el revuelto de champiñones y la pasta con calabacín, marca la fecha de los champiñones como estimada y no usa la leche caducada |
@@ -406,7 +483,7 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request de las restricciones alimentarias y confirmar en CI los 11 tests nuevos del móvil.
-2. Fase 5 — Smart Planning: plan semanal de comidas a partir de las recetas y el inventario.
+1. Fase 5: pantallas del plan semanal en web y móvil.
+2. Fase 6 — Shopping: lista de la compra a partir de lo que falta en el plan.
 3. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
    con una fuente autorizada antes de abrir a usuarios reales.
