@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/errors.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_controller.dart';
+import '../notifications/notification_bell.dart';
+import '../notifications/notification_repository.dart';
 import 'dialogs.dart';
 import 'households_repository.dart';
 
@@ -66,6 +68,7 @@ class HouseholdsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.appName),
         actions: [
+          const NotificationBell(),
           PopupMenuButton<String>(
             onSelected: (value) => switch (value) {
               'logout' => ref.read(authControllerProvider.notifier).logout(),
@@ -86,7 +89,10 @@ class HouseholdsScreen extends ConsumerWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(householdsProvider.future),
+        onRefresh: () {
+          ref.invalidate(unreadNotificationsProvider);
+          return ref.refresh(householdsProvider.future);
+        },
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [

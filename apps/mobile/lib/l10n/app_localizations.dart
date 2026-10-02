@@ -1033,6 +1033,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Right now we estimate {date}. Enter the date on the package if you know it.'**
   String currentEstimate(String date);
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications: {count} unread'**
+  String notificationsUnread(int count);
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no notifications. We will tell you when something is about to expire.'**
+  String get notificationsEmpty;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get markAllRead;
+
+  /// No description provided for @notificationNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get notificationNew;
+
+  /// No description provided for @notificationPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification preferences'**
+  String get notificationPreferences;
+
+  /// No description provided for @notificationSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{You have {count} food you should eat soon} other{You have {count} foods you should eat soon}}'**
+  String notificationSummary(int count);
+
+  /// No description provided for @notifiedExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{name} expired {count} day ago} other{{name} expired {count} days ago}}'**
+  String notifiedExpired(String name, int count);
+
+  /// No description provided for @notifiedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} expires today'**
+  String notifiedToday(String name);
+
+  /// No description provided for @notifiedLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{name} expires in {count} day} other{{name} expires in {count} days}}'**
+  String notifiedLeft(String name, int count);
+
+  /// No description provided for @notifiedExpiredEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{name} probably expired {count} day ago (estimated date)} other{{name} probably expired {count} days ago (estimated date)}}'**
+  String notifiedExpiredEstimated(String name, int count);
+
+  /// No description provided for @notifiedTodayEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} probably expires today (estimated date)'**
+  String notifiedTodayEstimated(String name);
+
+  /// No description provided for @notifiedLeftEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{name} expires in about {count} day (estimated date)} other{{name} expires in about {count} days (estimated date)}}'**
+  String notifiedLeftEstimated(String name, int count);
+
+  /// No description provided for @prefEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me about food that is about to expire'**
+  String get prefEnabled;
+
+  /// No description provided for @prefAntiSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'At most one notification a day per household, and only when there is something new to tell you.'**
+  String get prefAntiSpam;
+
+  /// No description provided for @prefHour.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get prefHour;
+
+  /// No description provided for @prefHourHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish mainland time.'**
+  String get prefHourHelp;
+
+  /// No description provided for @prefFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'At most'**
+  String get prefFrequency;
+
+  /// No description provided for @prefFrequencyDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Once a day'**
+  String get prefFrequencyDaily;
+
+  /// No description provided for @prefFrequencyEveryThreeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Every 3 days'**
+  String get prefFrequencyEveryThreeDays;
+
+  /// No description provided for @prefFrequencyWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Once a week'**
+  String get prefFrequencyWeekly;
+
+  /// No description provided for @prefThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me when a food'**
+  String get prefThreshold;
+
+  /// No description provided for @prefThresholdToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires today'**
+  String get prefThresholdToday;
+
+  /// No description provided for @prefThresholdUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in 2 days or less'**
+  String get prefThresholdUrgent;
+
+  /// No description provided for @prefThresholdSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in 5 days or less'**
+  String get prefThresholdSoon;
+
+  /// No description provided for @prefCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me about these categories'**
+  String get prefCategories;
+
+  /// No description provided for @preferencesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences saved'**
+  String get preferencesSaved;
+
+  /// No description provided for @errorNotificationNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This notification no longer exists.'**
+  String get errorNotificationNotFound;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -366,7 +366,7 @@ Estos puntos ya están identificados en `docs/STATUS.md` y bloquean un lanzamien
 | URL de la API | Se fija al compilar: `--dart-define=FREEZIFY_API_URL=https://api.tudominio.com/api/v1` |
 | Android | Firmar la app con una clave propia (que **no** va al repositorio) y subirla a Google Play; empezar por la pista de pruebas internas |
 | iOS | Requiere un Mac y una cuenta de Apple Developer; hoy no se puede ni compilar desde la máquina de desarrollo |
-| Notificaciones push | Llegan en la Fase 3 y necesitan un proyecto de Firebase y, para iOS, un certificado de APNs |
+| Notificaciones push | Pendientes: necesitan un proyecto de Firebase y, para iOS, un certificado de APNs. Los avisos dentro de la app ya funcionan sin nada de esto |
 
 ### 6.5 Orden propuesto
 

@@ -67,13 +67,13 @@ tipos internos de otro.
 | `food` | Catálogo canónico de alimentos, categorías, unidades y cantidades | common | 2 ✔ |
 | `inventory` | Alimentos del hogar, consumo y descarte | households, food | 2 ✔ |
 | `expiration` | Niveles de prioridad y estimación de fechas por reglas de vida útil | food | 3 ✔ |
-| `notifications` | Preferencias, generación y envío | households, inventory, expiration | 3 |
+| `notifications` | Avisos de caducidad dentro de la app y preferencias (hecho); envío push (pendiente) | households, inventory, expiration, food | 3 ✔ |
 | `recipes` | Recetas y recomendador | food, inventory, expiration | 4 |
 | `mealplanning` | Plan semanal y generador | recipes, inventory | 5 |
 | `shopping` | Listas de la compra | mealplanning, inventory, food | 6 |
 | `ai` | `AIProvider`, `AiService`, casos de uso de IA | common | 7 |
 | `integrations` | `ProductCatalogProvider` y fuentes externas | food | 7+ |
-| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users` e `inventory` | 2 ✔ / 8 |
+| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory` y `notifications` | 2 ✔ / 8 |
 | `realtime` | Flujos de eventos (SSE) por hogar | households; escucha eventos de `inventory` y `households` | 2 ✔ |
 
 Los módulos marcados con ✔, además de los cuatro de la Fase 1, existen en el código. Los de fases futuras **no existen todavía**: se crean cuando tienen contenido real.
@@ -123,6 +123,10 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D21 | Los eventos SSE **no llevan datos**: solo avisan de que algo cambió | Los datos siempre salen de la API autorizada; un evento filtrado no revela nada y no hay que versionar su contenido |
 | D23 | La fecha del usuario y la fecha que se aplica se guardan **por separado** | Estimar o acortar por apertura nunca pisa lo que el usuario escribió; el origen (`USER` / `ESTIMATED`) describe la fecha que se aplica |
 | D24 | Las reglas de vida útil son **datos** (tabla sembrada por migración), no código | Se corrigen sin tocar la lógica; la regla del alimento gana a la de su categoría y, sin regla, no hay fecha |
+| D25 | Un aviso lleva **datos, no frases** (alimentos, fechas, si la fecha es estimada) | Cada cliente lo redacta en el idioma del usuario y una estimación nunca se presenta como un hecho |
+| D26 | Anti-spam por **novedad**: se guarda el nivel más urgente del que ya se avisó por usuario y alimento | Un aviso al día por hogar como mucho, y solo si algo es nuevo o más urgente; nada se repite |
+| D27 | Los trabajos programados leen otros módulos por interfaces propias (`ExpiringFood`, `HouseholdDirectory`), no por `HouseholdAccess` | No actúan en nombre de un usuario; lo que devuelven nunca llega a un cliente sin comprobar la pertenencia |
+| D28 | La API de avisos no lleva identificador de usuario en la ruta (`/notifications`) | El usuario sale siempre del token; no hay ningún id que manipular |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -145,7 +149,7 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 
 ## 4. Modelo de datos
 
-Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`):
+Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`, `V4__notifications.sql`):
 
 ```text
 users ──< refresh_tokens
@@ -154,6 +158,9 @@ foods ──< food_items >── households
 food_items ──< food_outcomes >── households
 foods ──< shelf_life_rules
 product_events
+users ──< notifications >── households      notifications ──< notification_items
+users ──  notification_preferences, notification_checks
+users ──< notification_item_alerts >── food_items
 ```
 
 Entidades previstas por fase:
@@ -161,7 +168,7 @@ Entidades previstas por fase:
 | Fase | Entidades |
 |---|---|
 | 2 ✔ | `Food` (catálogo), `FoodItem`, `FoodOutcome` (consumo y desperdicio), `ProductEvent`; `FoodCategory` es un enum |
-| 3 | `Notification`, `NotificationPreference`, `DeviceToken`, `ShelfLifeRule` |
+| 3 ✔ | `ShelfLifeRule`, `Notification`, `NotificationPreference`; `DeviceToken` llegará con el envío push |
 | 4 | `Recipe`, `RecipeIngredient`, `UserPreference` |
 | 5 | `MealPlan`, `MealPlanEntry` |
 | 6 | `ShoppingList`, `ShoppingListItem` |
@@ -204,6 +211,16 @@ Fase 2 (todo bajo `/households/{id}/inventory` salvo el catálogo):
 | POST | `/inventory/{itemId}/discard` | Tirar todo o una cantidad, con motivo |
 | GET | `/inventory/consume-first` | Cuántos alimentos hay en cada nivel de prioridad y cuáles comer primero |
 | GET | `/households/{id}/events` | Flujo SSE: `inventory-changed` cuando cambia el inventario (sin datos) |
+
+Fase 3 (avisos del usuario que hace la petición):
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/notifications?page=&size=` | Sus avisos, del más reciente al más antiguo |
+| GET | `/notifications/unread-count` | Cuántos tiene sin leer |
+| POST | `/notifications/{id}/read` | Marcar uno como leído |
+| POST | `/notifications/read-all` | Marcar todos como leídos |
+| GET / PUT | `/notifications/preferences` | Ver / reemplazar sus preferencias |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).

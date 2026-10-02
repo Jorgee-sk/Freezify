@@ -79,7 +79,8 @@
     "ITEM_NOT_ACTIVE": "This food was already consumed or discarded.",
     "FOOD_NOT_FOUND": "That food does not exist in the catalog.",
     "INCOMPATIBLE_UNIT": "That unit is not compatible with the unit of the food.",
-    "QUANTITY_EXCEEDS_AVAILABLE": "There is less left than the quantity given."
+    "QUANTITY_EXCEEDS_AVAILABLE": "There is less left than the quantity given.",
+    "NOTIFICATION_NOT_FOUND": "This notification no longer exists."
   },
   "inventory": {
     "title": "Inventory",
@@ -203,5 +204,50 @@
     "count_other": "{{count}} foods that cannot wait",
     "more_one": "and {{count}} more",
     "more_other": "and {{count}} more"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "bellUnread_one": "Notifications: {{count}} unread",
+    "bellUnread_other": "Notifications: {{count}} unread",
+    "empty": "You have no notifications. We will tell you when something is about to expire.",
+    "markAllRead": "Mark all as read",
+    "new": "New",
+    "preferences": "Preferences",
+    "preferencesTitle": "Notification preferences",
+    "backToList": "Back to notifications",
+    "summary_one": "You have {{count}} food you should eat soon",
+    "summary_other": "You have {{count}} foods you should eat soon",
+    "item": {
+      "expired_one": "{{name}} expired {{count}} day ago",
+      "expired_other": "{{name}} expired {{count}} days ago",
+      "today": "{{name}} expires today",
+      "left_one": "{{name}} expires in {{count}} day",
+      "left_other": "{{name}} expires in {{count}} days",
+      "expiredEstimated_one": "{{name}} probably expired {{count}} day ago (estimated date)",
+      "expiredEstimated_other": "{{name}} probably expired {{count}} days ago (estimated date)",
+      "todayEstimated": "{{name}} probably expires today (estimated date)",
+      "leftEstimated_one": "{{name}} expires in about {{count}} day (estimated date)",
+      "leftEstimated_other": "{{name}} expires in about {{count}} days (estimated date)"
+    },
+    "pref": {
+      "enabled": "Tell me about food that is about to expire",
+      "antiSpam": "At most one notification a day per household, and only when there is something new to tell you.",
+      "hour": "From",
+      "hourHelp": "Spanish mainland time.",
+      "frequency": "At most",
+      "frequencyOption": {
+        "DAILY": "Once a day",
+        "EVERY_THREE_DAYS": "Every 3 days",
+        "WEEKLY": "Once a week"
+      },
+      "threshold": "Tell me when a food",
+      "thresholdOption": {
+        "TODAY": "Expires today",
+        "URGENT": "Expires in 2 days or less",
+        "SOON": "Expires in 5 days or less"
+      },
+      "categories": "Tell me about these categories",
+      "saved": "Preferences saved"
+    }
   }
 }

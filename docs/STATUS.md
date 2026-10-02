@@ -7,7 +7,7 @@
 | 0 — Product Definition | ✅ Completada |
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
-| 3 — Expiration Engine | 🟡 En curso: prioridad, "consume primero", estimación de fechas y scheduler hechos; faltan las notificaciones |
+| 3 — Expiration Engine | 🟡 En curso: falta solo el envío push; los avisos dentro de la app y sus preferencias están hechos |
 
 ## Fase 3 — Expiration Engine 🟡
 
@@ -45,22 +45,48 @@
   - Un alimento caducado sigue en casa: se puede consumir, tirar o editar. Web y móvil lo muestran con una
     sola etiqueta "Caducado".
 
+- **Avisos dentro de la app**:
+  - Cada miembro recibe, una vez al día y no antes de la hora que elija, un aviso por hogar con los alimentos
+    que están a punto de caducar o ya han caducado: nombra el alimento si es uno solo y los cuenta si son
+    varios (lista los 5 más urgentes).
+  - **Sin spam**: como mucho un aviso por hogar y día, y solo cuando hay algo nuevo que contar, es decir, un
+    alimento del que aún no se ha avisado o que se ha vuelto más urgente (quedan 2 días → vence hoy →
+    caducado). Un alimento que sigue caducado en la nevera no vuelve a provocar un aviso por sí solo.
+  - Preferencias por usuario: activar o desactivar, hora, frecuencia máxima (diaria, cada 3 días, semanal),
+    antelación (vence hoy, 2 días o menos, 5 días o menos) y categorías de las que no quiere avisos. Con una
+    frecuencia menor las novedades no se pierden: llegan juntas cuando toca.
+  - Si la aplicación estaba parada a la hora elegida, el aviso sale en la siguiente comprobación (cada hora
+    y al arrancar).
+  - Una fecha estimada **siempre** se redacta como estimación ("caduca en aproximadamente 1 día (fecha
+    estimada)"). El servidor envía datos, no frases: web y móvil las redactan en el idioma del usuario.
+  - Cada usuario solo ve y marca sus propios avisos; al salir de un hogar, o al eliminarlo, sus avisos
+    desaparecen.
+  - **Web y móvil**: campana con el número de avisos sin leer, lista de avisos (abrir uno lleva al inventario
+    de ese hogar y lo marca como leído), "marcar todo como leído" y pantalla de preferencias.
+  - Abrir un aviso por primera vez registra el evento de producto `notification_opened`.
+
 ### Tests
 
 | Qué | Resultado |
 |---|---|
+| Avisos, web contra el backend real | ✅ con 5 alimentos en casa, al arrancar se creó un aviso con los 4 que tocaba (el de fecha estimada, redactado como tal); la campana marcó 1 sin leer, abrirlo llevó al inventario y lo marcó como leído, y las preferencias se guardaron |
+| Avisos, código de la app móvil contra el backend real (compilado para web en una copia temporal) | ✅ lo mismo: campana con 1 sin leer, lista, preferencias guardadas (hora y una categoría) y apertura del aviso hacia el inventario |
+| Comprobación del test de aislamiento de avisos | ✅ al quitar a propósito la comprobación de propietario, el test falla (204 en lugar de 404) |
+| Migración `V4` sobre la base local con datos | ✅ aplicada al arrancar |
 | Barrido contra la base local real | ✅ al arrancar marcó como caducado el único alimento pasado de fecha y no tocó los demás |
-| Backend `./mvnw verify` | ✅ 122 tests (5 del barrido, 7 de la función de estimación, 8 de estimación por la API, 14 de niveles y 5 de "consume primero") |
-| Web lint / test / build | ✅ sin avisos / 68 tests / correcto |
+| Backend `./mvnw verify` | ✅ 142 tests (20 de avisos, 5 del barrido, 7 de la función de estimación, 8 de estimación por la API, 14 de niveles y 5 de "consume primero") |
+| Web lint / test / build | ✅ sin avisos / 85 tests (17 de avisos) / correcto |
 | Mobile `flutter analyze` y APK | ✅ sin avisos / generado |
-| Mobile `flutter test` | 🟡 67 pasaron en CI (pull request #5); **1 nuevo sin ejecutar** (68 en total): correrá en la CI del próximo pull request |
+| Mobile `flutter test` | 🟡 68 pasaron en CI (pull request #6); los **17 nuevos de avisos no se han ejecutado** (85 en total): no pueden correr en esta máquina y lo harán en la CI del próximo pull request |
 | Migración `V3` sobre la base local con datos | ✅ aplicada; las fechas existentes pasan a ser "del usuario" sin cambios |
 | Web contra el backend real | ✅ un pollo sin fecha aparece con "Caduca hacia el… (fecha estimada)" y su prioridad |
 | Web y móvil contra el backend real | ✅ con alimentos caducados, que vencen hoy, urgentes y próximos: el panel y las etiquetas muestran el nivel y los días correctos |
 
 ### Pendiente en esta fase
 
-- **Notificaciones** in-app y push, con preferencias y sin spam.
+- **Envío push** al móvil (Firebase Cloud Messaging). Necesita un proyecto de Firebase y su configuración,
+  que solo puede crear el propietario del proyecto; para iOS, además, un Mac y una cuenta de Apple Developer.
+- **Avisos de recetas y de compras**: llegarán con sus fases (4 y 6); hoy no hay nada de lo que avisar.
 
 ### Known issues
 
@@ -71,6 +97,18 @@
   abren.
 - **No se puede pedir "sin fecha"** para un alimento que tiene regla: si el usuario no da fecha, se estima.
 - **El formulario no muestra la estimación antes de guardar**; se ve después, en la lista.
+- **Los avisos solo se ven al abrir la app o la web**: hasta que exista el envío push, nadie recibe nada con
+  la aplicación cerrada.
+- **La hora de los avisos es la de `Europe/Madrid`** para todos los usuarios, y así se indica en la pantalla
+  de preferencias.
+- **La comprobación de avisos lee de una vez todos los alimentos próximos a caducar de todos los hogares**,
+  cada hora. Es suficiente para el MVP; con muchos hogares habrá que hacerlo por lotes.
+- **Con varias instancias del backend** dos comprobaciones simultáneas del mismo usuario chocarían en la base
+  de datos: una se descarta y queda un error en el log, sin avisos duplicados. Sin probar.
+- **La app móvil muestra solo los 50 avisos más recientes**; la web pagina.
+- **La campana no se actualiza en tiempo real**: la web la refresca cada 5 minutos y al volver a la pestaña;
+  el móvil, al volver a la app y al tirar para refrescar.
+- **No hay limpieza de avisos antiguos**: se acumulan (uno por hogar y día como mucho).
 - **El barrido es global y de una sola instancia**: usa una única zona horaria para todos los hogares y no
   tiene bloqueo entre instancias. Con varias instancias se ejecutaría en todas; es inofensivo, pero cada una
   enviaría su aviso en tiempo real.
@@ -217,5 +255,6 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request del scheduler y confirmar la CI.
-2. Notificaciones in-app y push, con preferencias y sin spam: es lo último de la Fase 3.
+1. Abrir el pull request de los avisos y confirmar en CI los 17 tests nuevos del móvil.
+2. Envío push (FCM): registro de dispositivos, envío desde el servidor y recepción en la app. Requiere el
+   proyecto de Firebase. Es lo último de la Fase 3.

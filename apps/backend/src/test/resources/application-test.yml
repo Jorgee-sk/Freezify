@@ -4,6 +4,9 @@ freezify:
   rate-limit:
     # All MockMvc requests share one client address; the limiter has its own unit test.
     capacity: 100000
+  notifications:
+    # Tests run the check themselves; a run on the hour in the middle of a test would get in the way.
+    check-cron: "-"
 
 logging:
   level:

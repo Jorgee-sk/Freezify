@@ -10,6 +10,7 @@ import com.freezify.food.FoodCategory;
 import com.freezify.food.Quantity;
 import com.freezify.food.StorageLocation;
 import com.freezify.households.HouseholdAccess;
+import com.freezify.inventory.ExpiringFood;
 import com.freezify.inventory.InventoryEvents.FoodItemAdded;
 import com.freezify.inventory.InventoryEvents.FoodItemConsumed;
 import com.freezify.inventory.InventoryEvents.FoodItemDiscarded;
@@ -49,6 +50,8 @@ interface FoodItemRepository extends JpaRepository<FoodItemEntity, UUID>, JpaSpe
     List<FoodItemEntity> findByHouseholdIdAndStatusInAndExpirationDateLessThanEqualOrderByExpirationDateAscSearchNameAsc(
             UUID householdId, Collection<ItemStatus> statuses, LocalDate until, Limit limit);
 
+    List<FoodItemEntity> findByStatusInAndExpirationDateLessThanEqual(Collection<ItemStatus> statuses, LocalDate until);
+
     @Query("select distinct i.householdId from FoodItemEntity i"
             + " where i.status in :statuses and i.expirationDate < :today")
     List<UUID> householdsWithItemsPastTheirDate(
@@ -73,7 +76,7 @@ interface FoodItemRepository extends JpaRepository<FoodItemEntity, UUID>, JpaSpe
 interface FoodOutcomeRepository extends JpaRepository<FoodOutcomeEntity, UUID> {}
 
 @Service
-public class InventoryService {
+public class InventoryService implements ExpiringFood {
 
     private static final int RECENT_LIMIT = 10;
     private static final int CONSUME_FIRST_LIMIT = 20;
@@ -279,6 +282,23 @@ public class InventoryService {
         int changed = items.markPastTheirDate(notYetExpired, day, ItemStatus.EXPIRED, clock.instant());
         households.forEach(householdId -> events.publishEvent(new InventoryChanged(householdId, null)));
         return changed;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ExpiringItem> until(LocalDate until) {
+        LocalDate day = today.date();
+        Collection<ItemStatus> inTheHouse = EnumSet.of(ItemStatus.AVAILABLE, ItemStatus.OPENED, ItemStatus.EXPIRED);
+        return items.findByStatusInAndExpirationDateLessThanEqual(inTheHouse, until).stream()
+                .map(item -> item.toView(day))
+                .map(item -> new ExpiringItem(
+                        item.householdId(),
+                        item.id(),
+                        item.name(),
+                        item.category(),
+                        item.expirationDate(),
+                        item.expirationSource()))
+                .toList();
     }
 
     private FoodItemEntity takeOut(
