@@ -28,6 +28,15 @@ public enum Unit {
         return dimension;
     }
 
+    /** The unit in which amounts of this dimension are added up and compared: gram, milliliter or unit. */
+    public Unit baseUnit() {
+        return switch (dimension) {
+            case MASS -> GRAM;
+            case VOLUME -> MILLILITER;
+            case COUNT -> UNIT;
+        };
+    }
+
     /** How many base units (gram, milliliter, unit) one of this unit is. */
     BigDecimal baseFactor() {
         return baseFactor;

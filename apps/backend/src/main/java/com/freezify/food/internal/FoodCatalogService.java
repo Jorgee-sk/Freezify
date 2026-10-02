@@ -62,6 +62,15 @@ class FoodCatalogService implements FoodCatalog {
                 .toList();
     }
 
+    @Override
+    public Optional<Food> findByName(String name) {
+        String wanted = FoodCatalog.normalize(name);
+        return catalog().index().stream()
+                .filter(entry -> entry.es().equals(wanted) || entry.en().equals(wanted))
+                .map(Indexed::food)
+                .findFirst();
+    }
+
     private Loaded catalog() {
         Loaded current = loaded;
         if (current == null) {

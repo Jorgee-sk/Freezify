@@ -8,6 +8,63 @@
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
 | 3 — Expiration Engine | 🟡 Código completo; **falta comprobar en un móvil Android que el push llega**, y hasta entonces no se da por cerrada |
+| 4 — Recipes | 🟡 En curso: catálogo y recomendador hechos en el servidor; faltan las pantallas de web y móvil y las restricciones alimentarias |
+
+## Fase 4 — Recipes 🟡
+
+### Completed
+
+- **Catálogo de recetas**: 25 recetas propias de cocina casera, en español e inglés, con raciones, tiempos,
+  dificultad, tipo (desayuno, principal, postre) y pasos. Cada ingrediente es un alimento del catálogo con su
+  cantidad y unidad; nada depende de texto libre.
+  - `GET /recipes` lista y filtra (texto sin acentos, tiempo máximo, dificultad, tipo), paginado.
+  - `GET /recipes/{id}` devuelve la receta con ingredientes y pasos.
+- **Recomendador determinista** (`GET /households/{id}/recipes/recommendations`): puntúa cada receta contra
+  lo que hay hoy en el hogar y devuelve las mejores primero.
+  - Factores, cada uno entre 0 y 1: ingredientes que ya hay en casa, urgencia de caducidad de los que usa,
+    comodidad (tiempo y dificultad) y novedad (cuánto hace que se cocinó). Pesos configurables
+    (`freezify.recipes.weights`); solo cuentan sus proporciones.
+  - Solo se recomiendan recetas que usan al menos un alimento que hay en casa.
+  - **Un alimento pasado de fecha nunca se cuenta como disponible** ni se propone para cocinar.
+  - Lo básico de cocina (sal, aceite, agua, ajo) aparece en la receta pero no se busca en el inventario ni
+    cuenta como "falta".
+  - Las cantidades se comparan en la misma magnitud (gramos con kilos). Si no se pueden comparar (la receta
+    pide "2 tomates" y hay "500 g"), se dice que hay, sin afirmar que sea suficiente.
+  - Un alimento escrito a mano se reconoce si su nombre coincide con uno del catálogo.
+- **Explicación con datos reales**: cada recomendación devuelve sus factores y, por ingrediente, si hay
+  suficiente, parte, cantidad no comparable o falta, con la fecha de caducidad más cercana de lo que hay en
+  casa y si esa fecha es estimada. El servidor no escribe frases: las redactarán los clientes.
+- **"La he cocinado"** (`POST /households/{id}/recipes/{recipeId}/cooked`): se anota una vez por hogar,
+  receta y día, y baja esa receta en las recomendaciones durante dos semanas. No toca el inventario.
+- Eventos de producto `recipe_viewed` y `recipe_cooked`.
+
+### Tests
+
+| Qué | Resultado |
+|---|---|
+| Backend `./mvnw verify` | ✅ 199 tests (33 nuevos: 16 del cálculo de puntuación y 17 de la API de recetas); 1 omitido, el que habla con Firebase real |
+| Recomendador contra el backend y la base locales reales | ✅ con calabacín (2 días), tomate, pasta, huevos, champiñones sin fecha y leche caducada: propone primero el revuelto de champiñones y la pasta con calabacín, marca la fecha de los champiñones como estimada y no usa la leche caducada |
+| Migración `V6` sobre la base local con datos | ✅ aplicada; comprueba ella misma que entran las 25 recetas y sus 153 ingredientes |
+
+### Pendiente en esta fase
+
+- **Pantallas de recetas en web y móvil**: hoy solo existe la API.
+- **Restricciones alimentarias** (dietas y alergias) como filtro duro, y preferencias del usuario.
+- **Avisos de recetas** ("hay recetas que aprovechan lo que va a caducar").
+
+### Known issues
+
+- **Sin restricciones alimentarias todavía**: el recomendador puede proponer carne a una persona vegetariana
+  o un plato con gluten a una persona celíaca. No debe abrirse a usuarios hasta que exista ese filtro.
+- **Las recetas no llevan información nutricional ni imagen**: no hay una fuente fiable de la que sacarlas y
+  no se inventan.
+- **Recetas escritas a mano y no probadas en cocina** una por una: cantidades y tiempos son orientativos.
+- **"La he cocinado" no descuenta ingredientes del inventario**; hay que consumirlos a mano.
+- **Las cantidades no se ajustan a las raciones** que quiera el usuario.
+- **No se convierte entre unidades y peso** ("2 tomates" frente a "500 g"); es el riesgo R4.
+- **El ajo cuenta como básico**: nunca aparece como ingrediente que falte.
+- **Los pesos del recomendador son los de la especificación menos el de preferencias** (0,15), que entrará
+  con las preferencias del usuario.
 
 ## Fase 3 — Expiration Engine 🟡
 
@@ -304,6 +361,6 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Fusionar el pull request #9.
-2. Probar el push en un móvil Android; con eso se cierra la Fase 3.
-3. Fase 4 — Recipes.
+1. Abrir el pull request del servidor de recetas y confirmar la CI.
+2. Fase 4: pantallas de recetas y recomendaciones en web y móvil; después, restricciones alimentarias.
+3. Pendiente de la Fase 3: probar el push en un móvil Android.

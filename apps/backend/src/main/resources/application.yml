@@ -62,6 +62,13 @@ freezify:
   notifications:
     # Every hour on the hour in freezify.time-zone: each user is told at the hour they chose.
     check-cron: "0 0 * * * *"
+  recipes:
+    # How much each factor counts in the score of a recommended recipe. Only their proportions matter.
+    weights:
+      ingredient-match: 0.35
+      expiry-urgency: 0.30
+      convenience: 0.10
+      novelty: 0.10
   push:
     # Path of the Firebase service account key. Without it nothing is sent and notifications are only seen
     # inside the app. The key itself never goes into the repository or an image.

@@ -68,12 +68,12 @@ tipos internos de otro.
 | `inventory` | Alimentos del hogar, consumo y descarte | households, food | 2 ✔ |
 | `expiration` | Niveles de prioridad y estimación de fechas por reglas de vida útil | food | 3 ✔ |
 | `notifications` | Avisos de caducidad dentro de la app, preferencias, dispositivos y envío push por FCM | households, inventory, expiration, food, users | 3 ✔ |
-| `recipes` | Recetas y recomendador | food, inventory, expiration | 4 |
+| `recipes` | Catálogo de recetas, recomendador y registro de lo cocinado | food, inventory, expiration, households | 4 ✔ |
 | `mealplanning` | Plan semanal y generador | recipes, inventory | 5 |
 | `shopping` | Listas de la compra | mealplanning, inventory, food | 6 |
 | `ai` | `AIProvider`, `AiService`, casos de uso de IA | common | 7 |
 | `integrations` | `ProductCatalogProvider` y fuentes externas | food | 7+ |
-| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory` y `notifications` | 2 ✔ / 8 |
+| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory`, `notifications` y `recipes` | 2 ✔ / 8 |
 | `realtime` | Flujos de eventos (SSE) por hogar | households; escucha eventos de `inventory` y `households` | 2 ✔ |
 
 Los módulos marcados con ✔, además de los cuatro de la Fase 1, existen en el código. Los de fases futuras **no existen todavía**: se crean cuando tienen contenido real.
@@ -133,6 +133,13 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D32 | La clave de Firebase se indica por **ruta de fichero** (`FREEZIFY_FCM_CREDENTIALS_FILE`); sin ella el push queda desactivado | El secreto no vive en el repositorio ni en la imagen; desarrollo y CI funcionan sin Firebase |
 | D33 | Al cerrar sesión la app **invalida su identificador de push** además de avisar al backend | Funciona también cuando la sesión caduca sola y ya no se puede llamar al backend; el servidor olvida el dispositivo cuando Firebase lo da por desaparecido |
 | D34 | El plugin de Google Services se aplica **solo si existe** `google-services.json` | El fichero no está en el repositorio (público); quien lo clone puede compilar la app, sin push |
+| D35 | Las recetas son **datos sembrados por migración** y se leen una vez en memoria, como el catálogo de alimentos | Solo cambian con un despliegue; puntuar necesita tenerlas todas a mano en cada petición |
+| D36 | El recomendador es una **función pura** (`RecipeScorer`): receta + existencias + historial + día → puntuación y factores | Determinista, testeable sin base de datos y explicable: cada número sale de sus entradas |
+| D37 | La puntuación es la **media ponderada** de los factores; solo cuentan las proporciones de los pesos | Añadir un factor (preferencias) es añadir un peso, sin recalibrar los demás |
+| D38 | La urgencia de varios alimentos se combina como **probabilidades independientes** (1 − Π(1 − u)) | Dos alimentos con prisa cuentan más que uno, sin pasar nunca de 1 |
+| D39 | Un ingrediente puede ser **básico** (`staple`): se lista pero no se busca en el inventario | Casi nadie apunta la sal o el aceite; sin esto toda receta tendría "faltas" falsas |
+| D40 | Lo pasado de fecha **no cuenta como disponible** para cocinar | La aplicación no debe proponer comer algo caducado |
+| D41 | "La he cocinado" **no descuenta** del inventario | Restar cantidades a ciegas puede perder datos; consumir sigue siendo una acción explícita por alimento |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -156,7 +163,7 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 ## 4. Modelo de datos
 
 Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`, `V4__notifications.sql`,
-`V5__device_tokens.sql`):
+`V5__device_tokens.sql`, `V6__recipes.sql`):
 
 ```text
 users ──< refresh_tokens
@@ -169,6 +176,8 @@ users ──< notifications >── households      notifications ──< notifi
 users ──  notification_preferences, notification_checks
 users ──< notification_item_alerts >── food_items
 users ──< device_tokens
+recipes ──< recipe_ingredients >── foods
+recipes ──< cooked_recipes >── households
 ```
 
 Entidades previstas por fase:
@@ -177,7 +186,7 @@ Entidades previstas por fase:
 |---|---|
 | 2 ✔ | `Food` (catálogo), `FoodItem`, `FoodOutcome` (consumo y desperdicio), `ProductEvent`; `FoodCategory` es un enum |
 | 3 ✔ | `ShelfLifeRule`, `Notification`, `NotificationPreference`, `DeviceToken` |
-| 4 | `Recipe`, `RecipeIngredient`, `UserPreference` |
+| 4 | `Recipe`, `RecipeIngredient`, `CookedRecipe` (hechas); `UserPreference` pendiente |
 | 5 | `MealPlan`, `MealPlanEntry` |
 | 6 | `ShoppingList`, `ShoppingListItem` |
 | 7 | `Scan`, `ScanResult`, `Product` |
@@ -231,6 +240,15 @@ Fase 3 (avisos del usuario que hace la petición):
 | GET / PUT | `/notifications/preferences` | Ver / reemplazar sus preferencias |
 | PUT | `/notifications/devices` | La app registra dónde recibe push este usuario (repetible) |
 | POST | `/notifications/devices/unregister` | La app deja de recibir push de este usuario (cierre de sesión) |
+
+Fase 4:
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/recipes?q=&maxMinutes=&difficulty=&course=&lang=&page=&size=` | Catálogo de recetas |
+| GET | `/recipes/{id}?lang=` | Receta con ingredientes y pasos |
+| GET | `/households/{id}/recipes/recommendations?lang=&limit=` | Qué cocinar con lo que hay, con los datos que lo explican |
+| POST | `/households/{id}/recipes/{recipeId}/cooked` | El hogar ha cocinado la receta hoy |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).
