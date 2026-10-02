@@ -56,6 +56,9 @@ freezify:
       - /api/v1/households/join
   households:
     invitation-ttl: 7d
+  expiration:
+    # Shortly after midnight in freezify.time-zone, when dates change meaning.
+    sweep-cron: "0 5 0 * * *"
   realtime:
     # Event streams end after this long; clients reconnect and are authenticated again.
     connection-ttl: 30m

@@ -143,10 +143,18 @@ class FoodItemEntity {
         return new Input(foodId, category, storageLocation, purchaseDate, openedDate, userExpirationDate);
     }
 
-    /** Sets the date that applies; {@code null} when there is neither a user date nor a rule to estimate one. */
-    void expiresOn(@Nullable Expiration expiration) {
+    /**
+     * Sets the date that applies ({@code null} when there is neither a user date nor a rule to estimate one)
+     * and brings the status in line with it: food still in the house is expired exactly when its date has
+     * passed. Correcting the date of an expired item therefore brings it back.
+     */
+    void expiresOn(@Nullable Expiration expiration, LocalDate today) {
         this.expirationDate = expiration == null ? null : expiration.date();
         this.expirationSource = expiration == null ? null : expiration.source();
+        if (status.isActive()) {
+            boolean pastItsDate = expirationDate != null && expirationDate.isBefore(today);
+            status = pastItsDate ? ItemStatus.EXPIRED : openedDate != null ? ItemStatus.OPENED : ItemStatus.AVAILABLE;
+        }
     }
 
     void open(LocalDate today) {

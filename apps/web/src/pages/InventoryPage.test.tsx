@@ -214,6 +214,19 @@ describe('expiration priority', () => {
     expect(row('Sal').queryByText(/quedan|Caducado|Urgente/)).not.toBeInTheDocument()
   })
 
+it('says "expired" once for food the daily sweep has marked as expired', async () => {
+    server([{ ...expired, status: 'EXPIRED' }])
+    renderApp('/households/h1')
+
+    const leche = await findRow('Leche')
+    expect(leche.getAllByText(/Caducado/)).toHaveLength(1)
+    // It is still in the house: it can be eaten at one's own risk, thrown away, or its date corrected.
+    expect(leche.getByRole('button', { name: 'Consumir' })).toBeInTheDocument()
+    expect(leche.getByRole('button', { name: 'Tirar' })).toBeInTheDocument()
+    expect(leche.getByRole('button', { name: 'Editar' })).toBeInTheDocument()
+    expect(leche.queryByRole('button', { name: 'Abrir' })).not.toBeInTheDocument()
+  })
+
   it('answers "what should I eat first?" at the top of the inventory', async () => {
     server([expired, urgent, soon, fine], {
       [CONSUME_FIRST]: () => ({ body: consumeFirst([expired, urgent, soon]) }),
