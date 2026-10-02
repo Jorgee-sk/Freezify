@@ -67,7 +67,7 @@ tipos internos de otro.
 | `food` | Catálogo canónico de alimentos, categorías, unidades y cantidades | common | 2 ✔ |
 | `inventory` | Alimentos del hogar, consumo y descarte | households, food | 2 ✔ |
 | `expiration` | Niveles de prioridad y estimación de fechas por reglas de vida útil | food | 3 ✔ |
-| `notifications` | Avisos de caducidad dentro de la app y preferencias (hecho); envío push (pendiente) | households, inventory, expiration, food | 3 ✔ |
+| `notifications` | Avisos de caducidad dentro de la app, preferencias, dispositivos y envío push por FCM | households, inventory, expiration, food, users | 3 ✔ |
 | `recipes` | Recetas y recomendador | food, inventory, expiration | 4 |
 | `mealplanning` | Plan semanal y generador | recipes, inventory | 5 |
 | `shopping` | Listas de la compra | mealplanning, inventory, food | 6 |
@@ -127,6 +127,10 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D26 | Anti-spam por **novedad**: se guarda el nivel más urgente del que ya se avisó por usuario y alimento | Un aviso al día por hogar como mucho, y solo si algo es nuevo o más urgente; nada se repite |
 | D27 | Los trabajos programados leen otros módulos por interfaces propias (`ExpiringFood`, `HouseholdDirectory`), no por `HouseholdAccess` | No actúan en nombre de un usuario; lo que devuelven nunca llega a un cliente sin comprobar la pertenencia |
 | D28 | La API de avisos no lleva identificador de usuario en la ruta (`/notifications`) | El usuario sale siempre del token; no hay ningún id que manipular |
+| D29 | Push por la **API HTTP v1 de FCM** con un cliente propio (firma con Nimbus, `HttpClient` del JDK), sin el SDK de Firebase Admin | Una sola llamada HTTP; evita arrastrar decenas de dependencias de Google |
+| D30 | El texto del push lo redacta **el servidor**, en el idioma guardado del usuario | Con la app cerrada no hay cliente que lo redacte. Dentro de la app siguen redactando los clientes (D25) |
+| D31 | El push se envía **tras el commit** del aviso y nunca lo deshace | El aviso es la fuente de verdad; el push es solo un medio de entrega |
+| D32 | La clave de Firebase se indica por **ruta de fichero** (`FREEZIFY_FCM_CREDENTIALS_FILE`); sin ella el push queda desactivado | El secreto no vive en el repositorio ni en la imagen; desarrollo y CI funcionan sin Firebase |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -149,7 +153,8 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 
 ## 4. Modelo de datos
 
-Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`, `V4__notifications.sql`):
+Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`, `V4__notifications.sql`,
+`V5__device_tokens.sql`):
 
 ```text
 users ──< refresh_tokens
@@ -161,6 +166,7 @@ product_events
 users ──< notifications >── households      notifications ──< notification_items
 users ──  notification_preferences, notification_checks
 users ──< notification_item_alerts >── food_items
+users ──< device_tokens
 ```
 
 Entidades previstas por fase:
@@ -168,7 +174,7 @@ Entidades previstas por fase:
 | Fase | Entidades |
 |---|---|
 | 2 ✔ | `Food` (catálogo), `FoodItem`, `FoodOutcome` (consumo y desperdicio), `ProductEvent`; `FoodCategory` es un enum |
-| 3 ✔ | `ShelfLifeRule`, `Notification`, `NotificationPreference`; `DeviceToken` llegará con el envío push |
+| 3 ✔ | `ShelfLifeRule`, `Notification`, `NotificationPreference`, `DeviceToken` |
 | 4 | `Recipe`, `RecipeIngredient`, `UserPreference` |
 | 5 | `MealPlan`, `MealPlanEntry` |
 | 6 | `ShoppingList`, `ShoppingListItem` |
@@ -221,6 +227,8 @@ Fase 3 (avisos del usuario que hace la petición):
 | POST | `/notifications/{id}/read` | Marcar uno como leído |
 | POST | `/notifications/read-all` | Marcar todos como leídos |
 | GET / PUT | `/notifications/preferences` | Ver / reemplazar sus preferencias |
+| PUT | `/notifications/devices` | La app registra dónde recibe push este usuario (repetible) |
+| POST | `/notifications/devices/unregister` | La app deja de recibir push de este usuario (cierre de sesión) |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).

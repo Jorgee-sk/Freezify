@@ -108,13 +108,42 @@ flutter run --dart-define=FREEZIFY_API_URL=http://192.168.1.20:8080/api/v1
 > máquina de desarrollo). Se ha comprobado que compila el APK, sus 59 tests pasan en CI y su código funciona
 > contra el backend real ejecutado en navegador y en la VM de Dart.
 
-### 2.4 Probar la API a mano
+### 2.4 Notificaciones push (Firebase)
+
+Los avisos dentro de la app funcionan sin configurar nada. Para que el servidor además envíe notificaciones
+push hace falta la clave de la cuenta de servicio de Firebase:
+
+| Qué | Dónde |
+|---|---|
+| Proyecto de Firebase | `freezify-c50ea`, en la cuenta de Google del propietario: <https://console.firebase.google.com/project/freezify-c50ea> |
+| App Android registrada | `com.freezify.app` |
+| Clave de la cuenta de servicio | `.freezify\firebase-service-account.json` dentro de tu carpeta de usuario (fuera del repositorio) |
+| Configuración de la app Android | `apps/mobile/android/app/google-services.json` (ignorado por git) |
+
+Arrancar el backend con push, en PowerShell:
+
+```powershell
+$env:FREEZIFY_FCM_CREDENTIALS_FILE = "$env:USERPROFILE\.freezify\firebase-service-account.json"
+./mvnw spring-boot:test-run
+```
+
+Al arrancar debe aparecer `Push notifications are sent through Firebase project freezify-c50ea`. Con la
+misma variable definida, `./mvnw test -Dtest=FcmLiveTests` comprueba contra Firebase real que la clave sirve,
+sin entregar ningún mensaje.
+
+**La clave es un secreto**: da acceso de administrador al proyecto de Firebase. No la copies al repositorio
+ni la envíes por correo o chat. Si se filtra, bórrala en la consola de Firebase (Configuración del proyecto →
+Cuentas de servicio → Administrar permisos de cuentas de servicio) y genera otra.
+
+Hoy ningún dispositivo se registra todavía: la app móvil aún no recibe push.
+
+### 2.5 Probar la API a mano
 
 - **Swagger UI**: <http://localhost:8080/swagger-ui.html>. Regístrate con `POST /auth/register`, copia el
   `accessToken` de la respuesta, pulsa **Authorize** y pégalo. El token dura 15 minutos.
 - **Health**: <http://localhost:8080/actuator/health>.
 
-### 2.5 Tests
+### 2.6 Tests
 
 ```bash
 cd apps/backend
@@ -366,7 +395,7 @@ Estos puntos ya están identificados en `docs/STATUS.md` y bloquean un lanzamien
 | URL de la API | Se fija al compilar: `--dart-define=FREEZIFY_API_URL=https://api.tudominio.com/api/v1` |
 | Android | Firmar la app con una clave propia (que **no** va al repositorio) y subirla a Google Play; empezar por la pista de pruebas internas |
 | iOS | Requiere un Mac y una cuenta de Apple Developer; hoy no se puede ni compilar desde la máquina de desarrollo |
-| Notificaciones push | Pendientes: necesitan un proyecto de Firebase y, para iOS, un certificado de APNs. Los avisos dentro de la app ya funcionan sin nada de esto |
+| Notificaciones push | El servidor ya las envía (sección 2.4); falta que la app las reciba y, para iOS, un certificado de APNs. En producción la clave se monta como fichero y se indica con `FREEZIFY_FCM_CREDENTIALS_FILE` |
 
 ### 6.5 Orden propuesto
 

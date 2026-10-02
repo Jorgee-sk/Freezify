@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -58,6 +59,7 @@ class ExpirationAlerts {
     private final NotificationPreferencesRepository preferences;
     private final ItemAlertRepository alerts;
     private final NotificationCheckRepository checks;
+    private final ApplicationEventPublisher events;
     private final TransactionTemplate transaction;
     private final Today today;
     private final Clock clock;
@@ -69,6 +71,7 @@ class ExpirationAlerts {
             NotificationPreferencesRepository preferences,
             ItemAlertRepository alerts,
             NotificationCheckRepository checks,
+            ApplicationEventPublisher events,
             PlatformTransactionManager transactionManager,
             Today today,
             Clock clock) {
@@ -78,6 +81,7 @@ class ExpirationAlerts {
         this.preferences = preferences;
         this.alerts = alerts;
         this.checks = checks;
+        this.events = events;
         this.transaction = new TransactionTemplate(transactionManager);
         this.today = today;
         this.clock = clock;
@@ -185,7 +189,7 @@ class ExpirationAlerts {
         if (!somethingNew) {
             return false;
         }
-        notifications.save(new NotificationEntity(
+        NotificationEntity notification = notifications.save(new NotificationEntity(
                 userId,
                 householdId,
                 NotificationType.EXPIRATION,
@@ -196,6 +200,8 @@ class ExpirationAlerts {
                         .map(item -> new NotifiedItem(item.name(), item.expirationDate(), item.estimated()))
                         .toList(),
                 clock.instant()));
+        // Heard after the commit by whoever delivers it outside the app.
+        events.publishEvent(new NotificationCreated(userId, notification.id()));
         return true;
     }
 }
