@@ -45,12 +45,21 @@ record RecipeProperties(RecipeScorer.Weights weights) {}
 @Service
 public class RecipeService {
 
-    /** Which recipes of the catalog to list. */
+    /**
+     * Which recipes of the catalog to list.
+     *
+     * @param householdId when given, what that household does not eat is left out
+     */
     public record Filter(
-            @Nullable String text, @Nullable Integer maxMinutes, @Nullable Difficulty difficulty, @Nullable Course course) {}
+            @Nullable String text,
+            @Nullable Integer maxMinutes,
+            @Nullable Difficulty difficulty,
+            @Nullable Course course,
+            @Nullable UUID householdId) {}
 
     private final RecipeBook book;
     private final CookedRecipeRepository cooked;
+    private final HouseholdDietRepository diets;
     private final HouseholdAccess access;
     private final HouseholdStock stock;
     private final FoodCatalog catalog;
@@ -62,6 +71,7 @@ public class RecipeService {
     RecipeService(
             RecipeBook book,
             CookedRecipeRepository cooked,
+            HouseholdDietRepository diets,
             HouseholdAccess access,
             HouseholdStock stock,
             FoodCatalog catalog,
@@ -71,6 +81,7 @@ public class RecipeService {
             Clock clock) {
         this.book = book;
         this.cooked = cooked;
+        this.diets = diets;
         this.access = access;
         this.stock = stock;
         this.catalog = catalog;
@@ -80,9 +91,12 @@ public class RecipeService {
         this.clock = clock;
     }
 
-    public PageResponse<RecipeSummary> list(Filter filter, String language, int page, int size) {
+    @Transactional(readOnly = true)
+    public PageResponse<RecipeSummary> list(Filter filter, UUID userId, String language, int page, int size) {
+        Diet diet = filter.householdId() == null ? Diet.none() : dietOf(filter.householdId(), userId);
         String wanted = filter.text() == null ? "" : FoodCatalog.normalize(filter.text());
         List<Recipe> matching = book.all().stream()
+                .filter(diet::allows)
                 .filter(recipe -> wanted.isEmpty()
                         || FoodCatalog.normalize(recipe.name(language)).contains(wanted))
                 .filter(recipe -> filter.maxMinutes() == null || recipe.totalMinutes() <= filter.maxMinutes())
@@ -121,7 +135,7 @@ public class RecipeService {
      */
     @Transactional(readOnly = true)
     public List<Recommendation> recommend(UUID householdId, UUID userId, String language, int limit) {
-        access.requireMember(householdId, userId);
+        Diet diet = dietOf(householdId, userId);
         LocalDate day = today.date();
         Map<UUID, FoodStock> available = availableFood(householdId, day);
         Map<UUID, LocalDate> lastCooked = cooked.lastCookedByRecipe(householdId).stream()
@@ -130,6 +144,8 @@ public class RecipeService {
                         CookedRecipeRepository.LastCooked::getLastCooked));
 
         return book.all().stream()
+                // A hard filter, applied before anything is scored: what the household does not eat is never offered.
+                .filter(diet::allows)
                 .map(recipe -> scorer.score(recipe, available, lastCooked.get(recipe.id()), day))
                 .filter(Scored::usesSomethingAtHome)
                 // The name breaks ties, so that the order never depends on chance.
@@ -139,6 +155,21 @@ public class RecipeService {
                 .limit(limit)
                 .map(scored -> toRecommendation(scored, language, day))
                 .toList();
+    }
+
+    /** What the household does not eat. Any member can see it. */
+    @Transactional(readOnly = true)
+    public Diet dietOf(UUID householdId, UUID userId) {
+        access.requireMember(householdId, userId);
+        return diets.findById(householdId).map(HouseholdDietEntity::toDiet).orElseGet(Diet::none);
+    }
+
+    /** Any member can change it: it describes the shared kitchen, not a person. */
+    @Transactional
+    public Diet updateDiet(UUID householdId, UUID userId, Diet diet) {
+        access.requireMember(householdId, userId);
+        HouseholdDietEntity entity = diets.findById(householdId).orElseGet(() -> new HouseholdDietEntity(householdId));
+        return diets.save(entity.apply(diet, userId, clock.instant())).toDiet();
     }
 
     /**

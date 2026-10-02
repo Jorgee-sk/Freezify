@@ -2,13 +2,14 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { COURSES, TIME_LIMITS, recipesApi } from '../api/recipes'
+import { COURSES, TIME_LIMITS, dietApi, recipesApi } from '../api/recipes'
 import type { Course, Recommendation } from '../api/recipes'
 import { queryKeys } from '../api/queryKeys'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { currentLocale } from '../i18n'
 import { useDebounced } from '../inventory/useDebounced'
 import { RecipeFacts } from '../recipes/RecipeFacts'
+import { dietSummary } from '../recipes/diet'
 import { reasons } from '../recipes/explain'
 
 /** How many recommendations are shown before the catalog. */
@@ -32,10 +33,13 @@ export function RecipesPage() {
   })
   const filter = { text, maxMinutes, course, page }
   const catalog = useQuery({
-    queryKey: queryKeys.recipeList(filter, lang),
-    queryFn: () => recipesApi.list(filter, lang),
+    queryKey: queryKeys.recipeList(householdId, filter, lang),
+    queryFn: () => recipesApi.list(householdId, filter, lang),
     placeholderData: keepPreviousData,
   })
+
+  const diet = useQuery({ queryKey: queryKeys.diet(householdId), queryFn: () => dietApi.get(householdId) })
+  const restrictions = diet.data ? dietSummary(diet.data) : null
 
   /** Any change of filter starts again from the first page. */
   function filtering<T>(setter: (value: T) => void) {
@@ -53,6 +57,13 @@ export function RecipesPage() {
         ← {t('households.backToInventory')}
       </Link>
       <h1>{t('recipes.title')}</h1>
+      {/* Says what is being left out, so that a short list is never a mystery. */}
+      {diet.data && (
+        <p className="diet-line">
+          <span>{restrictions ? t('diet.applied', { restrictions }) : t('diet.none')}</span>
+          <Link to={`/households/${householdId}/diet`}>{t('diet.change')}</Link>
+        </p>
+      )}
 
       <section aria-labelledby="recommended-title">
         <h2 id="recommended-title">{t('recipes.recommendedTitle')}</h2>

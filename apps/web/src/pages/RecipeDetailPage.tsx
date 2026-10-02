@@ -2,13 +2,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { recipesApi } from '../api/recipes'
+import { dietApi, recipesApi } from '../api/recipes'
 import type { MatchedIngredient } from '../api/recipes'
 import { queryKeys } from '../api/queryKeys'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { currentLocale } from '../i18n'
 import { formatQuantity } from '../inventory/format'
 import { RecipeFacts } from '../recipes/RecipeFacts'
+import { conflicts, traitList } from '../recipes/diet'
 
 export function RecipeDetailPage() {
   const { householdId = '', recipeId = '' } = useParams()
@@ -27,6 +28,7 @@ export function RecipeDetailPage() {
     queryFn: () => recipesApi.recommendations(householdId, lang),
     staleTime: 0,
   })
+  const diet = useQuery({ queryKey: queryKeys.diet(householdId), queryFn: () => dietApi.get(householdId) })
   const markCooked = useMutation({
     mutationFn: () => recipesApi.markCooked(householdId, recipeId),
     onSuccess: async () => {
@@ -57,6 +59,9 @@ export function RecipeDetailPage() {
       ?.ingredients.map((ingredient) => [ingredient.foodId, ingredient]),
   )
 
+  // A recipe opened directly may contain what the household does not eat; the lists never show such recipes.
+  const notEaten = diet.data ? conflicts(recipe.contains, diet.data) : []
+
   return (
     <>
       {back}
@@ -65,6 +70,14 @@ export function RecipeDetailPage() {
       <p>
         <RecipeFacts recipe={recipe} />
       </p>
+      {notEaten.length > 0 && (
+        <p role="alert" className="warning">
+          {t('diet.conflict', { traits: traitList(notEaten) })}
+        </p>
+      )}
+      {recipe.contains.length > 0 && (
+        <p className="muted small">{t('recipes.contains', { traits: traitList(recipe.contains) })}</p>
+      )}
 
       <section className="card recipe-section" aria-labelledby="ingredients-title">
         <h2 id="ingredients-title">{t('recipes.ingredients')}</h2>

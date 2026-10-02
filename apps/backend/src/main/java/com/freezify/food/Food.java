@@ -1,5 +1,6 @@
 package com.freezify.food;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -13,7 +14,12 @@ public record Food(
         String nameEn,
         FoodCategory category,
         Unit defaultUnit,
-        StorageLocation defaultStorage) {
+        StorageLocation defaultStorage,
+        Set<FoodTrait> traits) {
+
+    public Food {
+        traits = Set.copyOf(traits);
+    }
 
     public String name(String language) {
         return "es".equals(language) ? nameEs : nameEn;

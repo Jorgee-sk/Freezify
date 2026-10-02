@@ -323,6 +323,55 @@
     },
     "markCooked": "La he cocinado",
     "cookedSaved": "Anotado",
-    "cookedHelp": "Sirve para no recomendarte lo mismo cada día. No cambia tu inventario: consume los alimentos que hayas usado."
+    "cookedHelp": "Sirve para no recomendarte lo mismo cada día. No cambia tu inventario: consume los alimentos que hayas usado.",
+    "contains": "Contiene: {{traits}}."
+  },
+  "diet": {
+    "title": "Qué no se come en casa",
+    "shared": "Estas restricciones son del hogar: cualquier miembro las ve y puede cambiarlas. Las recetas que contengan algo de esto no se muestran.",
+    "typeLabel": "Dieta",
+    "typeOption": {
+      "NONE": "Sin dieta",
+      "VEGETARIAN": "Vegetariana",
+      "VEGAN": "Vegana"
+    },
+    "type": {
+      "VEGETARIAN": "Dieta vegetariana",
+      "VEGAN": "Dieta vegana"
+    },
+    "avoidLabel": "Además, evitar",
+    "trait": {
+      "MEAT": "carne",
+      "PORK": "cerdo",
+      "FISH": "pescado",
+      "SHELLFISH": "marisco",
+      "DAIRY": "lácteos",
+      "EGG": "huevo",
+      "GLUTEN": "gluten",
+      "NUTS": "frutos secos",
+      "SOY": "soja",
+      "SESAME": "sésamo",
+      "ALCOHOL": "alcohol"
+    },
+    "traitOption": {
+      "MEAT": "Carne",
+      "PORK": "Cerdo",
+      "FISH": "Pescado",
+      "SHELLFISH": "Marisco",
+      "DAIRY": "Lácteos",
+      "EGG": "Huevo",
+      "GLUTEN": "Gluten",
+      "NUTS": "Frutos secos",
+      "SOY": "Soja",
+      "SESAME": "Sésamo",
+      "ALCOHOL": "Alcohol"
+    },
+    "without": "sin {{trait}}",
+    "disclaimer": "Es una ayuda, no una garantía. Lo que contiene cada alimento es orientativo: un producto concreto puede llevar otros ingredientes o trazas. Si hay una alergia, comprueba siempre la etiqueta.",
+    "saved": "Restricciones guardadas",
+    "applied": "Recetas filtradas para este hogar: {{restrictions}}.",
+    "none": "Este hogar no tiene restricciones alimentarias.",
+    "change": "Cambiar",
+    "conflict": "Esta receta contiene algo que en este hogar no se come: {{traits}}."
   }
 }

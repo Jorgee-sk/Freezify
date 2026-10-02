@@ -1483,6 +1483,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This recipe does not exist.'**
   String get errorRecipeNotFound;
+
+  /// No description provided for @dietTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What this household does not eat'**
+  String get dietTitle;
+
+  /// No description provided for @dietShared.
+  ///
+  /// In en, this message translates to:
+  /// **'These restrictions belong to the household: every member can see and change them. Recipes that contain any of this are not shown.'**
+  String get dietShared;
+
+  /// No description provided for @dietTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Diet'**
+  String get dietTypeLabel;
+
+  /// No description provided for @dietNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No diet'**
+  String get dietNone;
+
+  /// No description provided for @dietVegetarian.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetarian'**
+  String get dietVegetarian;
+
+  /// No description provided for @dietVegan.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegan'**
+  String get dietVegan;
+
+  /// No description provided for @dietVegetarianName.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetarian diet'**
+  String get dietVegetarianName;
+
+  /// No description provided for @dietVeganName.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegan diet'**
+  String get dietVeganName;
+
+  /// No description provided for @dietAvoidLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Also avoid'**
+  String get dietAvoidLabel;
+
+  /// No description provided for @dietWithout.
+  ///
+  /// In en, this message translates to:
+  /// **'no {trait}'**
+  String dietWithout(String trait);
+
+  /// No description provided for @dietDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a help, not a guarantee. What each food contains is indicative: a given product may have other ingredients or traces. With an allergy, always check the label.'**
+  String get dietDisclaimer;
+
+  /// No description provided for @dietSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Restrictions saved'**
+  String get dietSaved;
+
+  /// No description provided for @dietApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipes filtered for this household: {restrictions}.'**
+  String dietApplied(String restrictions);
+
+  /// No description provided for @dietNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'This household has no dietary restrictions.'**
+  String get dietNotSet;
+
+  /// No description provided for @dietChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get dietChange;
+
+  /// No description provided for @dietConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This recipe contains something this household does not eat: {traits}.'**
+  String dietConflict(String traits);
+
+  /// No description provided for @recipeContains.
+  ///
+  /// In en, this message translates to:
+  /// **'Contains: {traits}.'**
+  String recipeContains(String traits);
+
+  /// No description provided for @traitMeat.
+  ///
+  /// In en, this message translates to:
+  /// **'meat'**
+  String get traitMeat;
+
+  /// No description provided for @traitPork.
+  ///
+  /// In en, this message translates to:
+  /// **'pork'**
+  String get traitPork;
+
+  /// No description provided for @traitFish.
+  ///
+  /// In en, this message translates to:
+  /// **'fish'**
+  String get traitFish;
+
+  /// No description provided for @traitShellfish.
+  ///
+  /// In en, this message translates to:
+  /// **'shellfish'**
+  String get traitShellfish;
+
+  /// No description provided for @traitDairy.
+  ///
+  /// In en, this message translates to:
+  /// **'dairy'**
+  String get traitDairy;
+
+  /// No description provided for @traitEgg.
+  ///
+  /// In en, this message translates to:
+  /// **'egg'**
+  String get traitEgg;
+
+  /// No description provided for @traitGluten.
+  ///
+  /// In en, this message translates to:
+  /// **'gluten'**
+  String get traitGluten;
+
+  /// No description provided for @traitNuts.
+  ///
+  /// In en, this message translates to:
+  /// **'nuts'**
+  String get traitNuts;
+
+  /// No description provided for @traitSoy.
+  ///
+  /// In en, this message translates to:
+  /// **'soy'**
+  String get traitSoy;
+
+  /// No description provided for @traitSesame.
+  ///
+  /// In en, this message translates to:
+  /// **'sesame'**
+  String get traitSesame;
+
+  /// No description provided for @traitAlcohol.
+  ///
+  /// In en, this message translates to:
+  /// **'alcohol'**
+  String get traitAlcohol;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

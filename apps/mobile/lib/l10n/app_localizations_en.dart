@@ -883,4 +883,98 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorRecipeNotFound => 'This recipe does not exist.';
+
+  @override
+  String get dietTitle => 'What this household does not eat';
+
+  @override
+  String get dietShared =>
+      'These restrictions belong to the household: every member can see and change them. Recipes that contain any of this are not shown.';
+
+  @override
+  String get dietTypeLabel => 'Diet';
+
+  @override
+  String get dietNone => 'No diet';
+
+  @override
+  String get dietVegetarian => 'Vegetarian';
+
+  @override
+  String get dietVegan => 'Vegan';
+
+  @override
+  String get dietVegetarianName => 'Vegetarian diet';
+
+  @override
+  String get dietVeganName => 'Vegan diet';
+
+  @override
+  String get dietAvoidLabel => 'Also avoid';
+
+  @override
+  String dietWithout(String trait) {
+    return 'no $trait';
+  }
+
+  @override
+  String get dietDisclaimer =>
+      'This is a help, not a guarantee. What each food contains is indicative: a given product may have other ingredients or traces. With an allergy, always check the label.';
+
+  @override
+  String get dietSaved => 'Restrictions saved';
+
+  @override
+  String dietApplied(String restrictions) {
+    return 'Recipes filtered for this household: $restrictions.';
+  }
+
+  @override
+  String get dietNotSet => 'This household has no dietary restrictions.';
+
+  @override
+  String get dietChange => 'Change';
+
+  @override
+  String dietConflict(String traits) {
+    return 'This recipe contains something this household does not eat: $traits.';
+  }
+
+  @override
+  String recipeContains(String traits) {
+    return 'Contains: $traits.';
+  }
+
+  @override
+  String get traitMeat => 'meat';
+
+  @override
+  String get traitPork => 'pork';
+
+  @override
+  String get traitFish => 'fish';
+
+  @override
+  String get traitShellfish => 'shellfish';
+
+  @override
+  String get traitDairy => 'dairy';
+
+  @override
+  String get traitEgg => 'egg';
+
+  @override
+  String get traitGluten => 'gluten';
+
+  @override
+  String get traitNuts => 'nuts';
+
+  @override
+  String get traitSoy => 'soy';
+
+  @override
+  String get traitSesame => 'sesame';
+
+  @override
+  String get traitAlcohol => 'alcohol';
 }

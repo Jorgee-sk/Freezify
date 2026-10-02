@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api_client.dart';
 import '../../core/providers.dart';
 import '../auth/auth_controller.dart';
+import 'diet_models.dart';
 import 'recipe_models.dart';
 
 class RecipeRepository {
@@ -20,6 +21,7 @@ class RecipeRepository {
     final text = query.text.trim();
     final parameters = Uri(
       queryParameters: {
+        'household': query.householdId,
         'lang': query.language,
         'size': '$catalogSize',
         if (text.isNotEmpty) 'q': text,
@@ -40,6 +42,12 @@ class RecipeRepository {
             as List<dynamic>;
     return [for (final item in json) Recommendation.fromJson(item as Map<String, dynamic>)];
   }
+
+  Future<Diet> diet(String householdId) async =>
+      Diet.fromJson(await _api.get('/households/$householdId/diet') as Map<String, dynamic>);
+
+  Future<void> updateDiet(String householdId, Diet diet) =>
+      _api.put('/households/$householdId/diet', body: diet.toJson());
 
   Future<void> markCooked(String householdId, String recipeId) =>
       _api.post('/households/$householdId/recipes/$recipeId/cooked');
@@ -66,3 +74,8 @@ final recommendationsProvider = FutureProvider.autoDispose
       ref.watch(authControllerProvider.select((auth) => auth.value?.id));
       return ref.watch(recipeRepositoryProvider).recommendations(key.householdId, key.language);
     });
+
+final dietProvider = FutureProvider.autoDispose.family<Diet, String>((ref, householdId) {
+  ref.watch(authControllerProvider.select((auth) => auth.value?.id));
+  return ref.watch(recipeRepositoryProvider).diet(householdId);
+});

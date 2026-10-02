@@ -6,6 +6,7 @@ import { ApiError } from './api/client'
 import { AuthProvider } from './auth/AuthContext'
 import { useAuth } from './auth/useAuth'
 import { Layout } from './components/Layout'
+import { DietPage } from './pages/DietPage'
 import { HouseholdDetailPage } from './pages/HouseholdDetailPage'
 import { HouseholdsPage } from './pages/HouseholdsPage'
 import { InventoryPage } from './pages/InventoryPage'
@@ -55,6 +56,7 @@ export function AppRoutes() {
           <Route path="/households/:householdId" element={<InventoryPage />} />
           <Route path="/households/:householdId/settings" element={<HouseholdDetailPage />} />
           <Route path="/households/:householdId/recipes" element={<RecipesPage />} />
+          <Route path="/households/:householdId/diet" element={<DietPage />} />
           <Route path="/households/:householdId/recipes/:recipeId" element={<RecipeDetailPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/notifications/preferences" element={<NotificationPreferencesPage />} />

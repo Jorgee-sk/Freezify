@@ -42,6 +42,7 @@ function recommendation(
       totalMinutes: 25,
       difficulty: 'EASY',
       course: 'MAIN',
+      contains: [],
     },
     score: 0.8,
     factors: { ingredientMatch: 0.75, expiryUrgency: 0.5, convenience: 0.9, novelty: 1 },

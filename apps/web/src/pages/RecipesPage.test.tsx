@@ -19,6 +19,7 @@ function recipe(id: string, name: string, overrides: Partial<RecipeSummary> = {}
     totalMinutes: 25,
     difficulty: 'EASY',
     course: 'MAIN',
+    contains: [],
     ...overrides,
   }
 }
@@ -77,6 +78,7 @@ function server(routes: Parameters<typeof fakeApi>[0] = {}) {
     'GET /users/me': () => ({ body: ANA }),
     'GET /households/h1': () => ({ body: CASA }),
     [CATALOG]: () => page([PASTA, TORTILLA]),
+    'GET /households/h1/diet': () => ({ body: { type: 'NONE', avoided: [] } }),
     [RECOMMENDATIONS]: () => ({ body: [PASTA_RECOMMENDATION] }),
     ...routes,
   })

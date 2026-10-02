@@ -1,4 +1,5 @@
 import '../inventory/inventory_models.dart';
+import 'diet_models.dart';
 
 enum Difficulty implements WireEnum {
   easy('EASY'),
@@ -57,6 +58,7 @@ class RecipeSummary {
     required this.totalMinutes,
     required this.difficulty,
     required this.course,
+    required this.contains,
   });
 
   factory RecipeSummary.fromJson(Map<String, dynamic> json) => RecipeSummary(
@@ -67,6 +69,7 @@ class RecipeSummary {
     totalMinutes: json['totalMinutes'] as int,
     difficulty: Difficulty.parse(json['difficulty'] as String),
     course: Course.parse(json['course'] as String),
+    contains: [for (final trait in json['contains'] as List<dynamic>) FoodTrait.parse(trait as String)],
   );
 
   final String id;
@@ -76,6 +79,9 @@ class RecipeSummary {
   final int totalMinutes;
   final Difficulty difficulty;
   final Course course;
+
+  /// What it contains that someone may not eat, staples included.
+  final List<FoodTrait> contains;
 }
 
 class RecipeIngredient {
@@ -174,5 +180,5 @@ class Recommendation {
   final int? daysSinceCooked;
 }
 
-/// Which recipes of the catalog a list shows.
-typedef RecipeQuery = ({String language, String text, int? maxMinutes, Course? course});
+/// Which recipes of the catalog a list shows, without what the household does not eat.
+typedef RecipeQuery = ({String householdId, String language, String text, int? maxMinutes, Course? course});

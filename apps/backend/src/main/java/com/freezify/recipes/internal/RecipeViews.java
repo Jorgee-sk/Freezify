@@ -1,6 +1,7 @@
 package com.freezify.recipes.internal;
 
 import com.freezify.expiration.ExpirationPriority;
+import com.freezify.food.FoodTrait;
 import com.freezify.food.Unit;
 import com.freezify.recipes.internal.Recipe.Course;
 import com.freezify.recipes.internal.Recipe.Difficulty;
@@ -13,6 +14,7 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 /** Recipes as clients receive them, in the language they asked for. */
+// "contains" lists what the recipe has that someone may not eat, so that clients can say so.
 public final class RecipeViews {
 
     private RecipeViews() {}
@@ -26,7 +28,8 @@ public final class RecipeViews {
             int cookMinutes,
             int totalMinutes,
             Difficulty difficulty,
-            Course course) {
+            Course course,
+            List<FoodTrait> contains) {
 
         static RecipeSummary of(Recipe recipe, String language) {
             return new RecipeSummary(
@@ -38,7 +41,8 @@ public final class RecipeViews {
                     recipe.cookMinutes(),
                     recipe.totalMinutes(),
                     recipe.difficulty(),
-                    recipe.course());
+                    recipe.course(),
+                    recipe.contains().stream().sorted().toList());
         }
     }
 

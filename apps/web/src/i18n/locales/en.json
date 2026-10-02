@@ -323,6 +323,55 @@
     },
     "markCooked": "I cooked it",
     "cookedSaved": "Noted",
-    "cookedHelp": "It keeps the same recipe from being recommended every day. It does not change your inventory: consume the food you used."
+    "cookedHelp": "It keeps the same recipe from being recommended every day. It does not change your inventory: consume the food you used.",
+    "contains": "Contains: {{traits}}."
+  },
+  "diet": {
+    "title": "What this household does not eat",
+    "shared": "These restrictions belong to the household: every member can see and change them. Recipes that contain any of this are not shown.",
+    "typeLabel": "Diet",
+    "typeOption": {
+      "NONE": "No diet",
+      "VEGETARIAN": "Vegetarian",
+      "VEGAN": "Vegan"
+    },
+    "type": {
+      "VEGETARIAN": "Vegetarian diet",
+      "VEGAN": "Vegan diet"
+    },
+    "avoidLabel": "Also avoid",
+    "trait": {
+      "MEAT": "meat",
+      "PORK": "pork",
+      "FISH": "fish",
+      "SHELLFISH": "shellfish",
+      "DAIRY": "dairy",
+      "EGG": "egg",
+      "GLUTEN": "gluten",
+      "NUTS": "nuts",
+      "SOY": "soy",
+      "SESAME": "sesame",
+      "ALCOHOL": "alcohol"
+    },
+    "traitOption": {
+      "MEAT": "Meat",
+      "PORK": "Pork",
+      "FISH": "Fish",
+      "SHELLFISH": "Shellfish",
+      "DAIRY": "Dairy",
+      "EGG": "Egg",
+      "GLUTEN": "Gluten",
+      "NUTS": "Nuts",
+      "SOY": "Soy",
+      "SESAME": "Sesame",
+      "ALCOHOL": "Alcohol"
+    },
+    "without": "no {{trait}}",
+    "disclaimer": "This is a help, not a guarantee. What each food contains is indicative: a given product may have other ingredients or traces. With an allergy, always check the label.",
+    "saved": "Restrictions saved",
+    "applied": "Recipes filtered for this household: {{restrictions}}.",
+    "none": "This household has no dietary restrictions.",
+    "change": "Change",
+    "conflict": "This recipe contains something this household does not eat: {{traits}}."
   }
 }

@@ -1,4 +1,5 @@
 import '../../l10n/app_localizations.dart';
+import 'diet_models.dart';
 import 'recipe_models.dart';
 
 /// How many missing ingredients are named before they are only counted.
@@ -103,3 +104,48 @@ String? availabilityName(AppLocalizations l10n, Availability availability) => sw
   Availability.missing => l10n.availabilityMissing,
   Availability.assumed => null,
 };
+
+/// "gluten", "frutos secos": a trait as it reads inside a sentence.
+String traitName(AppLocalizations l10n, FoodTrait trait) => switch (trait) {
+  FoodTrait.meat => l10n.traitMeat,
+  FoodTrait.pork => l10n.traitPork,
+  FoodTrait.fish => l10n.traitFish,
+  FoodTrait.shellfish => l10n.traitShellfish,
+  FoodTrait.dairy => l10n.traitDairy,
+  FoodTrait.egg => l10n.traitEgg,
+  FoodTrait.gluten => l10n.traitGluten,
+  FoodTrait.nuts => l10n.traitNuts,
+  FoodTrait.soy => l10n.traitSoy,
+  FoodTrait.sesame => l10n.traitSesame,
+  FoodTrait.alcohol => l10n.traitAlcohol,
+};
+
+/// "Gluten", "Frutos secos": a trait as an option to choose.
+String traitOption(AppLocalizations l10n, FoodTrait trait) {
+  final name = traitName(l10n, trait);
+  return name[0].toUpperCase() + name.substring(1);
+}
+
+String dietTypeOption(AppLocalizations l10n, DietType type) => switch (type) {
+  DietType.none => l10n.dietNone,
+  DietType.vegetarian => l10n.dietVegetarian,
+  DietType.vegan => l10n.dietVegan,
+};
+
+/// "gluten, lácteos, huevo": what a recipe contains that someone may not eat.
+String traitList(AppLocalizations l10n, Iterable<FoodTrait> traits) =>
+    traits.map((trait) => traitName(l10n, trait)).join(', ');
+
+/// "Dieta vegetariana · sin gluten, sin soja", or `null` when the household has no restrictions.
+String? dietSummary(AppLocalizations l10n, Diet diet) {
+  final parts = [
+    if (diet.type == DietType.vegetarian) l10n.dietVegetarianName,
+    if (diet.type == DietType.vegan) l10n.dietVeganName,
+    if (diet.avoided.isNotEmpty)
+      [
+        for (final trait in FoodTrait.values)
+          if (diet.avoided.contains(trait)) l10n.dietWithout(traitName(l10n, trait)),
+      ].join(', '),
+  ];
+  return parts.isEmpty ? null : parts.join(' · ');
+}

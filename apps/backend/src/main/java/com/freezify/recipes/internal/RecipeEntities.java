@@ -1,5 +1,6 @@
 package com.freezify.recipes.internal;
 
+import com.freezify.food.FoodTrait;
 import com.freezify.food.Quantity;
 import com.freezify.food.Unit;
 import com.freezify.recipes.internal.Recipe.Course;
@@ -20,8 +21,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.ListIndexBase;
@@ -87,7 +91,12 @@ class RecipeEntity {
 
     protected RecipeEntity() {}
 
-    Recipe toRecipe() {
+    /**
+     * @param traitsOf what a catalog food contains
+     */
+    Recipe toRecipe(Function<UUID, Set<FoodTrait>> traitsOf) {
+        Set<FoodTrait> contains = EnumSet.noneOf(FoodTrait.class);
+        ingredients.forEach(row -> contains.addAll(traitsOf.apply(row.foodId())));
         return new Recipe(
                 id,
                 slug,
@@ -104,6 +113,7 @@ class RecipeEntity {
                         .map(row -> new Recipe.Ingredient(
                                 row.foodId(), new Quantity(row.amount(), row.unit()), row.staple()))
                         .toList(),
+                contains,
                 stepsEs.lines().toList(),
                 stepsEn.lines().toList());
     }
@@ -141,6 +151,55 @@ class CookedRecipeEntity {
 
     protected CookedRecipeEntity() {}
 }
+
+/** What is not cooked in a household. */
+@Entity
+@Table(name = "household_diets")
+class HouseholdDietEntity {
+
+    @Id
+    @Column(name = "household_id")
+    private UUID householdId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Diet.Type diet;
+
+    /** The names of the traits, separated by commas. */
+    @Column(nullable = false)
+    private String avoided;
+
+    @Column(name = "updated_by")
+    private @Nullable UUID updatedBy;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    protected HouseholdDietEntity() {}
+
+    HouseholdDietEntity(UUID householdId) {
+        this.householdId = householdId;
+    }
+
+    HouseholdDietEntity apply(Diet diet, UUID userId, Instant now) {
+        this.diet = diet.type();
+        this.avoided = diet.avoided().stream().map(Enum::name).collect(java.util.stream.Collectors.joining(","));
+        this.updatedBy = userId;
+        this.updatedAt = now;
+        return this;
+    }
+
+    Diet toDiet() {
+        Set<FoodTrait> traits = EnumSet.noneOf(FoodTrait.class);
+        java.util.Arrays.stream(avoided.split(","))
+                .filter(name -> !name.isBlank())
+                .map(FoodTrait::valueOf)
+                .forEach(traits::add);
+        return new Diet(diet, traits);
+    }
+}
+
+interface HouseholdDietRepository extends JpaRepository<HouseholdDietEntity, UUID> {}
 
 interface RecipeRepository extends JpaRepository<RecipeEntity, UUID> {}
 
