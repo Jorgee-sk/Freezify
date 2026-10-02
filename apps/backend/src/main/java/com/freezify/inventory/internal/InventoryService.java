@@ -11,6 +11,7 @@ import com.freezify.food.Quantity;
 import com.freezify.food.StorageLocation;
 import com.freezify.households.HouseholdAccess;
 import com.freezify.inventory.ExpiringFood;
+import com.freezify.inventory.HouseholdStock;
 import com.freezify.inventory.InventoryEvents.FoodItemAdded;
 import com.freezify.inventory.InventoryEvents.FoodItemConsumed;
 import com.freezify.inventory.InventoryEvents.FoodItemDiscarded;
@@ -50,6 +51,8 @@ interface FoodItemRepository extends JpaRepository<FoodItemEntity, UUID>, JpaSpe
     List<FoodItemEntity> findByHouseholdIdAndStatusInAndExpirationDateLessThanEqualOrderByExpirationDateAscSearchNameAsc(
             UUID householdId, Collection<ItemStatus> statuses, LocalDate until, Limit limit);
 
+    List<FoodItemEntity> findByHouseholdIdAndStatusIn(UUID householdId, Collection<ItemStatus> statuses);
+
     List<FoodItemEntity> findByStatusInAndExpirationDateLessThanEqual(Collection<ItemStatus> statuses, LocalDate until);
 
     @Query("select distinct i.householdId from FoodItemEntity i"
@@ -76,7 +79,7 @@ interface FoodItemRepository extends JpaRepository<FoodItemEntity, UUID>, JpaSpe
 interface FoodOutcomeRepository extends JpaRepository<FoodOutcomeEntity, UUID> {}
 
 @Service
-public class InventoryService implements ExpiringFood {
+public class InventoryService implements ExpiringFood, HouseholdStock {
 
     private static final int RECENT_LIMIT = 10;
     private static final int CONSUME_FIRST_LIMIT = 20;
@@ -296,6 +299,23 @@ public class InventoryService implements ExpiringFood {
                         item.id(),
                         item.name(),
                         item.category(),
+                        item.expirationDate(),
+                        item.expirationSource()))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StockItem> of(UUID householdId) {
+        LocalDate day = today.date();
+        Collection<ItemStatus> inTheHouse = EnumSet.of(ItemStatus.AVAILABLE, ItemStatus.OPENED, ItemStatus.EXPIRED);
+        return items.findByHouseholdIdAndStatusIn(householdId, inTheHouse).stream()
+                .map(item -> item.toView(day))
+                .map(item -> new StockItem(
+                        item.id(),
+                        item.foodId(),
+                        item.name(),
+                        new Quantity(item.quantity().amount(), item.quantity().unit()),
                         item.expirationDate(),
                         item.expirationSource()))
                 .toList();

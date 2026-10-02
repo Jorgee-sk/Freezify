@@ -14,6 +14,9 @@ public interface FoodCatalog {
      */
     List<Food> search(String text, String language, int limit);
 
+    /** The food called exactly {@code name} in Spanish or English, ignoring case and accents. */
+    Optional<Food> findByName(String name);
+
     /** Lower case, without accents: the form in which names are compared. */
     static String normalize(String text) {
         String decomposed = java.text.Normalizer.normalize(text.strip(), java.text.Normalizer.Form.NFD);

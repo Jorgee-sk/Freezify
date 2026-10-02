@@ -4,6 +4,8 @@ import com.freezify.inventory.InventoryEvents.FoodItemAdded;
 import com.freezify.inventory.InventoryEvents.FoodItemConsumed;
 import com.freezify.inventory.InventoryEvents.FoodItemDiscarded;
 import com.freezify.notifications.NotificationEvents.NotificationOpened;
+import com.freezify.recipes.RecipeEvents.RecipeCooked;
+import com.freezify.recipes.RecipeEvents.RecipeViewed;
 import com.freezify.users.UserRegistered;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -98,6 +100,16 @@ class ProductEventRecorder {
     @TransactionalEventListener
     void on(NotificationOpened event) {
         record("notification_opened", event.userId(), event.householdId());
+    }
+
+    @TransactionalEventListener
+    void on(RecipeViewed event) {
+        record("recipe_viewed", event.userId(), null);
+    }
+
+    @TransactionalEventListener
+    void on(RecipeCooked event) {
+        record("recipe_cooked", event.userId(), event.householdId());
     }
 
     private void record(String name, @Nullable UUID userId, @Nullable UUID householdId) {
