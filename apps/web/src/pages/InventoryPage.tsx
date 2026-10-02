@@ -73,6 +73,9 @@ export function InventoryPage() {
       </Link>
       <div className="title-row">
         <h1>{household.data.name}</h1>
+        <Link to={`/households/${householdId}/recipes`} className="button">
+          {t('recipes.title')}
+        </Link>
         <Link to={`/households/${householdId}/settings`} className="button ghost">
           {t('households.settings')}
         </Link>

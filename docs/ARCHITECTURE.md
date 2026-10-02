@@ -140,6 +140,7 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D39 | Un ingrediente puede ser **básico** (`staple`): se lista pero no se busca en el inventario | Casi nadie apunta la sal o el aceite; sin esto toda receta tendría "faltas" falsas |
 | D40 | Lo pasado de fecha **no cuenta como disponible** para cocinar | La aplicación no debe proponer comer algo caducado |
 | D41 | "La he cocinado" **no descuenta** del inventario | Restar cantidades a ciegas puede perder datos; consumir sigue siendo una acción explícita por alimento |
+| D42 | Los motivos de una recomendación los **redacta el cliente** a partir de los datos (como los avisos, D25), con frases que no dependen del género ni del número del alimento | El servidor no inventa texto y cada frase se puede rastrear hasta un dato del inventario |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad

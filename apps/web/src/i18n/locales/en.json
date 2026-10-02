@@ -80,7 +80,8 @@
     "FOOD_NOT_FOUND": "That food does not exist in the catalog.",
     "INCOMPATIBLE_UNIT": "That unit is not compatible with the unit of the food.",
     "QUANTITY_EXCEEDS_AVAILABLE": "There is less left than the quantity given.",
-    "NOTIFICATION_NOT_FOUND": "This notification no longer exists."
+    "NOTIFICATION_NOT_FOUND": "This notification no longer exists.",
+    "RECIPE_NOT_FOUND": "This recipe does not exist."
   },
   "inventory": {
     "title": "Inventory",
@@ -249,5 +250,79 @@
       "categories": "Tell me about these categories",
       "saved": "Preferences saved"
     }
+  },
+  "recipes": {
+    "title": "Recipes",
+    "recommendedTitle": "What to cook with what you have",
+    "noRecommendations": "No recipe uses what is in your inventory. Add some food and look again.",
+    "catalogTitle": "All recipes",
+    "search": "Search recipes",
+    "searchPlaceholder": "Search recipes…",
+    "time": "Time",
+    "anyTime": "Any duration",
+    "upTo_one": "Up to {{count}} minute",
+    "upTo_other": "Up to {{count}} minutes",
+    "course": "Course",
+    "anyCourse": "All courses",
+    "courseOption": {
+      "MAIN": "Main course",
+      "BREAKFAST": "Breakfast",
+      "DESSERT": "Dessert"
+    },
+    "difficulty": {
+      "EASY": "Easy",
+      "MEDIUM": "Medium",
+      "HARD": "Hard"
+    },
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "servings_one": "{{count}} serving",
+    "servings_other": "{{count}} servings",
+    "emptyFiltered": "No recipe matches the filter.",
+    "fit": "{{percent}}% match",
+    "because": "Recommended because:",
+    "reason": {
+      "expires_one": "You have {{food}} due to expire in {{count}} day.",
+      "expires_other": "You have {{food}} due to expire in {{count}} days.",
+      "expiresEstimated_one": "You have {{food}} estimated to expire in about {{count}} day.",
+      "expiresEstimated_other": "You have {{food}} estimated to expire in about {{count}} days.",
+      "expiresToday": "You have {{food}} due to expire today.",
+      "expiresTodayEstimated": "You have {{food}} estimated to expire today.",
+      "haveAll": "You have every ingredient.",
+      "have_one": "You have {{have}} of {{count}} ingredient.",
+      "have_other": "You have {{have}} of {{count}} ingredients.",
+      "missing_one": "You only need: {{foods}}.",
+      "missing_other": "You need: {{foods}}.",
+      "missingMany_one": "You need {{count}} more ingredient.",
+      "missingMany_other": "You need {{count}} more ingredients.",
+      "partial": "You have less {{food}} than the recipe asks for.",
+      "unknownQuantity": "Check how much {{food}} you have: it cannot be compared with the recipe.",
+      "time": "About {{minutes}} min.",
+      "cookedToday": "You cooked it today.",
+      "cooked_one": "You cooked it {{count}} day ago.",
+      "cooked_other": "You cooked it {{count}} days ago."
+    },
+    "backToRecipes": "Back to recipes",
+    "ingredients": "Ingredients",
+    "staple": "kitchen staple",
+    "steps": "Method",
+    "nothingAtHome": "None of the ingredients of this recipe is in your inventory.",
+    "availability": {
+      "ENOUGH": "You have it",
+      "PARTIAL": "You have less",
+      "UNKNOWN_QUANTITY": "You have some; check the amount",
+      "MISSING": "Missing"
+    },
+    "badge": {
+      "today": "Expires today",
+      "todayEstimated": "Expires today (estimated)",
+      "days_one": "Expires in {{count}} day",
+      "days_other": "Expires in {{count}} days",
+      "daysEstimated_one": "Expires in about {{count}} day (estimated)",
+      "daysEstimated_other": "Expires in about {{count}} days (estimated)"
+    },
+    "markCooked": "I cooked it",
+    "cookedSaved": "Noted",
+    "cookedHelp": "It keeps the same recipe from being recommended every day. It does not change your inventory: consume the food you used."
   }
 }

@@ -1,4 +1,5 @@
 import type { InventoryFilter } from './inventory'
+import type { RecipeFilter } from './recipes'
 
 export const queryKeys = {
   households: ['households'] as const,
@@ -9,6 +10,9 @@ export const queryKeys = {
   recentFoods: (householdId: string) => ['inventory', householdId, 'recent'] as const,
   consumeFirst: (householdId: string) => ['inventory', householdId, 'consume-first'] as const,
   foodSearch: (text: string, lang: string) => ['foods', lang, text] as const,
+  recipeList: (filter: RecipeFilter, lang: string) => ['recipes', 'list', lang, filter] as const,
+  recipe: (id: string, lang: string) => ['recipes', 'detail', lang, id] as const,
+  recommendations: (householdId: string, lang: string) => ['recipes', 'recommendations', householdId, lang] as const,
   notifications: ['notifications'] as const,
   notificationList: (page: number) => ['notifications', 'list', page] as const,
   unreadNotifications: ['notifications', 'unread'] as const,
