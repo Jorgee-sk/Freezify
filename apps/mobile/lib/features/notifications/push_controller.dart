@@ -65,8 +65,10 @@ class PushController {
   }
 
   Future<void> _stop() async {
+    // Not awaited: nothing here depends on the cancellation having finished, and under the fake clock of
+    // widget tests that future never completes.
     for (final subscription in _subscriptions) {
-      await subscription.cancel();
+      unawaited(subscription.cancel());
     }
     _subscriptions.clear();
     if (_token == null) return;

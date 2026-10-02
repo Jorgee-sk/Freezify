@@ -37,6 +37,9 @@ def main(report_path: str) -> None:
                 errors.setdefault(event["testID"], []).append(
                     f"{event.get('error', '')}\n{event.get('stackTrace', '')}"
                 )
+            elif kind == "print":
+                # Flutter prints the exception itself; the error event only says "see above".
+                errors.setdefault(event["testID"], []).append(event.get("message", ""))
             elif kind == "testDone" and event.get("result") != "success" and not event.get("hidden"):
                 failed.append(event["testID"])
 
