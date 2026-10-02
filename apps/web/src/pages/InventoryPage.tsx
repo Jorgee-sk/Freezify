@@ -7,6 +7,7 @@ import { FOOD_CATEGORIES, STORAGE_LOCATIONS, inventoryApi } from '../api/invento
 import type { FoodCategory, InventoryFilter, InventoryItem, ItemState, StorageLocation } from '../api/inventory'
 import { queryKeys } from '../api/queryKeys'
 import { ErrorMessage } from '../components/ErrorMessage'
+import { ConsumeFirstPanel } from '../inventory/ConsumeFirstPanel'
 import { ItemForm } from '../inventory/ItemForm'
 import { ItemRow } from '../inventory/ItemRow'
 import { useDebounced } from '../inventory/useDebounced'
@@ -96,6 +97,8 @@ export function InventoryPage() {
           onDone={() => setEditing(null)}
         />
       )}
+
+      <ConsumeFirstPanel householdId={householdId} />
 
       <div className="filters" role="search">
         <input

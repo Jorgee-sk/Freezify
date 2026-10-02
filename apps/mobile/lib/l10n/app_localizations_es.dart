@@ -473,4 +473,55 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorConcurrentModification => 'Alguien acaba de cambiar esto. Inténtalo de nuevo.';
+
+  @override
+  String get priorityExpired => 'Caducado';
+
+  @override
+  String get priorityToday => 'Vence hoy';
+
+  @override
+  String get priorityUrgent => 'Urgente';
+
+  @override
+  String get prioritySoon => 'Consumir pronto';
+
+  @override
+  String get priorityUpcoming => 'Próximo';
+
+  @override
+  String daysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'quedan $count días',
+      one: 'queda $count día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String daysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'hace $count días', one: 'hace $count día');
+    return '$_temp0';
+  }
+
+  @override
+  String get consumeFirstTitle => 'Consume primero';
+
+  @override
+  String consumeFirstCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alimentos que no pueden esperar',
+      one: '$count alimento que no puede esperar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String andMore(int count) {
+    return 'y $count más';
+  }
 }

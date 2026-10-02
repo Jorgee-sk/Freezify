@@ -6,7 +6,7 @@ Aplicación para controlar los alimentos de casa y reducir el desperdicio: inven
 prioridad por caducidad, recetas y plan semanal que aprovechan lo que caduca antes, y lista de la compra
 generada a partir del plan.
 
-**Estado:** Fases 0 a 2 completadas; la siguiente es la Fase 3 (motor de caducidad). Hoy funciona de extremo a extremo: registro, sesión, hogares
+**Estado:** Fases 0 a 2 completadas; Fase 3 (motor de caducidad) en curso. Hoy funciona de extremo a extremo: registro, sesión, hogares
 compartidos e invitaciones, y el inventario del hogar con consumo, descarte y actualización en tiempo real, en backend, web y móvil. Detalle en [docs/STATUS.md](docs/STATUS.md).
 
 ## Documentación
@@ -17,6 +17,7 @@ compartidos e invitaciones, y el inventario del hogar con consumo, descarte y ac
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Módulos, decisiones técnicas, seguridad, modelo de datos, riesgos |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Fases y criterios de salida |
 | [docs/STATUS.md](docs/STATUS.md) | Qué está hecho, qué se ha probado y qué no |
+| [docs/HOW_TO_USE.md](docs/HOW_TO_USE.md) | Arrancar todo en local, ver la base de datos, Docker y plan de producción |
 | [masterPrompt.md](masterPrompt.md) | Encargo original |
 
 ## Estructura

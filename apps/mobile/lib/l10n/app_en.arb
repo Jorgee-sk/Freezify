@@ -245,5 +245,43 @@
   "errorFoodNotFound": "That food does not exist in the catalog.",
   "errorIncompatibleUnit": "That unit is not compatible with the unit of the food.",
   "errorQuantityExceeds": "There is less left than the quantity given.",
-  "errorConcurrentModification": "Someone else just changed this. Try again."
+  "errorConcurrentModification": "Someone else just changed this. Try again.",
+  "priorityExpired": "Expired",
+  "priorityToday": "Expires today",
+  "priorityUrgent": "Urgent",
+  "prioritySoon": "Eat soon",
+  "priorityUpcoming": "Coming up",
+  "daysLeft": "{count, plural, =1{{count} day left} other{{count} days left}}",
+  "@daysLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count, plural, =1{{count} day ago} other{{count} days ago}}",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "consumeFirstTitle": "Eat first",
+  "consumeFirstCount": "{count, plural, =1{{count} food that cannot wait} other{{count} foods that cannot wait}}",
+  "@consumeFirstCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "andMore": "and {count} more",
+  "@andMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -66,7 +66,7 @@ tipos internos de otro.
 | `households` | Hogares, miembros, invitaciones, **control de acceso por hogar** | users, common | 1 |
 | `food` | Catálogo canónico de alimentos, categorías, unidades y cantidades | common | 2 ✔ |
 | `inventory` | Alimentos del hogar, consumo y descarte | households, food | 2 ✔ |
-| `expiration` | Estimación de fechas y niveles de prioridad | food | 3 |
+| `expiration` | Niveles de prioridad (hecho) y estimación de fechas | food | 3 ✔ |
 | `notifications` | Preferencias, generación y envío | households, inventory, expiration | 3 |
 | `recipes` | Recetas y recomendador | food, inventory, expiration | 4 |
 | `mealplanning` | Plan semanal y generador | recipes, inventory | 5 |
@@ -199,6 +199,7 @@ Fase 2 (todo bajo `/households/{id}/inventory` salvo el catálogo):
 | POST | `/inventory/{itemId}/open` | Marcar como abierto |
 | POST | `/inventory/{itemId}/consume` | Consumir todo o una cantidad |
 | POST | `/inventory/{itemId}/discard` | Tirar todo o una cantidad, con motivo |
+| GET | `/inventory/consume-first` | Cuántos alimentos hay en cada nivel de prioridad y cuáles comer primero |
 | GET | `/households/{id}/events` | Flujo SSE: `inventory-changed` cuando cambia el inventario (sin datos) |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`

@@ -9,6 +9,7 @@ import com.freezify.food.Quantity;
 import com.freezify.food.StorageLocation;
 import com.freezify.food.Unit;
 import com.freezify.inventory.internal.InventoryService;
+import com.freezify.inventory.internal.InventoryService.ConsumeFirst;
 import com.freezify.inventory.internal.InventoryService.Filter;
 import com.freezify.inventory.internal.InventoryService.ItemSort;
 import com.freezify.inventory.internal.InventoryService.RecentFood;
@@ -72,6 +73,12 @@ class InventoryController {
             @RequestParam(defaultValue = "50") @Min(1) @Max(100) int size) {
         return inventory.list(
                 householdId, CurrentUser.id(jwt), new Filter(state, location, category, text), sort, page, size);
+    }
+
+    /** What should be eaten first: counts per priority level and the most pressing items. */
+    @GetMapping("/consume-first")
+    ConsumeFirst consumeFirst(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID householdId) {
+        return inventory.consumeFirst(householdId, CurrentUser.id(jwt));
     }
 
     @GetMapping("/recent")

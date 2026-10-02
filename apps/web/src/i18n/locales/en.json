@@ -183,5 +183,23 @@
     "BEVERAGES": "Drinks",
     "PREPARED": "Ready meals",
     "OTHER": "Other"
+  },
+  "priority": {
+    "EXPIRED": "Expired",
+    "TODAY": "Expires today",
+    "URGENT": "Urgent",
+    "SOON": "Eat soon",
+    "UPCOMING": "Coming up",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago"
+  },
+  "consumeFirst": {
+    "title": "Eat first",
+    "count_one": "{{count}} food that cannot wait",
+    "count_other": "{{count}} foods that cannot wait",
+    "more_one": "and {{count}} more",
+    "more_other": "and {{count}} more"
   }
 }

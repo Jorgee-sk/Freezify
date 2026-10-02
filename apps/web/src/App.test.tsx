@@ -7,6 +7,10 @@ import { fakeApi, problem } from './test/fakeApi'
 import { ANA, CASA, SESSION, renderApp, signedIn } from './test/renderApp'
 
 const EMPTY_PAGE = { items: [], page: 0, size: 50, totalItems: 0, totalPages: 0 }
+const NOTHING_TO_CONSUME_FIRST = {
+  counts: { EXPIRED: 0, TODAY: 0, URGENT: 0, SOON: 0, UPCOMING: 0, OK: 0, NO_DATE: 0 },
+  items: [],
+}
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -134,6 +138,7 @@ describe('households', () => {
       'POST /households': () => ({ status: 201, body: created }),
       'GET /households/h2': () => ({ body: created }),
       'GET /households/h2/inventory': () => ({ body: EMPTY_PAGE }),
+      'GET /households/h2/inventory/consume-first': () => ({ body: NOTHING_TO_CONSUME_FIRST }),
     })
     const user = userEvent.setup()
     renderApp('/')

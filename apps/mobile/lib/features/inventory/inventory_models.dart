@@ -120,6 +120,23 @@ enum ExpirationSource implements WireEnum {
   static ExpirationSource parse(String wire) => _parse(values, wire);
 }
 
+/// How soon a food should be eaten, from most to least pressing.
+enum ExpirationPriority implements WireEnum {
+  expired('EXPIRED'),
+  today('TODAY'),
+  urgent('URGENT'),
+  soon('SOON'),
+  upcoming('UPCOMING'),
+  ok('OK');
+
+  const ExpirationPriority(this.wire);
+
+  @override
+  final String wire;
+
+  static ExpirationPriority parse(String wire) => _parse(values, wire);
+}
+
 class Quantity {
   const Quantity(this.amount, this.unit);
 
@@ -194,6 +211,8 @@ class InventoryItem {
     required this.purchaseDate,
     required this.expirationDate,
     required this.expirationSource,
+    required this.daysUntilExpiration,
+    required this.priority,
     required this.openedDate,
     required this.barcode,
     required this.brand,
@@ -215,6 +234,11 @@ class InventoryItem {
       final String source => ExpirationSource.parse(source),
       _ => null,
     },
+    daysUntilExpiration: json['daysUntilExpiration'] as int?,
+    priority: switch (json['priority']) {
+      final String priority => ExpirationPriority.parse(priority),
+      _ => null,
+    },
     openedDate: json['openedDate'] as String?,
     barcode: json['barcode'] as String?,
     brand: json['brand'] as String?,
@@ -234,6 +258,10 @@ class InventoryItem {
   final String purchaseDate;
   final String? expirationDate;
   final ExpirationSource? expirationSource;
+
+  /// Negative when the date has passed; `null` without a date.
+  final int? daysUntilExpiration;
+  final ExpirationPriority? priority;
   final String? openedDate;
   final String? barcode;
   final String? brand;
@@ -301,6 +329,27 @@ class InventoryPage {
   final int page;
   final int totalItems;
   final int totalPages;
+}
+
+/// What should be eaten first.
+class ConsumeFirst {
+  const ConsumeFirst({required this.total, required this.items});
+
+  factory ConsumeFirst.fromJson(Map<String, dynamic> json) {
+    final counts = json['counts'] as Map<String, dynamic>;
+    return ConsumeFirst(
+      total: [
+        for (final level in ['EXPIRED', 'TODAY', 'URGENT', 'SOON']) (counts[level] as int?) ?? 0,
+      ].fold(0, (sum, count) => sum + count),
+      items: [for (final item in json['items'] as List<dynamic>) InventoryItem.fromJson(item as Map<String, dynamic>)],
+    );
+  }
+
+  /// How many items are expired or have 5 days or fewer left.
+  final int total;
+
+  /// The most pressing of them, in order. The backend caps this list, so it can be shorter than [total].
+  final List<InventoryItem> items;
 }
 
 /// Everything that selects one page of one household's inventory. Records compare by value, so two equal

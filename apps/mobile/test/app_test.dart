@@ -13,6 +13,10 @@ const _members = [
 ];
 
 const _emptyInventory = {'items': <Object>[], 'page': 0, 'size': 50, 'totalItems': 0, 'totalPages': 0};
+const _nothingToConsumeFirst = {
+  'counts': {'EXPIRED': 0, 'TODAY': 0, 'URGENT': 0, 'SOON': 0, 'UPCOMING': 0, 'OK': 0, 'NO_DATE': 0},
+  'items': <Object>[],
+};
 
 void main() {
   late InMemoryTokenStorage storage;
@@ -195,6 +199,7 @@ void main() {
         'GET /households/h1': (_) => const FakeResponse.ok(_casa),
         'GET /households/h1/members': (_) => const FakeResponse.ok(_members),
         'GET /households/h1/inventory': (_) => const FakeResponse.ok(_emptyInventory),
+        'GET /households/h1/inventory/consume-first': (_) => const FakeResponse.ok(_nothingToConsumeFirst),
       });
       await pumpApp(tester, backend);
       await openSettings(tester);
@@ -212,6 +217,7 @@ void main() {
         'POST /households': (_) => const FakeResponse(201, piso),
         'GET /households/h2': (_) => const FakeResponse.ok(piso),
         'GET /households/h2/inventory': (_) => const FakeResponse.ok(_emptyInventory),
+        'GET /households/h2/inventory/consume-first': (_) => const FakeResponse.ok(_nothingToConsumeFirst),
       });
       await pumpApp(tester, backend);
 
@@ -250,6 +256,7 @@ void main() {
         'GET /households/h1': (_) => const FakeResponse.ok(_casa),
         'GET /households/h1/members': (_) => const FakeResponse.ok(_members),
         'GET /households/h1/inventory': (_) => const FakeResponse.ok(_emptyInventory),
+        'GET /households/h1/inventory/consume-first': (_) => const FakeResponse.ok(_nothingToConsumeFirst),
         'POST /households/h1/invitations': (_) =>
             const FakeResponse(201, {'code': 'ABCD2345', 'expiresAt': '2026-10-08T10:00:00Z'}),
       });
@@ -271,6 +278,7 @@ void main() {
         'GET /households/h1': (_) => const FakeResponse.ok(_casa),
         'GET /households/h1/members': (_) => const FakeResponse.ok(_members),
         'GET /households/h1/inventory': (_) => const FakeResponse.ok(_emptyInventory),
+        'GET /households/h1/inventory/consume-first': (_) => const FakeResponse.ok(_nothingToConsumeFirst),
         'DELETE /households/h1': (_) {
           deleted = true;
           return const FakeResponse(204);
@@ -303,6 +311,7 @@ void main() {
         'GET /households/h1': (_) => const FakeResponse.ok(asMember),
         'GET /households/h1/members': (_) => const FakeResponse.ok(_members),
         'GET /households/h1/inventory': (_) => const FakeResponse.ok(_emptyInventory),
+        'GET /households/h1/inventory/consume-first': (_) => const FakeResponse.ok(_nothingToConsumeFirst),
       });
       await pumpApp(tester, backend);
       await openSettings(tester);

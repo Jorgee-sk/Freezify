@@ -400,6 +400,94 @@ class InventoryApiTests extends ApiTestSupport {
                 .containsExactly("user_registered");
     }
 
+    @Test
+    void itemsSayHowSoonTheyExpire() throws Exception {
+        addItem(jorge, "Caducado", "1", "UNIT", "REFRIGERATOR", inDays(-3));
+        addItem(jorge, "Hoy", "1", "UNIT", "REFRIGERATOR", inDays(0));
+        addItem(jorge, "Urgente", "1", "UNIT", "REFRIGERATOR", inDays(2));
+        addItem(jorge, "Pronto", "1", "UNIT", "REFRIGERATOR", inDays(5));
+        addItem(jorge, "Proximo", "1", "UNIT", "REFRIGERATOR", inDays(10));
+        addItem(jorge, "Lejano", "1", "UNIT", "REFRIGERATOR", inDays(11));
+        addItem(jorge, "Sin fecha", "1", "UNIT", "PANTRY", null);
+
+        list(jorge, "")
+                .andExpect(jsonPath("$.items[*].name")
+                        .value(contains("Caducado", "Hoy", "Urgente", "Pronto", "Proximo", "Lejano", "Sin fecha")))
+                .andExpect(jsonPath("$.items[*].priority")
+                        .value(contains("EXPIRED", "TODAY", "URGENT", "SOON", "UPCOMING", "OK", null)))
+                .andExpect(jsonPath("$.items[*].daysUntilExpiration").value(contains(-3, 0, 2, 5, 10, 11, null)));
+    }
+
+    @Test
+    void priorityFollowsTheCalendarAsDaysPass() throws Exception {
+        String itemId = addItem(jorge, "Yogur", "1", "UNIT", "REFRIGERATOR", inDays(4));
+        mvc.perform(as(jorge, get(item(itemId))))
+                .andExpect(jsonPath("$.priority").value("SOON"))
+                .andExpect(jsonPath("$.daysUntilExpiration").value(4));
+
+        clock.advance(java.time.Duration.ofDays(3));
+        mvc.perform(as(jorge, get(item(itemId))))
+                .andExpect(jsonPath("$.priority").value("URGENT"))
+                .andExpect(jsonPath("$.daysUntilExpiration").value(1));
+
+        clock.advance(java.time.Duration.ofDays(2));
+        mvc.perform(as(jorge, get(item(itemId))))
+                .andExpect(jsonPath("$.priority").value("EXPIRED"))
+                .andExpect(jsonPath("$.daysUntilExpiration").value(-1));
+    }
+
+    @Test
+    void consumeFirstListsWhatNeedsAttentionMostPressingFirst() throws Exception {
+        addItem(jorge, "Lechuga", "1", "UNIT", "REFRIGERATOR", inDays(5));
+        addItem(jorge, "Pollo", "500", "GRAM", "REFRIGERATOR", inDays(1));
+        addItem(jorge, "Brócoli", "1", "UNIT", "REFRIGERATOR", inDays(1));
+        addItem(jorge, "Leche", "1", "LITER", "REFRIGERATOR", inDays(-2));
+        addItem(jorge, "Queso", "200", "GRAM", "REFRIGERATOR", inDays(6));
+        addItem(jorge, "Arroz", "1", "KILOGRAM", "PANTRY", null);
+        // Already eaten: no longer anyone's problem.
+        String eaten = addItem(jorge, "Yogur", "1", "UNIT", "REFRIGERATOR", inDays(0));
+        mvc.perform(as(jorge, post(item(eaten) + "/consume"))).andExpect(status().isOk());
+
+        mvc.perform(as(jorge, get(consumeFirst())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[*].name").value(contains("Leche", "Brócoli", "Pollo", "Lechuga")))
+                .andExpect(jsonPath("$.items[*].priority").value(contains("EXPIRED", "URGENT", "URGENT", "SOON")))
+                .andExpect(jsonPath("$.counts.EXPIRED").value(1))
+                .andExpect(jsonPath("$.counts.TODAY").value(0))
+                .andExpect(jsonPath("$.counts.URGENT").value(2))
+                .andExpect(jsonPath("$.counts.SOON").value(1))
+                .andExpect(jsonPath("$.counts.UPCOMING").value(1))
+                .andExpect(jsonPath("$.counts.OK").value(0))
+                .andExpect(jsonPath("$.counts.NO_DATE").value(1));
+    }
+
+    @Test
+    void consumeFirstOfAnEmptyInventoryReportsEveryLevelAsZero() throws Exception {
+        mvc.perform(as(jorge, get(consumeFirst())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items", hasSize(0)))
+                .andExpect(jsonPath("$.counts.length()").value(7))
+                .andExpect(jsonPath("$.counts.URGENT").value(0));
+    }
+
+    @Test
+    void consumeFirstIsOnlyForMembers() throws Exception {
+        TestUser stranger = register("Stranger");
+        addItem(jorge, "Pollo", "500", "GRAM", "REFRIGERATOR", inDays(1));
+
+        expectHouseholdNotFound(mvc.perform(as(stranger, get(consumeFirst()))));
+        mvc.perform(get(consumeFirst())).andExpect(status().isUnauthorized());
+    }
+
+    private String consumeFirst() {
+        return "/api/v1/households/" + householdId + "/inventory/consume-first";
+    }
+
+    /** A date relative to today as the application sees it. */
+    private static String inDays(int days) {
+        return LocalDate.now(ZoneId.of("Europe/Madrid")).plusDays(days).toString();
+    }
+
     private ResultActions add(TestUser user, String body) throws Exception {
         return mvc.perform(as(user, json(post("/api/v1/households/" + householdId + "/inventory"), body)));
     }

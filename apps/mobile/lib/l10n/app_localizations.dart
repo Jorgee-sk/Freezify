@@ -961,6 +961,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Someone else just changed this. Try again.'**
   String get errorConcurrentModification;
+
+  /// No description provided for @priorityExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get priorityExpired;
+
+  /// No description provided for @priorityToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires today'**
+  String get priorityToday;
+
+  /// No description provided for @priorityUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent'**
+  String get priorityUrgent;
+
+  /// No description provided for @prioritySoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Eat soon'**
+  String get prioritySoon;
+
+  /// No description provided for @priorityUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming up'**
+  String get priorityUpcoming;
+
+  /// No description provided for @daysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} day left} other{{count} days left}}'**
+  String daysLeft(int count);
+
+  /// No description provided for @daysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} day ago} other{{count} days ago}}'**
+  String daysAgo(int count);
+
+  /// No description provided for @consumeFirstTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Eat first'**
+  String get consumeFirstTitle;
+
+  /// No description provided for @consumeFirstCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} food that cannot wait} other{{count} foods that cannot wait}}'**
+  String consumeFirstCount(int count);
+
+  /// No description provided for @andMore.
+  ///
+  /// In en, this message translates to:
+  /// **'and {count} more'**
+  String andMore(int count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

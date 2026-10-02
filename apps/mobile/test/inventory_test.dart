@@ -15,6 +15,7 @@ const _casa = {'id': 'h1', 'name': 'Casa', 'role': 'OWNER', 'memberCount': 2};
 
 const _list = 'GET /households/h1/inventory';
 const _create = 'POST /households/h1/inventory';
+const _consumeFirst = 'GET /households/h1/inventory/consume-first';
 
 Map<String, Object?> _item(String id, String name, [Map<String, Object?> overrides = const {}]) => {
   'id': id,
@@ -42,6 +43,19 @@ final _pollo = _item('i1', 'Pollo', {
   'expirationSource': 'USER',
 });
 
+/// What the consume-first endpoint answers for [items], counted by their priority.
+FakeResponse _consumeFirstOf(List<Map<String, Object?>> items) {
+  final counts = {'EXPIRED': 0, 'TODAY': 0, 'URGENT': 0, 'SOON': 0, 'UPCOMING': 0, 'OK': 0, 'NO_DATE': 0};
+  for (final item in items) {
+    final level = (item['priority'] as String?) ?? 'NO_DATE';
+    counts[level] = counts[level]! + 1;
+  }
+  return FakeResponse.ok({'counts': counts, 'items': items});
+}
+
+Map<String, Object?> _expiring(String id, String name, int days, String priority) =>
+    _item(id, name, {'expirationDate': '2026-10-05', 'expirationSource': 'USER', 'daysUntilExpiration': days, 'priority': priority});
+
 FakeResponse _page(List<Map<String, Object?>> items, {int page = 0, int? totalItems, int? totalPages}) =>
     FakeResponse.ok({
       'items': items,
@@ -65,6 +79,7 @@ void main() {
         'GET /households/h1': (_) => const FakeResponse.ok(_casa),
         _list: (_) => _page(items),
         'GET /households/h1/inventory/recent': (_) => const FakeResponse.ok(<Object>[]),
+        _consumeFirst: (_) => _consumeFirstOf(const []),
         ...extra,
       });
 
@@ -224,6 +239,78 @@ void main() {
 
       expect(find.text('Miembros'), findsOneWidget);
       expect(find.text('Invitar a alguien'), findsOneWidget);
+    });
+  });
+
+  group('expiration priority', () {
+    final expired = _expiring('e1', 'Leche', -3, 'EXPIRED');
+    final today = _expiring('e2', 'Yogur', 0, 'TODAY');
+    final urgent = _expiring('e3', 'Pollo', 1, 'URGENT');
+    final soon = _expiring('e4', 'Lechuga', 5, 'SOON');
+    final upcoming = _expiring('e5', 'Queso', 8, 'UPCOMING');
+    final fine = _expiring('e6', 'Arroz', 150, 'OK');
+
+    testWidgets('labels each item with how soon it should be eaten', (tester) async {
+      await openInventory(tester, backendWith([expired, today, urgent, soon, upcoming, fine, _item('e7', 'Sal')]));
+
+      expect(find.text('Caducado · hace 3 días'), findsOneWidget);
+      expect(find.text('Vence hoy'), findsOneWidget);
+      expect(find.text('Urgente · queda 1 día'), findsOneWidget);
+      expect(find.text('Consumir pronto · quedan 5 días'), findsOneWidget);
+      expect(find.text('Próximo · quedan 8 días'), findsOneWidget);
+      // No label when there is plenty of time, or no date at all.
+      expect(find.textContaining('150'), findsNothing);
+    });
+
+    testWidgets('answers "what should I eat first?" at the top of the inventory', (tester) async {
+      await openInventory(
+        tester,
+        backendWith([], {_consumeFirst: (_) => _consumeFirstOf([expired, urgent, soon])}),
+      );
+
+      expect(find.text('Consume primero'), findsOneWidget);
+      expect(find.text('3 alimentos que no pueden esperar'), findsOneWidget);
+      expect(find.text('Leche · 1 ud'), findsOneWidget);
+      expect(find.text('Caducado · hace 3 días'), findsOneWidget);
+      expect(find.text('Pollo · 1 ud'), findsOneWidget);
+      expect(find.text('Urgente · queda 1 día'), findsOneWidget);
+      expect(find.text('Lechuga · 1 ud'), findsOneWidget);
+    });
+
+    testWidgets('shows the five most pressing and says how many more there are', (tester) async {
+      final many = [for (var index = 0; index < 7; index++) _expiring('u$index', 'Alimento $index', 1, 'URGENT')];
+      await openInventory(tester, backendWith([], {_consumeFirst: (_) => _consumeFirstOf(many)}));
+
+      expect(find.text('7 alimentos que no pueden esperar'), findsOneWidget);
+      expect(find.text('Urgente · queda 1 día'), findsNWidgets(5));
+      expect(find.text('y 2 más'), findsOneWidget);
+    });
+
+    testWidgets('says nothing when no food needs attention', (tester) async {
+      await openInventory(tester, backendWith([fine], {_consumeFirst: (_) => _consumeFirstOf([fine, upcoming])}));
+
+      expect(find.text('Arroz'), findsOneWidget);
+      expect(find.text('Consume primero'), findsNothing);
+    });
+
+    testWidgets('is refreshed when the inventory changes', (tester) async {
+      var pressing = [urgent];
+      final backend = backendWith([urgent], {
+        _consumeFirst: (_) => _consumeFirstOf(pressing),
+        'POST /households/h1/inventory/e3/consume': (_) {
+          pressing = [];
+          return FakeResponse.ok(urgent);
+        },
+      });
+      await openInventory(tester, backend);
+      expect(find.text('Consume primero'), findsOneWidget);
+
+      await chooseAction(tester, 'Consumir');
+      await tester.tap(find.widgetWithText(FilledButton, 'Confirmar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Consume primero'), findsNothing);
+      expect(backend.count(_consumeFirst), 2);
     });
   });
 

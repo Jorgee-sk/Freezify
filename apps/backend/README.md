@@ -32,6 +32,7 @@ ciclo.
 | `auth` | Registro, login, tokens, configuración de Spring Security |
 | `households` | Hogares, miembros, invitaciones. API: `HouseholdAccess`, `HouseholdRole` |
 | `food` | Catálogo de alimentos y cantidades. API: `FoodCatalog`, `Food`, `Quantity`, `Unit`, `FoodCategory`, `StorageLocation` |
+| `expiration` | Niveles de prioridad de caducidad. API: `ExpirationPriority` |
 | `inventory` | Alimentos del hogar, consumo y descarte. API: `ItemStatus`, `ExpirationSource`, `InventoryEvents` |
 | `analytics` | Registra eventos de producto a partir de los eventos de los demás módulos |
 | `realtime` | Flujos SSE por hogar: avisa a los miembros conectados de que el inventario cambió |
