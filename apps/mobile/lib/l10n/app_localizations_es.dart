@@ -981,4 +981,155 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get traitAlcohol => 'alcohol';
+
+  @override
+  String get planTitle => 'Plan de la semana';
+
+  @override
+  String get planPreviousWeek => 'Semana anterior';
+
+  @override
+  String get planNextWeek => 'Semana siguiente';
+
+  @override
+  String get planThisWeek => 'Esta semana';
+
+  @override
+  String planWeekRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String get planToday => 'Hoy';
+
+  @override
+  String get planPastWeek => 'Esta semana ya ha pasado.';
+
+  @override
+  String get planLunch => 'Comida';
+
+  @override
+  String get planDinner => 'Cena';
+
+  @override
+  String get planEmpty => 'Nada planificado';
+
+  @override
+  String get planChoose => 'Elegir receta';
+
+  @override
+  String get planChange => 'Cambiar';
+
+  @override
+  String get planMove => 'Mover';
+
+  @override
+  String get planRemove => 'Quitar';
+
+  @override
+  String get planMealActions => 'Opciones de la comida';
+
+  @override
+  String get planSuggested => 'Propuesta';
+
+  @override
+  String get planGenerate => 'Rellenar los huecos';
+
+  @override
+  String get planRegenerate => 'Rehacer la propuesta';
+
+  @override
+  String get planGenerateHelp =>
+      'Rellena las comidas vacías, de hoy en adelante, usando primero lo que caduca antes. Lo que hayas elegido tú no se toca.';
+
+  @override
+  String get planRegenerateConfirm =>
+      'Se sustituirán las comidas propuestas automáticamente de esta semana. Las que elegiste tú se mantienen.';
+
+  @override
+  String planFilled(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Se han planificado $count comidas.',
+      one: 'Se ha planificado $count comida.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planNothingFilled => 'No se ha planificado ninguna comida nueva.';
+
+  @override
+  String planUnfilled(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count comidas se quedan vacías: no hay más recetas que encajen sin repetir demasiado.',
+      one: '$count comida se queda vacía: no hay más recetas que encajen sin repetir demasiado.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planNoteUses(String food, String date) {
+    return 'Aprovecha $food, con caducidad el $date.';
+  }
+
+  @override
+  String planNoteUsesEstimated(String food, String date) {
+    return 'Aprovecha $food, con caducidad estimada el $date.';
+  }
+
+  @override
+  String get planNoteHaveAll => 'Habrá en casa todos los ingredientes.';
+
+  @override
+  String planNoteMissing(String foods) {
+    return 'Falta por comprar: $foods.';
+  }
+
+  @override
+  String planNotePartial(String food) {
+    return 'Habrá menos $food de lo que pide la receta.';
+  }
+
+  @override
+  String get planUnusedTitle => 'El plan deja caducar';
+
+  @override
+  String get planUnusedHelp =>
+      'Caducan antes de que acabe la semana y ninguna comida planificada los aprovecha del todo.';
+
+  @override
+  String planUnusedItem(String food, String quantity, String date) {
+    return '$food ($quantity), con caducidad el $date';
+  }
+
+  @override
+  String planUnusedItemEstimated(String food, String quantity, String date) {
+    return '$food ($quantity), con caducidad estimada el $date';
+  }
+
+  @override
+  String get planPickerTitle => 'Elige una receta';
+
+  @override
+  String get planMoveTitle => 'Mover a';
+
+  @override
+  String planMovePlace(String day, String slot) {
+    return '$day · $slot';
+  }
+
+  @override
+  String planMoveSwap(String recipe) {
+    return 'Se intercambia con $recipe';
+  }
+
+  @override
+  String get errorMealNotFound => 'Esa comida ya no está en el plan.';
+
+  @override
+  String get errorWeekInThePast => 'No se puede planificar una semana que ya ha pasado.';
 }

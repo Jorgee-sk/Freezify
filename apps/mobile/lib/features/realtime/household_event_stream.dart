@@ -5,25 +5,30 @@ import 'package:dio/dio.dart';
 
 import '../../core/api_client.dart';
 
-/// Listens to what happens in a household and reports inventory changes, reconnecting until disposed.
+/// Listens to what happens in a household and reports its changes, reconnecting until disposed.
 ///
-/// Events carry no data: the listener is expected to fetch again. After a reconnection the callback is called
-/// once, because anything may have been missed while disconnected.
+/// Events carry no data: the listener is expected to fetch again. After a reconnection [onInventoryChanged] is
+/// called once, because anything may have been missed while disconnected.
 class HouseholdEventStream {
   HouseholdEventStream(
     this._api,
     this._householdId, {
     required this.onInventoryChanged,
+    this.onMealPlanChanged,
     this.retryDelay = const Duration(seconds: 1),
     this.maxRetryDelay = const Duration(seconds: 30),
     this.idleTimeout = const Duration(seconds: 60),
   });
 
   static const _inventoryChanged = 'inventory-changed';
+  static const _mealPlanChanged = 'meal-plan-changed';
 
   final ApiClient _api;
   final String _householdId;
   final void Function() onInventoryChanged;
+
+  /// Only whoever shows the meal plan cares about it.
+  final void Function()? onMealPlanChanged;
 
   /// First wait before reconnecting; doubles after every failed attempt up to [maxRetryDelay].
   final Duration retryDelay;
@@ -85,9 +90,10 @@ class HouseholdEventStream {
         .timeout(idleTimeout)
         .listen(
           (line) {
-            if (!_disposed && line.startsWith('event:') && line.substring(6).trim() == _inventoryChanged) {
-              onInventoryChanged();
-            }
+            if (_disposed || !line.startsWith('event:')) return;
+            final event = line.substring(6).trim();
+            if (event == _inventoryChanged) onInventoryChanged();
+            if (event == _mealPlanChanged) onMealPlanChanged?.call();
           },
           onError: (Object _) => _closeConnection(),
           onDone: _closeConnection,

@@ -9,14 +9,13 @@
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
 | 3 — Expiration Engine | 🟡 Código completo; **falta comprobar en un móvil Android que el push llega**, y hasta entonces no se da por cerrada |
 | 4 — Recipes | 🟡 Funcionalidad completa (CI en verde en el pull request #12). Antes de usuarios reales hay que revisar los datos de alérgenos |
-| 5 — Smart Planning | 🟡 En curso: el backend del plan semanal y su generador están hechos; faltan las pantallas de web y móvil |
+| 5 — Smart Planning | 🟡 Funcionalidad completa, con los tests nuevos del móvil pendientes de CI. Faltan las preferencias del usuario como factor |
 
 ## Fase 5 — Smart Planning 🟡
 
 ### Completed
 
-- **Plan semanal del hogar** (solo backend por ahora): una receta por día y comida (comida y cena), de lunes
-  a domingo.
+- **Plan semanal del hogar**: una receta por día y comida (comida y cena), de lunes a domingo.
   - `GET /households/{id}/meal-plan?week=` devuelve la semana que contiene esa fecha (la actual si no se
     indica).
   - `PUT /households/{id}/meal-plan/{fecha}/{LUNCH|DINNER}` elige o sustituye la receta de una comida;
@@ -48,6 +47,19 @@
   comida planificada de una semana registra el evento de producto `meal_plan_created`.
 - Para que el planificador pueda usarlas, las recetas y el cálculo de disponibilidad pasan a ser la interfaz
   pública del módulo de recetas (`Recipe`, `RecipeScorer`, `RecipeCatalog`); su comportamiento no cambia.
+- **Pantallas del plan en web y móvil**, con acceso desde el inventario del hogar:
+  - La semana día a día, con comida y cena; se pasa a la semana anterior o siguiente y se vuelve a la actual.
+  - En cada comida: la receta (abre su detalle), si es una propuesta automática, y frases con lo que aprovecha
+    ("Aprovecha calabacín, con caducidad el 7 oct."), lo que falta por comprar y lo que habrá en menos
+    cantidad. Las frases se construyen en el cliente con los datos del plan; una fecha estimada se dice
+    siempre como estimada.
+  - Elegir receta (buscando entre las que el hogar come), cambiarla, quitarla y moverla a otro día o comida;
+    al mover se indica con qué receta se intercambiaría.
+  - "Rellenar los huecos" genera el plan y dice cuántas comidas ha planificado y cuántas quedan vacías.
+    "Rehacer la propuesta" solo aparece si hay propuestas automáticas por delante y **pide confirmación**.
+    En una semana ya pasada no se ofrece generar.
+  - Aviso "El plan deja caducar" con los alimentos, la cantidad que sobraría y su fecha.
+  - El plan se actualiza solo cuando otro miembro lo cambia o cambia el inventario.
 
 ### Tests
 
@@ -58,12 +70,14 @@
 | Límites entre módulos (`ModularityTests`) | ✅ el módulo nuevo solo usa las interfaces públicas de recetas, inventario, alimentos y hogares |
 | Migración `V8` sobre la base local con datos | ✅ aplicada al arrancar |
 | Generador contra el backend y la base locales reales | ✅ con pollo (600 g, 2 días), tomates (3 días), lechuga (4), calabacín (5), arroz, huevos, champiñones sin fecha y yogur (1 día): planificó las seis comidas que quedaban de la semana, usó todo el pollo antes de su fecha en dos platos distintos, marcó la fecha de los champiñones como estimada y señaló el yogur como lo único que el plan deja caducar. Para la semana siguiente rellenó las 14 comidas con 14 platos distintos |
-| Web y móvil | ⏳ sin pantallas todavía |
+| Web lint / test / build | ✅ sin avisos / 139 tests (23 del plan: 13 de la página y 10 de las frases) / correcto |
+| Plan, web contra el backend real | ✅ mostró la semana generada con sus frases y el aviso del yogur; en la semana siguiente generó 14 comidas, y se quitó una comida, se eligió otra receta y se movió sobre otra (se intercambiaron y cada una conservó su origen) |
+| Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
+| Mobile `flutter test` | 🟡 123 pasaron en CI (pull request #12); los **23 nuevos del plan no se han ejecutado** (146 en total): correrán en la CI del próximo pull request |
+| Plan, código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ generó 6 comidas con sus frases (la fecha estimada de los champiñones, dicha como estimada), y se movió una comida sobre otra, se cambió su receta y se quitó, sin errores en consola. No se probó "Rehacer la propuesta" ni el cambio de semana en esta versión |
 
 ### Pendiente en esta fase
 
-- **Pantallas del plan semanal en web y móvil**: ver la semana, elegir, mover, sustituir y quitar comidas,
-  generar el plan y ver qué falta y qué se deja caducar.
 - **Preferencias del usuario** como factor: no existen todavía (viene de la Fase 4).
 
 ### Known issues
@@ -81,6 +95,12 @@
 - **Marcar una comida del plan como cocinada no existe**: "La he cocinado" sigue estando en la receta y el
   plan no lo refleja.
 - **No hay "vaciar la semana"** ni copia de una semana a otra.
+- **Mover una comida solo dentro de la semana en pantalla**, eligiendo el destino de una lista; no se
+  arrastra. La API sí permite mover entre semanas.
+- **No se puede añadir una receta al plan desde la propia receta**: se elige desde el plan.
+- **El selector de recetas de la web muestra las 20 primeras**; el resto se alcanza buscando.
+- **Al elegir una receta a mano no se avisa si contiene algo que el hogar no come**: el selector ya solo
+  ofrece las que come, pero la API acepta cualquiera.
 - **Dos miembros que eligen a la vez la misma comida vacía**: la segunda petición falla con un error genérico
   en lugar de un mensaje claro. Sin test.
 - **Los alimentos fuera del catálogo** no encajan en ninguna receta: aparecen siempre como "el plan no los
@@ -483,7 +503,7 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Fase 5: pantallas del plan semanal en web y móvil.
+1. Abrir el pull request de las pantallas del plan y confirmar en CI los 23 tests nuevos del móvil.
 2. Fase 6 — Shopping: lista de la compra a partir de lo que falta en el plan.
 3. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
    con una fuente autorizada antes de abrir a usuarios reales.

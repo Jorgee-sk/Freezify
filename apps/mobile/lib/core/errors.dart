@@ -25,6 +25,8 @@ String errorMessage(AppLocalizations l10n, Object error) {
     'CONCURRENT_MODIFICATION' => l10n.errorConcurrentModification,
     'NOTIFICATION_NOT_FOUND' => l10n.errorNotificationNotFound,
     'RECIPE_NOT_FOUND' => l10n.errorRecipeNotFound,
+    'MEAL_NOT_FOUND' => l10n.errorMealNotFound,
+    'WEEK_IN_THE_PAST' => l10n.errorWeekInThePast,
     _ => l10n.errorGeneric,
   };
 }

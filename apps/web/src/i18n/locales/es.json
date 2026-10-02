@@ -81,7 +81,9 @@
     "INCOMPATIBLE_UNIT": "Esa unidad no es compatible con la del alimento.",
     "QUANTITY_EXCEEDS_AVAILABLE": "Queda menos cantidad de la indicada.",
     "NOTIFICATION_NOT_FOUND": "Este aviso ya no existe.",
-    "RECIPE_NOT_FOUND": "Esta receta no existe."
+    "RECIPE_NOT_FOUND": "Esta receta no existe.",
+    "MEAL_NOT_FOUND": "Esa comida ya no está en el plan.",
+    "WEEK_IN_THE_PAST": "No se puede planificar una semana que ya ha pasado."
   },
   "inventory": {
     "title": "Inventario",
@@ -373,5 +375,51 @@
     "none": "Este hogar no tiene restricciones alimentarias.",
     "change": "Cambiar",
     "conflict": "Esta receta contiene algo que en este hogar no se come: {{traits}}."
+  },
+  "plan": {
+    "title": "Plan de la semana",
+    "open": "Plan semanal",
+    "week": "Semana",
+    "weekRange": "{{from}} – {{to}}",
+    "previousWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "thisWeek": "Esta semana",
+    "today": "Hoy",
+    "pastWeek": "Esta semana ya ha pasado.",
+    "slot": {
+      "LUNCH": "Comida",
+      "DINNER": "Cena"
+    },
+    "empty": "Nada planificado",
+    "choose": "Elegir receta",
+    "change": "Cambiar",
+    "move": "Mover",
+    "remove": "Quitar",
+    "generatedBadge": "Propuesta",
+    "generate": "Rellenar los huecos",
+    "regenerate": "Rehacer la propuesta",
+    "generateHelp": "Rellena las comidas vacías, de hoy en adelante, usando primero lo que caduca antes. Lo que hayas elegido tú no se toca.",
+    "regenerateConfirm": "Se sustituirán las comidas propuestas automáticamente de esta semana. Las que elegiste tú se mantienen. ¿Continuar?",
+    "filled_one": "Se ha planificado {{count}} comida.",
+    "filled_other": "Se han planificado {{count}} comidas.",
+    "nothingFilled": "No se ha planificado ninguna comida nueva.",
+    "unfilled_one": "{{count}} comida se queda vacía: no hay más recetas que encajen sin repetir demasiado.",
+    "unfilled_other": "{{count}} comidas se quedan vacías: no hay más recetas que encajen sin repetir demasiado.",
+    "note": {
+      "uses": "Aprovecha {{food}}, con caducidad el {{date}}.",
+      "usesEstimated": "Aprovecha {{food}}, con caducidad estimada el {{date}}.",
+      "haveAll": "Habrá en casa todos los ingredientes.",
+      "missing": "Falta por comprar: {{foods}}.",
+      "partial": "Habrá menos {{food}} de lo que pide la receta."
+    },
+    "unusedTitle": "El plan deja caducar",
+    "unusedHelp": "Caducan antes de que acabe la semana y ninguna comida planificada los aprovecha del todo.",
+    "unusedItem": "{{food}} ({{quantity}}), con caducidad el {{date}}",
+    "unusedItemEstimated": "{{food}} ({{quantity}}), con caducidad estimada el {{date}}",
+    "pickerTitle": "Elige una receta",
+    "moveTitle": "Mover a",
+    "moveChoose": "Elige día y comida…",
+    "movePlace": "{{day}} · {{slot}}",
+    "moveSwap": "{{place}} (se intercambia con {{recipe}})"
   }
 }

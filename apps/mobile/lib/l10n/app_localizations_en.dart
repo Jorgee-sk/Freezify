@@ -977,4 +977,154 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get traitAlcohol => 'alcohol';
+
+  @override
+  String get planTitle => 'Plan for the week';
+
+  @override
+  String get planPreviousWeek => 'Previous week';
+
+  @override
+  String get planNextWeek => 'Next week';
+
+  @override
+  String get planThisWeek => 'This week';
+
+  @override
+  String planWeekRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String get planToday => 'Today';
+
+  @override
+  String get planPastWeek => 'This week is over.';
+
+  @override
+  String get planLunch => 'Lunch';
+
+  @override
+  String get planDinner => 'Dinner';
+
+  @override
+  String get planEmpty => 'Nothing planned';
+
+  @override
+  String get planChoose => 'Choose a recipe';
+
+  @override
+  String get planChange => 'Change';
+
+  @override
+  String get planMove => 'Move';
+
+  @override
+  String get planRemove => 'Remove';
+
+  @override
+  String get planMealActions => 'Meal options';
+
+  @override
+  String get planSuggested => 'Suggested';
+
+  @override
+  String get planGenerate => 'Fill the gaps';
+
+  @override
+  String get planRegenerate => 'Suggest again';
+
+  @override
+  String get planGenerateHelp =>
+      'Fills the empty meals, from today on, using first what expires first. What you chose yourself is left alone.';
+
+  @override
+  String get planRegenerateConfirm =>
+      'The meals suggested automatically for this week will be replaced. The ones you chose are kept.';
+
+  @override
+  String planFilled(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count meals have been planned.',
+      one: '$count meal has been planned.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planNothingFilled => 'No new meal has been planned.';
+
+  @override
+  String planUnfilled(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count meals stay empty: no more recipes fit without too much repetition.',
+      one: '$count meal stays empty: no more recipes fit without too much repetition.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String planNoteUses(String food, String date) {
+    return 'Uses $food, due to expire on $date.';
+  }
+
+  @override
+  String planNoteUsesEstimated(String food, String date) {
+    return 'Uses $food, estimated to expire on $date.';
+  }
+
+  @override
+  String get planNoteHaveAll => 'Every ingredient will be at home.';
+
+  @override
+  String planNoteMissing(String foods) {
+    return 'To buy: $foods.';
+  }
+
+  @override
+  String planNotePartial(String food) {
+    return 'There will be less $food than the recipe asks for.';
+  }
+
+  @override
+  String get planUnusedTitle => 'The plan lets these expire';
+
+  @override
+  String get planUnusedHelp => 'They expire before the week is over and no planned meal uses them up.';
+
+  @override
+  String planUnusedItem(String food, String quantity, String date) {
+    return '$food ($quantity), due to expire on $date';
+  }
+
+  @override
+  String planUnusedItemEstimated(String food, String quantity, String date) {
+    return '$food ($quantity), estimated to expire on $date';
+  }
+
+  @override
+  String get planPickerTitle => 'Choose a recipe';
+
+  @override
+  String get planMoveTitle => 'Move to';
+
+  @override
+  String planMovePlace(String day, String slot) {
+    return '$day · $slot';
+  }
+
+  @override
+  String planMoveSwap(String recipe) {
+    return 'Swaps with $recipe';
+  }
+
+  @override
+  String get errorMealNotFound => 'That meal is no longer in the plan.';
+
+  @override
+  String get errorWeekInThePast => 'A week that is over cannot be planned.';
 }

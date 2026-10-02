@@ -166,6 +166,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
             onPressed: () => context.push('/households/$_householdId/recipes'),
           ),
           IconButton(
+            tooltip: l10n.planTitle,
+            icon: const Icon(Icons.calendar_month_outlined),
+            onPressed: () => context.push('/households/$_householdId/plan'),
+          ),
+          IconButton(
             tooltip: l10n.settings,
             icon: const Icon(Icons.group_outlined),
             onPressed: () => context.push('/households/$_householdId/settings'),

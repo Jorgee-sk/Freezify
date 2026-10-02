@@ -12,6 +12,7 @@ import 'features/inventory/inventory_screen.dart';
 import 'features/notifications/notification_preferences_screen.dart';
 import 'features/notifications/notifications_screen.dart';
 import 'features/notifications/push_controller.dart';
+import 'features/plan/meal_plan_screen.dart';
 import 'features/recipes/diet_screen.dart';
 import 'features/recipes/recipe_detail_screen.dart';
 import 'features/recipes/recipes_screen.dart';
@@ -57,6 +58,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'settings',
                 builder: (_, state) => HouseholdDetailScreen(householdId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: 'plan',
+                builder: (_, state) => MealPlanScreen(householdId: state.pathParameters['id']!),
               ),
               GoRoute(
                 path: 'diet',

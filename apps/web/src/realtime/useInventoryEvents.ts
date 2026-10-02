@@ -8,7 +8,9 @@ export function useInventoryEvents(householdId: string, enabled: boolean) {
   const queryClient = useQueryClient()
   useEffect(() => {
     if (!enabled) return
-    return subscribeToHousehold(householdId, () => {
+    return subscribeToHousehold(householdId, (event) => {
+      // A change to the meal plan does not touch the inventory.
+      if (event === 'meal-plan-changed') return
       void queryClient.invalidateQueries({ queryKey: queryKeys.inventory(householdId) })
     })
   }, [householdId, enabled, queryClient])
