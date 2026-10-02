@@ -10,10 +10,12 @@ import '../../l10n/app_localizations.dart';
 import '../households/dialogs.dart';
 import '../households/households_repository.dart';
 import '../realtime/household_event_stream.dart';
+import 'consume_first_card.dart';
 import 'inventory_format.dart';
 import 'inventory_models.dart';
 import 'inventory_repository.dart';
 import 'item_form_screen.dart';
+import 'priority_label.dart';
 import 'take_out_sheet.dart';
 
 enum _ItemAction { consume, discard, open, edit, delete }
@@ -89,6 +91,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
 
   void _reload() {
     ref.invalidate(inventoryListProvider);
+    ref.invalidate(consumeFirstProvider(_householdId));
     ref.invalidate(recentFoodsProvider(_householdId));
   }
 
@@ -181,6 +184,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
                 children: [
+                  ConsumeFirstCard(householdId: _householdId),
                   Row(
                     children: [
                       Expanded(
@@ -310,6 +314,7 @@ class _ItemCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(itemSummary(l10n, item)),
+            if (item.status.isActive) PriorityLabel(item: item),
             if (item.status != ItemStatus.available)
               Padding(
                 padding: const EdgeInsets.only(top: 4),

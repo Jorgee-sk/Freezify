@@ -3,6 +3,7 @@ package com.freezify.inventory.internal;
 import com.freezify.common.ApiException;
 import com.freezify.common.PageResponse;
 import com.freezify.common.Today;
+import com.freezify.expiration.ExpirationPriority;
 import com.freezify.food.FoodCatalog;
 import com.freezify.food.FoodCategory;
 import com.freezify.food.Quantity;
@@ -16,24 +17,39 @@ import com.freezify.inventory.ItemStatus;
 import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 interface FoodItemRepository extends JpaRepository<FoodItemEntity, UUID>, JpaSpecificationExecutor<FoodItemEntity> {
 
-    List<FoodItemEntity> findTop50ByHouseholdIdOrderByCreatedAtDesc(UUID householdId);
+    /** The id breaks ties: creation times have millisecond precision and ids are time-ordered. */
+    List<FoodItemEntity> findTop50ByHouseholdIdOrderByCreatedAtDescIdDesc(UUID householdId);
+
+    List<FoodItemEntity> findByHouseholdIdAndStatusInAndExpirationDateLessThanEqualOrderByExpirationDateAscSearchNameAsc(
+            UUID householdId, Collection<ItemStatus> statuses, LocalDate until, Limit limit);
+
+    /** One entry per item still in the house; {@code null} for items without a date. */
+    @Query("select i.expirationDate from FoodItemEntity i where i.householdId = :householdId and i.status in :statuses")
+    List<LocalDate> expirationDates(
+            @Param("householdId") UUID householdId, @Param("statuses") Collection<ItemStatus> statuses);
 }
 
 interface FoodOutcomeRepository extends JpaRepository<FoodOutcomeEntity, UUID> {}
@@ -42,6 +58,8 @@ interface FoodOutcomeRepository extends JpaRepository<FoodOutcomeEntity, UUID> {
 public class InventoryService {
 
     private static final int RECENT_LIMIT = 10;
+    private static final int CONSUME_FIRST_LIMIT = 20;
+    private static final String NO_DATE = "NO_DATE";
 
     public enum State {
         /** Still in the house. */
@@ -66,6 +84,14 @@ public class InventoryService {
 
     public record Filter(
             State state, @Nullable StorageLocation location, @Nullable FoodCategory category, @Nullable String text) {}
+
+    /**
+     * What should be eaten first.
+     *
+     * @param counts how many items still in the house are at each priority level, plus {@code NO_DATE}
+     * @param items  expired items and those with 5 days or fewer left, the most pressing first
+     */
+    public record ConsumeFirst(Map<String, Long> counts, List<ItemView> items) {}
 
     /** A food the household added before, to offer it again with one tap. */
     public record RecentFood(
@@ -104,15 +130,15 @@ public class InventoryService {
     public PageResponse<ItemView> list(UUID householdId, UUID userId, Filter filter, ItemSort sort, int page, int size) {
         access.requireMember(householdId, userId);
         return PageResponse.of(items.findAll(matching(householdId, filter), PageRequest.of(page, size, sort.sort))
-                .map(FoodItemEntity::toView));
+                .map(item -> item.toView(today.date())));
     }
 
     @Transactional(readOnly = true)
     public List<RecentFood> recent(UUID householdId, UUID userId) {
         access.requireMember(householdId, userId);
         Map<String, RecentFood> distinct = new LinkedHashMap<>();
-        for (FoodItemEntity item : items.findTop50ByHouseholdIdOrderByCreatedAtDesc(householdId)) {
-            ItemView view = item.toView();
+        for (FoodItemEntity item : items.findTop50ByHouseholdIdOrderByCreatedAtDescIdDesc(householdId)) {
+            ItemView view = item.toView(today.date());
             distinct.putIfAbsent(
                     FoodCatalog.normalize(view.name()),
                     new RecentFood(
@@ -125,9 +151,34 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
+    public ConsumeFirst consumeFirst(UUID householdId, UUID userId) {
+        access.requireMember(householdId, userId);
+        LocalDate day = today.date();
+        Collection<ItemStatus> inTheHouse = EnumSet.of(ItemStatus.AVAILABLE, ItemStatus.OPENED, ItemStatus.EXPIRED);
+
+        // Every level is reported, also with zero, so clients need no special cases.
+        Map<String, Long> counts = new LinkedHashMap<>();
+        for (ExpirationPriority priority : ExpirationPriority.values()) {
+            counts.put(priority.name(), 0L);
+        }
+        counts.put(NO_DATE, 0L);
+        for (LocalDate date : items.expirationDates(householdId, inTheHouse)) {
+            counts.merge(date == null ? NO_DATE : ExpirationPriority.of(date, day).name(), 1L, Long::sum);
+        }
+
+        List<ItemView> first = items
+                .findByHouseholdIdAndStatusInAndExpirationDateLessThanEqualOrderByExpirationDateAscSearchNameAsc(
+                        householdId, inTheHouse, ExpirationPriority.attentionHorizon(day), Limit.of(CONSUME_FIRST_LIMIT))
+                .stream()
+                .map(item -> item.toView(day))
+                .toList();
+        return new ConsumeFirst(counts, first);
+    }
+
+    @Transactional(readOnly = true)
     public ItemView get(UUID householdId, UUID userId, UUID itemId) {
         access.requireMember(householdId, userId);
-        return load(householdId, itemId).toView();
+        return load(householdId, itemId).toView(today.date());
     }
 
     @Transactional
@@ -137,7 +188,7 @@ public class InventoryService {
         FoodItemEntity item = items.saveAndFlush(new FoodItemEntity(householdId, userId, data));
         events.publishEvent(new FoodItemAdded(householdId, userId, item.id()));
         events.publishEvent(new InventoryChanged(householdId, userId));
-        return item.toView();
+        return item.toView(today.date());
     }
 
     @Transactional
@@ -147,7 +198,7 @@ public class InventoryService {
         FoodItemEntity item = loadActive(householdId, itemId);
         item.apply(data);
         events.publishEvent(new InventoryChanged(householdId, userId));
-        return items.saveAndFlush(item).toView();
+        return items.saveAndFlush(item).toView(today.date());
     }
 
     /** Removes an item that should never have been there. It is neither consumption nor waste. */
@@ -164,7 +215,7 @@ public class InventoryService {
         FoodItemEntity item = loadActive(householdId, itemId);
         item.open(today.date());
         events.publishEvent(new InventoryChanged(householdId, userId));
-        return items.saveAndFlush(item).toView();
+        return items.saveAndFlush(item).toView(today.date());
     }
 
     /**
@@ -174,7 +225,7 @@ public class InventoryService {
     public ItemView consume(UUID householdId, UUID userId, UUID itemId, @Nullable Quantity quantity) {
         FoodItemEntity item = takeOut(householdId, userId, itemId, quantity, FoodOutcomeEntity.Type.CONSUMED, null);
         events.publishEvent(new FoodItemConsumed(householdId, userId, itemId));
-        return item.toView();
+        return item.toView(today.date());
     }
 
     /**
@@ -185,7 +236,7 @@ public class InventoryService {
             UUID householdId, UUID userId, UUID itemId, @Nullable Quantity quantity, WasteReason reason) {
         FoodItemEntity item = takeOut(householdId, userId, itemId, quantity, FoodOutcomeEntity.Type.DISCARDED, reason);
         events.publishEvent(new FoodItemDiscarded(householdId, userId, itemId));
-        return item.toView();
+        return item.toView(today.date());
     }
 
     private FoodItemEntity takeOut(

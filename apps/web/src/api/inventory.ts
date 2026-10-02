@@ -6,6 +6,8 @@ export type StorageLocation = 'REFRIGERATOR' | 'FREEZER' | 'PANTRY' | 'OTHER'
 export type ItemStatus = 'AVAILABLE' | 'OPENED' | 'EXPIRED' | 'CONSUMED' | 'DISCARDED'
 export type ItemState = 'ACTIVE' | 'FINISHED' | 'ALL'
 export type WasteReason = 'EXPIRED' | 'SPOILED' | 'LEFTOVER' | 'OTHER'
+/** How soon a food should be eaten, from most to least pressing. */
+export type ExpirationPriority = 'EXPIRED' | 'TODAY' | 'URGENT' | 'SOON' | 'UPCOMING' | 'OK'
 export type FoodCategory =
   | 'VEGETABLES'
   | 'FRUITS'
@@ -65,6 +67,9 @@ export interface InventoryItem {
   expirationDate: string | null
   /** Whether the date was typed by the user or estimated by the app. Estimates must be labelled as such. */
   expirationSource: 'USER' | 'ESTIMATED' | null
+  /** Negative when the date has passed; null without a date. */
+  daysUntilExpiration: number | null
+  priority: ExpirationPriority | null
   openedDate: string | null
   barcode: string | null
   brand: string | null
@@ -96,6 +101,14 @@ export interface RecentFood {
   category: FoodCategory
   quantity: Quantity
   storageLocation: StorageLocation
+}
+
+/** What should be eaten first. */
+export interface ConsumeFirst {
+  /** Items still in the house at each priority level, plus `NO_DATE`. */
+  counts: Record<ExpirationPriority | 'NO_DATE', number>
+  /** Expired items and those with 5 days or fewer left, the most pressing first. */
+  items: InventoryItem[]
 }
 
 export interface Page<T> {
@@ -132,6 +145,7 @@ export const inventoryApi = {
     if (filter.text.trim()) params.set('q', filter.text.trim())
     return api<Page<InventoryItem>>(`/households/${householdId}/inventory?${params}`)
   },
+  consumeFirst: (householdId: string) => api<ConsumeFirst>(`/households/${householdId}/inventory/consume-first`),
   recent: (householdId: string) => api<RecentFood[]>(`/households/${householdId}/inventory/recent`),
   create: (householdId: string, input: ItemInput) =>
     api<InventoryItem>(`/households/${householdId}/inventory`, { method: 'POST', body: input }),

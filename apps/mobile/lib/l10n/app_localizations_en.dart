@@ -473,4 +473,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorConcurrentModification => 'Someone else just changed this. Try again.';
+
+  @override
+  String get priorityExpired => 'Expired';
+
+  @override
+  String get priorityToday => 'Expires today';
+
+  @override
+  String get priorityUrgent => 'Urgent';
+
+  @override
+  String get prioritySoon => 'Eat soon';
+
+  @override
+  String get priorityUpcoming => 'Coming up';
+
+  @override
+  String daysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count days left', one: '$count day left');
+    return '$_temp0';
+  }
+
+  @override
+  String daysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count days ago', one: '$count day ago');
+    return '$_temp0';
+  }
+
+  @override
+  String get consumeFirstTitle => 'Eat first';
+
+  @override
+  String consumeFirstCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count foods that cannot wait',
+      one: '$count food that cannot wait',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String andMore(int count) {
+    return 'and $count more';
+  }
 }

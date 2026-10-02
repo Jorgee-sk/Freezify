@@ -8,7 +8,7 @@ El estado detallado de cada entrega está en [STATUS.md](STATUS.md).
 | 0 | Product Definition | ✅ Completada |
 | 1 | Foundation | ✅ Completada |
 | 2 | Inventory | ✅ Completada |
-| 3 | Expiration Engine | ⏳ Pendiente |
+| 3 | Expiration Engine | 🟡 En curso: prioridad y "consume primero" hechos |
 | 4 | Recipes | ⏳ Pendiente |
 | 5 | Smart Planning | ⏳ Pendiente |
 | 6 | Shopping | ⏳ Pendiente |

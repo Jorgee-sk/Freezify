@@ -144,5 +144,15 @@
   "errorFoodNotFound": "Ese alimento no existe en el catálogo.",
   "errorIncompatibleUnit": "Esa unidad no es compatible con la del alimento.",
   "errorQuantityExceeds": "Queda menos cantidad de la indicada.",
-  "errorConcurrentModification": "Alguien acaba de cambiar esto. Inténtalo de nuevo."
+  "errorConcurrentModification": "Alguien acaba de cambiar esto. Inténtalo de nuevo.",
+  "priorityExpired": "Caducado",
+  "priorityToday": "Vence hoy",
+  "priorityUrgent": "Urgente",
+  "prioritySoon": "Consumir pronto",
+  "priorityUpcoming": "Próximo",
+  "daysLeft": "{count, plural, =1{queda {count} día} other{quedan {count} días}}",
+  "daysAgo": "{count, plural, =1{hace {count} día} other{hace {count} días}}",
+  "consumeFirstTitle": "Consume primero",
+  "consumeFirstCount": "{count, plural, =1{{count} alimento que no puede esperar} other{{count} alimentos que no pueden esperar}}",
+  "andMore": "y {count} más"
 }

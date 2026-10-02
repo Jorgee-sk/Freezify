@@ -1,5 +1,6 @@
 package com.freezify.inventory.internal;
 
+import com.freezify.expiration.ExpirationPriority;
 import com.freezify.food.FoodCatalog;
 import com.freezify.food.FoodCategory;
 import com.freezify.food.Quantity;
@@ -193,7 +194,11 @@ class FoodItemEntity {
         return status;
     }
 
-    ItemView toView() {
+    /**
+     * @param today the day against which "days left" and the priority are computed
+     */
+    ItemView toView(LocalDate today) {
+        Long daysLeft = expirationDate == null ? null : ExpirationPriority.daysLeft(expirationDate, today);
         return new ItemView(
                 id,
                 householdId,
@@ -206,6 +211,8 @@ class FoodItemEntity {
                 purchaseDate,
                 expirationDate,
                 expirationSource,
+                daysLeft,
+                daysLeft == null ? null : ExpirationPriority.ofDaysLeft(daysLeft),
                 openedDate,
                 barcode,
                 brand,

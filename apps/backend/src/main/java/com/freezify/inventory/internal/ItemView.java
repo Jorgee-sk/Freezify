@@ -1,5 +1,6 @@
 package com.freezify.inventory.internal;
 
+import com.freezify.expiration.ExpirationPriority;
 import com.freezify.food.FoodCategory;
 import com.freezify.food.StorageLocation;
 import com.freezify.food.Unit;
@@ -23,6 +24,9 @@ public record ItemView(
         LocalDate purchaseDate,
         @Nullable LocalDate expirationDate,
         @Nullable ExpirationSource expirationSource,
+        /** Negative when the date has passed; {@code null} without a date. */
+        @Nullable Long daysUntilExpiration,
+        @Nullable ExpirationPriority priority,
         @Nullable LocalDate openedDate,
         @Nullable String barcode,
         @Nullable String brand,

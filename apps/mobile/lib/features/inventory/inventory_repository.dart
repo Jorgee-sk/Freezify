@@ -30,6 +30,11 @@ class InventoryRepository {
     return InventoryPage.fromJson(json as Map<String, dynamic>);
   }
 
+  Future<ConsumeFirst> consumeFirst(String householdId) async {
+    final json = await _api.get('${_base(householdId)}/consume-first');
+    return ConsumeFirst.fromJson(json as Map<String, dynamic>);
+  }
+
   Future<List<RecentFood>> recent(String householdId) async {
     final json = await _api.get('${_base(householdId)}/recent') as List<dynamic>;
     return [for (final item in json) RecentFood.fromJson(item as Map<String, dynamic>)];
@@ -67,6 +72,11 @@ final inventoryRepositoryProvider = Provider<InventoryRepository>(
 final inventoryListProvider = FutureProvider.autoDispose.family<InventoryPage, InventoryQuery>((ref, query) {
   ref.watch(authControllerProvider.select((auth) => auth.value?.id));
   return ref.watch(inventoryRepositoryProvider).list(query);
+});
+
+final consumeFirstProvider = FutureProvider.autoDispose.family<ConsumeFirst, String>((ref, householdId) {
+  ref.watch(authControllerProvider.select((auth) => auth.value?.id));
+  return ref.watch(inventoryRepositoryProvider).consumeFirst(householdId);
 });
 
 final recentFoodsProvider = FutureProvider.autoDispose.family<List<RecentFood>, String>((ref, householdId) {

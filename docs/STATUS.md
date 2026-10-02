@@ -7,6 +7,43 @@
 | 0 — Product Definition | ✅ Completada |
 | 1 — Foundation | ✅ Completada (CI en verde en el pull request #1) |
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
+| 3 — Expiration Engine | 🟡 En curso: prioridad y "consume primero" hechos; faltan la estimación de fechas, el scheduler y las notificaciones |
+
+## Fase 3 — Expiration Engine 🟡
+
+### Completed
+
+- **Niveles de prioridad** como función pura de dominio (`ExpirationPriority`): caducado, vence hoy, urgente
+  (1–2 días), consumir pronto (3–5), próximo (6–10) y OK (más de 10). Es el orden que usarán el recomendador
+  de recetas y el planificador.
+- Cada alimento del inventario devuelve `priority` y `daysUntilExpiration`, calculados contra el día de hoy.
+- `GET /households/{id}/inventory/consume-first`: cuántos alimentos hay en cada nivel y cuáles hay que comer
+  primero (caducados o con 5 días o menos), los más urgentes delante.
+- **Web y móvil**: panel "Consume primero" al principio del inventario y etiqueta de prioridad con color en
+  cada alimento. No hay etiqueta cuando queda mucho tiempo o no hay fecha, para que siga significando algo.
+  El panel se actualiza con cada cambio, también con los que llegan en tiempo real.
+
+### Tests
+
+| Qué | Resultado |
+|---|---|
+| Backend `./mvnw verify` | ✅ 102 tests (14 de niveles de prioridad y 5 de "consume primero" nuevos) |
+| Web lint / test / build | ✅ sin avisos / 64 tests (5 nuevos) / correcto |
+| Mobile `flutter analyze` y APK | ✅ sin avisos / generado |
+| Mobile `flutter test` | ❌ **5 tests nuevos sin ejecutar** (64 en total): correrán en la CI del próximo pull request |
+| Web y móvil contra el backend real | ✅ con alimentos caducados, que vencen hoy, urgentes y próximos: el panel y las etiquetas muestran el nivel y los días correctos |
+
+### Pendiente en esta fase
+
+- **Estimación de fechas** por reglas (alimento × ubicación × abierto), siempre etiquetada como estimada.
+- **Scheduler diario**: marcar como caducado lo que ha pasado de fecha y preparar los avisos.
+- **Notificaciones** in-app y push, con preferencias y sin spam.
+
+### Known issues
+
+- **El estado `EXPIRED` aún no se asigna**: un alimento pasado de fecha se muestra como "Caducado" por su
+  prioridad, pero su estado sigue siendo "disponible" hasta que exista el scheduler.
+- **"Hoy" es el día en `Europe/Madrid`** para todos los hogares.
 
 ## Fase 2 — Inventory ✅
 
@@ -88,6 +125,9 @@
 
 ### Known issues
 
+- **Orden de "añadidos recientemente"**: un test falló una vez porque dos alimentos creados en el mismo
+  milisegundo podían salir en cualquier orden. Ahora el desempate es por id; no ha vuelto a fallar en tres
+  ejecuciones completas, pero al ser intermitente no hay prueba definitiva.
 - **Tiempo real a través de nginx sin probar**: se ha probado contra el backend directamente y a través del
   proxy de desarrollo de Vite. El backend envía `X-Accel-Buffering: no` para que nginx no retenga los
   eventos, pero esa ruta no se ha ejecutado (Docker no está instalado aquí).
@@ -103,7 +143,6 @@
   peticiones se solapan de verdad sobre el mismo alimento, la segunda debería recibir 409
   `CONCURRENT_MODIFICATION` (columna `version`); ese caso **no tiene test** y la web lo muestra con el
   mensaje de error genérico.
-- **El estado `EXPIRED` aún no se asigna**: lo hará el motor de caducidad (Fase 3).
 - **El catálogo no tiene alias ni sinónimos** ("jitomate", abreviaturas de ticket); previsto para la Fase 7.
 - **Los eventos de producto no se borran con la cuenta** (no hay borrado de cuenta todavía).
 
@@ -145,6 +184,6 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-Fase 3 — motor de caducidad. Primera unidad de trabajo: los niveles de prioridad como función pura de dominio
-(días hasta caducar → nivel) y el panel "consume primero"; después, la estimación de fechas por reglas y las
-notificaciones.
+1. Abrir el pull request de la prioridad de caducidad y confirmar en CI los tests nuevos del móvil.
+2. Estimación de fechas de caducidad por reglas.
+3. Scheduler diario y notificaciones.

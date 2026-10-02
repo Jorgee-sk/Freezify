@@ -6,6 +6,7 @@ import { WASTE_REASONS, inventoryApi } from '../api/inventory'
 import type { InventoryItem, Unit, WasteReason } from '../api/inventory'
 import { queryKeys } from '../api/queryKeys'
 import { ErrorMessage } from '../components/ErrorMessage'
+import { PriorityBadge } from './PriorityBadge'
 import { compatibleUnits, formatDay, formatQuantity, parseAmount } from './format'
 
 interface Props {
@@ -80,9 +81,12 @@ export function ItemRow({ householdId, item, onEdit }: Props) {
             {item.openedDate && <> · {t('inventory.opened', { date: formatDay(item.openedDate) })}</>}
           </div>
         </div>
-        {item.status !== 'AVAILABLE' && (
-          <span className={`badge status-${item.status.toLowerCase()}`}>{t(`inventory.status.${item.status}`)}</span>
-        )}
+        <div className="item-badges">
+          {active && <PriorityBadge item={item} />}
+          {item.status !== 'AVAILABLE' && (
+            <span className={`badge status-${item.status.toLowerCase()}`}>{t(`inventory.status.${item.status}`)}</span>
+          )}
+        </div>
       </div>
 
       {active && (

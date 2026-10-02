@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { InventoryItem } from '../api/inventory'
+import type { ConsumeFirst, InventoryItem } from '../api/inventory'
 import { todayIso } from '../inventory/format'
 import { eventStream, fakeApi, problem } from '../test/fakeApi'
 import { ANA, CASA, renderApp, signedIn } from '../test/renderApp'
@@ -19,6 +19,8 @@ function item(overrides: Partial<InventoryItem> & Pick<InventoryItem, 'id' | 'na
     purchaseDate: '2026-10-01',
     expirationDate: null,
     expirationSource: null,
+    daysUntilExpiration: null,
+    priority: null,
     openedDate: null,
     barcode: null,
     brand: null,
@@ -33,6 +35,15 @@ function item(overrides: Partial<InventoryItem> & Pick<InventoryItem, 'id' | 'na
 function page(items: InventoryItem[]) {
   return { body: { items, page: 0, size: 50, totalItems: items.length, totalPages: items.length ? 1 : 0 } }
 }
+
+/** What the consume-first endpoint answers for `items`, all of them needing attention. */
+function consumeFirst(items: InventoryItem[]): ConsumeFirst {
+  const counts = { EXPIRED: 0, TODAY: 0, URGENT: 0, SOON: 0, UPCOMING: 0, OK: 0, NO_DATE: 0 }
+  for (const entry of items) counts[entry.priority ?? 'NO_DATE'] += 1
+  return { counts, items }
+}
+
+const CONSUME_FIRST = 'GET /households/h1/inventory/consume-first'
 
 const POLLO = item({
   id: 'i1',
@@ -50,6 +61,7 @@ function server(items: InventoryItem[], extra: Parameters<typeof fakeApi>[0] = {
     'GET /households/h1': () => ({ body: CASA }),
     [LIST]: () => page(items),
     'GET /households/h1/inventory/recent': () => ({ body: [] }),
+    [CONSUME_FIRST]: () => ({ body: consumeFirst([]) }),
     ...extra,
   })
 }
@@ -174,6 +186,85 @@ describe('inventory list', () => {
     expect(await screen.findByText('Alimento de la página 1')).toBeInTheDocument()
     expect(screen.getByText('Página 2 de 3')).toBeInTheDocument()
     expect(api.last(LIST)!.query.get('page')).toBe('1')
+  })
+})
+
+describe('expiration priority', () => {
+  const expired = item({ id: 'e1', name: 'Leche', expirationDate: '2026-09-29', daysUntilExpiration: -3, priority: 'EXPIRED' })
+  const today = item({ id: 'e2', name: 'Yogur', expirationDate: '2026-10-02', daysUntilExpiration: 0, priority: 'TODAY' })
+  const urgent = item({ id: 'e3', name: 'Pollo', expirationDate: '2026-10-03', daysUntilExpiration: 1, priority: 'URGENT' })
+  const soon = item({ id: 'e4', name: 'Lechuga', expirationDate: '2026-10-07', daysUntilExpiration: 5, priority: 'SOON' })
+  const upcoming = item({ id: 'e5', name: 'Queso', expirationDate: '2026-10-10', daysUntilExpiration: 8, priority: 'UPCOMING' })
+  const fine = item({ id: 'e6', name: 'Arroz', expirationDate: '2027-03-01', daysUntilExpiration: 150, priority: 'OK' })
+  const undated = item({ id: 'e7', name: 'Sal' })
+
+  it('labels each item with how soon it should be eaten', async () => {
+    server([expired, today, urgent, soon, upcoming, fine, undated])
+    renderApp('/households/h1')
+
+    expect((await findRow('Leche')).getByText('Caducado · hace 3 días')).toBeInTheDocument()
+    expect(row('Yogur').getByText('Vence hoy')).toBeInTheDocument()
+    expect(row('Pollo').getByText('Urgente · queda 1 día')).toBeInTheDocument()
+    expect(row('Lechuga').getByText('Consumir pronto · quedan 5 días')).toBeInTheDocument()
+    expect(row('Queso').getByText('Próximo · quedan 8 días')).toBeInTheDocument()
+    // No badge when there is plenty of time, or no date at all.
+    expect(row('Arroz').queryByText(/quedan/)).not.toBeInTheDocument()
+    expect(row('Sal').queryByText(/quedan|Caducado|Urgente/)).not.toBeInTheDocument()
+  })
+
+  it('answers "what should I eat first?" at the top of the inventory', async () => {
+    server([expired, urgent, soon, fine], {
+      [CONSUME_FIRST]: () => ({ body: consumeFirst([expired, urgent, soon]) }),
+    })
+    renderApp('/households/h1')
+
+    const panel = within(await screen.findByRole('region', { name: /Consume primero/ }))
+    expect(panel.getByText('3 alimentos que no pueden esperar')).toBeInTheDocument()
+    expect(panel.getAllByRole('listitem').map((entry) => entry.textContent)).toEqual([
+      'Leche 1 udCaducado · hace 3 días',
+      'Pollo 1 udUrgente · queda 1 día',
+      'Lechuga 1 udConsumir pronto · quedan 5 días',
+    ])
+  })
+
+  it('shows the five most pressing and says how many more there are', async () => {
+    const many = Array.from({ length: 7 }, (_, index) =>
+      item({ id: `u${index}`, name: `Alimento ${index}`, daysUntilExpiration: 1, priority: 'URGENT' }),
+    )
+    server(many, { [CONSUME_FIRST]: () => ({ body: consumeFirst(many) }) })
+    renderApp('/households/h1')
+
+    const panel = within(await screen.findByRole('region', { name: /Consume primero/ }))
+    expect(panel.getAllByRole('listitem')).toHaveLength(5)
+    expect(panel.getByText('y 2 más')).toBeInTheDocument()
+  })
+
+  it('says nothing when no food needs attention', async () => {
+    server([fine, upcoming], { [CONSUME_FIRST]: () => ({ body: consumeFirst([fine, upcoming]) }) })
+    renderApp('/households/h1')
+
+    await findRow('Arroz')
+    expect(screen.queryByRole('region', { name: /Consume primero/ })).not.toBeInTheDocument()
+  })
+
+  it('is refreshed when the inventory changes', async () => {
+    let pressing: InventoryItem[] = [urgent]
+    const api = server([urgent], {
+      [CONSUME_FIRST]: () => ({ body: consumeFirst(pressing) }),
+      'POST /households/h1/inventory/e3/consume': () => {
+        pressing = []
+        return { body: urgent }
+      },
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1')
+    await screen.findByRole('region', { name: /Consume primero/ })
+
+    await user.click((await findRow('Pollo')).getByRole('button', { name: 'Consumir' }))
+    await user.click(row('Pollo').getByRole('button', { name: 'Confirmar' }))
+
+    await waitFor(() => expect(screen.queryByRole('region', { name: /Consume primero/ })).not.toBeInTheDocument())
+    expect(api.count(CONSUME_FIRST)).toBe(2)
   })
 })
 

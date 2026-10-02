@@ -7,5 +7,6 @@ export const queryKeys = {
   inventory: (householdId: string) => ['inventory', householdId] as const,
   inventoryList: (householdId: string, filter: InventoryFilter) => ['inventory', householdId, 'list', filter] as const,
   recentFoods: (householdId: string) => ['inventory', householdId, 'recent'] as const,
+  consumeFirst: (householdId: string) => ['inventory', householdId, 'consume-first'] as const,
   foodSearch: (text: string, lang: string) => ['foods', lang, text] as const,
 }
