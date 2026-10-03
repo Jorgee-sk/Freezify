@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/errors.dart';
 import '../../l10n/app_localizations.dart';
 import '../households/dialogs.dart';
 import '../inventory/inventory_format.dart';
+import '../plan/add_to_plan_sheet.dart';
+import '../plan/plan_wording.dart';
 import 'recipe_models.dart';
 import 'recipe_repository.dart';
 import 'recipe_wording.dart';
@@ -36,6 +39,23 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Future<void> _addToPlan() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    final place = await showAddToPlan(context, householdId: widget.householdId, recipeId: widget.recipeId);
+    if (place == null) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.planAdded(l10n.planMovePlace(weekdayAndDay(l10n, place.date), slotName(l10n, place.slot)))),
+        action: SnackBarAction(
+          label: l10n.planView,
+          onPressed: () => router.push('/households/${widget.householdId}/plan?week=${place.date}'),
+        ),
+      ),
+    );
   }
 
   @override
@@ -98,6 +118,8 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
             for (final (index, step) in recipe.steps.indexed)
               Padding(padding: const EdgeInsets.only(bottom: 8), child: Text('${index + 1}. $step')),
             const SizedBox(height: 16),
+            OutlinedButton(onPressed: _addToPlan, child: Text(l10n.planAdd)),
+            const SizedBox(height: 8),
             FilledButton(onPressed: _saving ? null : () => _markCooked(language), child: Text(l10n.markCooked)),
             const SizedBox(height: 8),
             Text(l10n.cookedHelp, style: muted),

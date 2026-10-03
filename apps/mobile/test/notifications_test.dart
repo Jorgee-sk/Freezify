@@ -149,13 +149,13 @@ void main() {
       await openNotifications(tester, backend);
 
       expect(find.text('Tienes 4 alimentos que deberías consumir pronto'), findsOneWidget);
-      expect(find.text('• Yogur caducó hace 1 día'), findsOneWidget);
-      expect(find.text('• Jamón caduca hoy'), findsOneWidget);
-      expect(find.text('• Leche caduca en 2 días'), findsOneWidget);
+      expect(find.text('• Yogur: su fecha de caducidad pasó hace 1 día'), findsOneWidget);
+      expect(find.text('• Jamón: su fecha de caducidad es hoy'), findsOneWidget);
+      expect(find.text('• Leche: quedan 2 días para su fecha de caducidad'), findsOneWidget);
       expect(find.text('y 1 más'), findsOneWidget);
       expect(find.text('Casa · 02/10/2026'), findsOneWidget);
 
-      expect(find.text('Brócoli caduca en 2 días'), findsOneWidget);
+      expect(find.text('Brócoli: quedan 2 días para su fecha de caducidad'), findsOneWidget);
       expect(find.text('Casa · 01/10/2026'), findsOneWidget);
       // Only the unread one is marked as new.
       expect(find.text('Nuevo'), findsOneWidget);
@@ -172,7 +172,10 @@ void main() {
         }),
       );
 
-      expect(find.text('Merluza caduca en aproximadamente 1 día (fecha estimada)'), findsOneWidget);
+      expect(
+        find.text('Merluza: queda aproximadamente 1 día para su fecha de caducidad (fecha estimada)'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('says so when there is nothing to show', (tester) async {
@@ -191,7 +194,7 @@ void main() {
       });
       await openNotifications(tester, backend);
 
-      await tester.tap(find.text('Leche caduca en 1 día'));
+      await tester.tap(find.text('Leche: queda 1 día para su fecha de caducidad'));
       await tester.pumpAndSettle();
 
       expect(find.text('Añadir alimento'), findsOneWidget);
@@ -207,7 +210,7 @@ void main() {
       });
       await openNotifications(tester, backend);
 
-      await tester.tap(find.text('Leche caduca en 1 día'));
+      await tester.tap(find.text('Leche: queda 1 día para su fecha de caducidad'));
       await tester.pumpAndSettle();
 
       expect(find.text('Añadir alimento'), findsOneWidget);
@@ -221,7 +224,7 @@ void main() {
       });
       await openNotifications(tester, backend);
 
-      await tester.tap(find.text('Leche caduca en 1 día'));
+      await tester.tap(find.text('Leche: queda 1 día para su fecha de caducidad'));
       await tester.pumpAndSettle();
 
       expect(find.text('Añadir alimento'), findsOneWidget);
@@ -366,12 +369,21 @@ void main() {
         NotifiedItem(name: 'Leche', expirationDate: '2026-10-03', estimated: estimated, daysUntilExpiration: days);
 
     test('says how long is left, or how long ago the date passed', () {
-      expect(itemSentence(es, food(3)), 'Leche caduca en 3 días');
-      expect(itemSentence(es, food(1)), 'Leche caduca en 1 día');
-      expect(itemSentence(es, food(0)), 'Leche caduca hoy');
-      expect(itemSentence(es, food(-1)), 'Leche caducó hace 1 día');
-      expect(itemSentence(es, food(-4)), 'Leche caducó hace 4 días');
-      expect(itemSentence(en, food(2)), 'Leche expires in 2 days');
+      expect(itemSentence(es, food(3)), 'Leche: quedan 3 días para su fecha de caducidad');
+      expect(itemSentence(es, food(1)), 'Leche: queda 1 día para su fecha de caducidad');
+      expect(itemSentence(es, food(0)), 'Leche: su fecha de caducidad es hoy');
+      expect(itemSentence(es, food(-1)), 'Leche: su fecha de caducidad pasó hace 1 día');
+      expect(itemSentence(es, food(-4)), 'Leche: su fecha de caducidad pasó hace 4 días');
+      expect(itemSentence(en, food(2)), 'Leche: 2 days left before the expiry date');
+    });
+
+    test('reads right whatever the number of the name', () {
+      NotifiedItem eggs(int days) =>
+          NotifiedItem(name: 'Huevos', expirationDate: '2026-10-03', estimated: false, daysUntilExpiration: days);
+
+      // Not "Huevos caduca hoy": no verb agrees with the name.
+      expect(itemSentence(es, eggs(0)), 'Huevos: su fecha de caducidad es hoy');
+      expect(itemSentence(es, eggs(2)), 'Huevos: quedan 2 días para su fecha de caducidad');
     });
 
     test('never presents an estimate as a fact', () {
@@ -379,7 +391,10 @@ void main() {
         expect(itemSentence(es, food(days, estimated: true)), contains('(fecha estimada)'));
         expect(itemSentence(en, food(days, estimated: true)), contains('(estimated date)'));
       }
-      expect(itemSentence(es, food(0, estimated: true)), 'Leche probablemente caduca hoy (fecha estimada)');
+      expect(
+        itemSentence(es, food(0, estimated: true)),
+        'Leche: su fecha de caducidad es probablemente hoy (fecha estimada)',
+      );
     });
 
     test('names the food when there is only one and counts several', () {
@@ -393,7 +408,7 @@ void main() {
         read: false,
       );
 
-      expect(notificationTitle(es, notification([food(2)], 1)), 'Leche caduca en 2 días');
+      expect(notificationTitle(es, notification([food(2)], 1)), 'Leche: quedan 2 días para su fecha de caducidad');
       expect(
         notificationTitle(es, notification([food(2), food(3)], 7)),
         'Tienes 7 alimentos que deberías consumir pronto',

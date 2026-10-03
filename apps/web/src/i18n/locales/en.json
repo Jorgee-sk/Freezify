@@ -83,7 +83,8 @@
     "NOTIFICATION_NOT_FOUND": "This notification no longer exists.",
     "RECIPE_NOT_FOUND": "This recipe does not exist.",
     "MEAL_NOT_FOUND": "That meal is no longer in the plan.",
-    "WEEK_IN_THE_PAST": "A week that is over cannot be planned."
+    "WEEK_IN_THE_PAST": "A week that is over cannot be planned.",
+    "CONCURRENT_MODIFICATION": "Someone else changed this at the same time. Reload and make the change again."
   },
   "inventory": {
     "title": "Inventory",
@@ -221,16 +222,16 @@
     "summary_one": "You have {{count}} food you should eat soon",
     "summary_other": "You have {{count}} foods you should eat soon",
     "item": {
-      "expired_one": "{{name}} expired {{count}} day ago",
-      "expired_other": "{{name}} expired {{count}} days ago",
-      "today": "{{name}} expires today",
-      "left_one": "{{name}} expires in {{count}} day",
-      "left_other": "{{name}} expires in {{count}} days",
-      "expiredEstimated_one": "{{name}} probably expired {{count}} day ago (estimated date)",
-      "expiredEstimated_other": "{{name}} probably expired {{count}} days ago (estimated date)",
-      "todayEstimated": "{{name}} probably expires today (estimated date)",
-      "leftEstimated_one": "{{name}} expires in about {{count}} day (estimated date)",
-      "leftEstimated_other": "{{name}} expires in about {{count}} days (estimated date)"
+      "expired_one": "{{name}}: the expiry date was {{count}} day ago",
+      "expired_other": "{{name}}: the expiry date was {{count}} days ago",
+      "today": "{{name}}: the expiry date is today",
+      "left_one": "{{name}}: {{count}} day left before the expiry date",
+      "left_other": "{{name}}: {{count}} days left before the expiry date",
+      "expiredEstimated_one": "{{name}}: the expiry date was probably {{count}} day ago (estimated date)",
+      "expiredEstimated_other": "{{name}}: the expiry date was probably {{count}} days ago (estimated date)",
+      "todayEstimated": "{{name}}: the expiry date is probably today (estimated date)",
+      "leftEstimated_one": "{{name}}: about {{count}} day left before the expiry date (estimated date)",
+      "leftEstimated_other": "{{name}}: about {{count}} days left before the expiry date (estimated date)"
     },
     "pref": {
       "enabled": "Tell me about food that is about to expire",
@@ -420,6 +421,14 @@
     "moveTitle": "Move to",
     "moveChoose": "Choose a day and a meal…",
     "movePlace": "{{day}} · {{slot}}",
-    "moveSwap": "{{place}} (swaps with {{recipe}})"
+    "moveSwap": "{{place}} (swaps with {{recipe}})",
+    "cooked": "Cooked",
+    "addTitle": "Add to the plan",
+    "addDay": "Day",
+    "addSlot": "Lunch or dinner",
+    "add": "Add to the plan",
+    "added": "Added to the plan: {{place}}.",
+    "addReplaces": "“{{recipe}}” is already there: it will be replaced.",
+    "view": "See the plan"
   }
 }

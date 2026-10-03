@@ -40,28 +40,36 @@ final class PushWording {
         return count == 1 ? "You have 1 food you should eat soon" : "You have " + count + " foods you should eat soon";
     }
 
+    /**
+     * Food names can be plural ("Huevos"), so no sentence makes a verb agree with the name: the name is followed
+     * by a colon and the sentence is about its date.
+     */
     private static String item(NotificationView.Item item, boolean spanish) {
         long days = item.daysUntilExpiration();
-        String name = item.name();
+        boolean estimated = item.estimated();
         String sentence;
         if (spanish) {
             if (days < 0) {
-                sentence = name + (item.estimated() ? " probablemente caducó hace " : " caducó hace ") + days(-days, true);
+                sentence = (estimated ? "su fecha de caducidad probablemente pasó hace " : "su fecha de caducidad pasó hace ")
+                        + days(-days, true);
             } else if (days == 0) {
-                sentence = name + (item.estimated() ? " probablemente caduca hoy" : " caduca hoy");
+                sentence = estimated ? "su fecha de caducidad es probablemente hoy" : "su fecha de caducidad es hoy";
             } else {
-                sentence = name + (item.estimated() ? " caduca en aproximadamente " : " caduca en ") + days(days, true);
+                sentence = (days == 1 ? "queda " : "quedan ")
+                        + (estimated ? "aproximadamente " : "")
+                        + days(days, true)
+                        + " para su fecha de caducidad";
             }
-            return item.estimated() ? sentence + " (fecha estimada)" : sentence;
+            return item.name() + ": " + sentence + (estimated ? " (fecha estimada)" : "");
         }
         if (days < 0) {
-            sentence = name + (item.estimated() ? " probably expired " : " expired ") + days(-days, false) + " ago";
+            sentence = (estimated ? "the expiry date was probably " : "the expiry date was ") + days(-days, false) + " ago";
         } else if (days == 0) {
-            sentence = name + (item.estimated() ? " probably expires today" : " expires today");
+            sentence = estimated ? "the expiry date is probably today" : "the expiry date is today";
         } else {
-            sentence = name + (item.estimated() ? " expires in about " : " expires in ") + days(days, false);
+            sentence = (estimated ? "about " : "") + days(days, false) + " left before the expiry date";
         }
-        return item.estimated() ? sentence + " (estimated date)" : sentence;
+        return item.name() + ": " + sentence + (estimated ? " (estimated date)" : "");
     }
 
     private static String days(long count, boolean spanish) {

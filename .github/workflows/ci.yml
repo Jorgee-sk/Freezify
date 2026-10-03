@@ -72,5 +72,10 @@ jobs:
     needs: [backend, web]
     steps:
       - uses: actions/checkout@v7
+      - name: Check docker-compose.yml
+        run: docker compose config --quiet
+        env:
+          FREEZIFY_DB_PASSWORD: ci-only
+          FREEZIFY_JWT_SECRET: ci-only-secret-ci-only-secret-ci-only
       - run: docker build -f infrastructure/docker/backend.Dockerfile -t freezify-backend .
       - run: docker build -f infrastructure/docker/web.Dockerfile -t freezify-web .

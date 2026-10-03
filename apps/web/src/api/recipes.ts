@@ -107,17 +107,20 @@ export interface RecipeFilter {
 }
 
 export const RECIPE_PAGE_SIZE = 20
+/** The whole catalog fits in one request, so pickers show every recipe at once. */
+export const ALL_RECIPES = 100
 /** Enough to hold every recipe that uses something at home, so that any recipe can be looked up in it. */
 export const ALL_RECOMMENDATIONS = 50
 
 export const recipesApi = {
   /** The catalog without what the household does not eat. */
-  list: (householdId: string, filter: RecipeFilter, lang: Locale) => {
+  /** `size` defaults to a page of the catalog; the most the server gives at once is 100. */
+  list: (householdId: string, filter: RecipeFilter, lang: Locale, size = RECIPE_PAGE_SIZE) => {
     const params = new URLSearchParams({
       household: householdId,
       lang,
       page: String(filter.page),
-      size: String(RECIPE_PAGE_SIZE),
+      size: String(size),
     })
     if (filter.text.trim()) params.set('q', filter.text.trim())
     if (filter.maxMinutes) params.set('maxMinutes', String(filter.maxMinutes))

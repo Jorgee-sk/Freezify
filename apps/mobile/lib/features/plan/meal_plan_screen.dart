@@ -9,6 +9,7 @@ import '../../core/providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../households/dialogs.dart';
 import '../realtime/household_event_stream.dart';
+import '../recipes/diet_models.dart';
 import '../recipes/recipe_models.dart';
 import '../recipes/recipe_repository.dart';
 import '../recipes/recipe_wording.dart';
@@ -20,9 +21,12 @@ enum _MealAction { change, move, remove }
 
 /// What the household plans to eat this week: one recipe per day for lunch and for dinner.
 class MealPlanScreen extends ConsumerStatefulWidget {
-  const MealPlanScreen({super.key, required this.householdId});
+  const MealPlanScreen({super.key, required this.householdId, this.initialWeek});
 
   final String householdId;
+
+  /// Any day of the week to show first; the week of today when null.
+  final String? initialWeek;
 
   @override
   ConsumerState<MealPlanScreen> createState() => _MealPlanScreenState();
@@ -30,7 +34,7 @@ class MealPlanScreen extends ConsumerStatefulWidget {
 
 class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
   /// Any day of the week on screen; null for the week of today.
-  String? _week;
+  late String? _week = widget.initialWeek;
   bool _busy = false;
   late final HouseholdEventStream _events;
 
@@ -86,6 +90,13 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
     await _change(() => _repository.choose(_householdId, place, recipeId));
   }
 
+  /// What was cooked is said on the day: the server records it as cooked today.
+  Future<void> _markCooked(PlannedMeal meal) => _change(() async {
+    await ref.read(recipeRepositoryProvider).markCooked(_householdId, meal.recipeId);
+    // Cooking something today makes it less of a novelty for the recommender.
+    ref.invalidate(recommendationsProvider);
+  });
+
   Future<void> _move(MealPlan plan, MealPlace from) async {
     final to = await showDialog<MealPlace>(
       context: context,
@@ -117,6 +128,7 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
     final theme = Theme.of(context);
     final MealPlanQuery query = (householdId: _householdId, week: _week, language: l10n.localeName);
     final plan = ref.watch(mealPlanProvider(query));
+    final diet = ref.watch(dietProvider(_householdId)).value;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.planTitle)),
@@ -158,7 +170,9 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
                   _DayCard(
                     plan: plan,
                     date: date,
+                    diet: diet,
                     busy: _busy,
+                    onMarkCooked: _markCooked,
                     onOpen: (meal) => context.push('/households/$_householdId/recipes/${meal.recipeId}'),
                     onChoose: _choose,
                     onMove: (place) => _move(plan, place),
@@ -284,7 +298,9 @@ class _DayCard extends StatelessWidget {
   const _DayCard({
     required this.plan,
     required this.date,
+    required this.diet,
     required this.busy,
+    required this.onMarkCooked,
     required this.onOpen,
     required this.onChoose,
     required this.onMove,
@@ -293,7 +309,11 @@ class _DayCard extends StatelessWidget {
 
   final MealPlan plan;
   final String date;
+
+  /// What the household does not eat, once known.
+  final Diet? diet;
   final bool busy;
+  final void Function(PlannedMeal meal) onMarkCooked;
   final void Function(PlannedMeal meal) onOpen;
   final void Function(MealPlace place) onChoose;
   final void Function(MealPlace place) onMove;
@@ -346,6 +366,10 @@ class _DayCard extends StatelessWidget {
         Row(
           children: [
             Expanded(child: Text(slotName(l10n, place.slot), style: muted)),
+            if (meal?.cooked ?? false) ...[
+              Text(l10n.planCooked, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.primary)),
+              const SizedBox(width: 8),
+            ],
             // Only what the generator chose is marked as a suggestion.
             if (meal?.origin == MealOrigin.generated) Text(l10n.planSuggested, style: theme.textTheme.labelSmall),
             if (meal != null)
@@ -381,8 +405,22 @@ class _DayCard extends StatelessWidget {
             ),
           ),
           Text('${l10n.recipeMinutes(meal.totalMinutes)} · ${difficultyName(l10n, meal.difficulty)}', style: muted),
+          // Generated meals never contain it; a recipe chosen by hand, or before the restrictions changed, might.
+          if (diet != null && diet!.conflictsWith(meal.contains).isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2, right: 8),
+              child: Text(
+                l10n.dietConflict(traitList(l10n, diet!.conflictsWith(meal.contains))),
+                style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.w600),
+              ),
+            ),
           for (final note in mealNotes(l10n, meal))
             Padding(padding: const EdgeInsets.only(top: 2, right: 8), child: Text('• $note')),
+          if (meal.date == plan.today && !meal.cooked)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(onPressed: busy ? null : () => onMarkCooked(meal), child: Text(l10n.markCooked)),
+            ),
         ],
       ],
     );

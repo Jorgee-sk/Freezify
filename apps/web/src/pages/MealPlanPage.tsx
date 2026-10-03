@@ -1,16 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { MEAL_SLOTS, mealPlanApi } from '../api/mealPlan'
 import type { Generated, MealPlan, MealSlot, PlannedMeal } from '../api/mealPlan'
 import { queryKeys } from '../api/queryKeys'
-import { recipesApi } from '../api/recipes'
+import { ALL_RECIPES, dietApi, recipesApi } from '../api/recipes'
+import type { Diet } from '../api/recipes'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { currentLocale } from '../i18n'
 import { useDebounced } from '../inventory/useDebounced'
 import { addDays, mealNotes, shortDay, unusedLine, weekDays, weekdayAndDay } from '../plan/wording'
 import { useMealPlanEvents } from '../realtime/useMealPlanEvents'
+import { conflicts, traitList } from '../recipes/diet'
 
 /** A meal of the week: a day and whether it is lunch or dinner. */
 interface Place {
@@ -26,8 +28,10 @@ export function MealPlanPage() {
   const { t } = useTranslation()
   const lang = currentLocale()
   const queryClient = useQueryClient()
+  // A link may ask for a week ("?week=2026-10-12"), as the recipe page does after adding a meal.
+  const [searchParams] = useSearchParams()
   /** Any day of the week on screen; null for the week of today. */
-  const [week, setWeek] = useState<string | null>(null)
+  const [week, setWeek] = useState<string | null>(searchParams.get('week'))
   const [picking, setPicking] = useState<Place | null>(null)
   const [moving, setMoving] = useState<Place | null>(null)
   const [generated, setGenerated] = useState<Generated | null>(null)
@@ -39,6 +43,7 @@ export function MealPlanPage() {
     staleTime: 0,
   })
   useMealPlanEvents(householdId, plan.isSuccess)
+  const diet = useQuery({ queryKey: queryKeys.diet(householdId), queryFn: () => dietApi.get(householdId) })
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.mealPlan(householdId) })
   const choose = useMutation({
@@ -58,6 +63,14 @@ export function MealPlanPage() {
     onSuccess: () => {
       setMoving(null)
       return refresh()
+    },
+  })
+  const markCooked = useMutation({
+    mutationFn: (recipeId: string) => recipesApi.markCooked(householdId, recipeId),
+    onSuccess: async () => {
+      await refresh()
+      // Cooking something today makes it less of a novelty for the recommender.
+      await queryClient.invalidateQueries({ queryKey: queryKeys.recipes })
     },
   })
   const generate = useMutation({
@@ -154,7 +167,7 @@ export function MealPlanPage() {
             </section>
           )}
 
-          <ErrorMessage error={choose.error ?? remove.error ?? move.error} />
+          <ErrorMessage error={choose.error ?? remove.error ?? move.error ?? markCooked.error} />
           <div className="plan-days">
             {weekDays(plan.data.weekStart).map((date) => (
               <section key={date} className="card plan-day" aria-label={weekdayAndDay(date)}>
@@ -169,7 +182,7 @@ export function MealPlanPage() {
                     <div key={slot} className="plan-meal" role="group" aria-label={t(`plan.slot.${slot}`)}>
                       <span className="muted small">{t(`plan.slot.${slot}`)}</span>
                       {meal ? (
-                        <PlannedMealView householdId={householdId} meal={meal} />
+                        <PlannedMealView householdId={householdId} meal={meal} diet={diet.data} />
                       ) : (
                         <span className="muted">{t('plan.empty')}</span>
                       )}
@@ -177,6 +190,17 @@ export function MealPlanPage() {
                         <button type="button" className="button small-button" onClick={() => setPicking(place)}>
                           {meal ? t('plan.change') : t('plan.choose')}
                         </button>
+                        {/* What was cooked is said on the day: the server records it as cooked today. */}
+                        {meal && meal.date === plan.data.today && !meal.cooked && (
+                          <button
+                            type="button"
+                            className="button small-button"
+                            disabled={markCooked.isPending}
+                            onClick={() => markCooked.mutate(meal.recipe.id)}
+                          >
+                            {t('recipes.markCooked')}
+                          </button>
+                        )}
                         {meal && (
                           <>
                             <button type="button" className="button small-button" onClick={() => setMoving(place)}>
@@ -222,17 +246,25 @@ export function MealPlanPage() {
   )
 }
 
-function PlannedMealView({ householdId, meal }: { householdId: string; meal: PlannedMeal }) {
+function PlannedMealView({ householdId, meal, diet }: { householdId: string; meal: PlannedMeal; diet?: Diet }) {
   const { t } = useTranslation()
   const notes = mealNotes(meal)
+  // Generated meals never contain it; a recipe chosen by hand, or before the restrictions changed, might.
+  const notEaten = diet ? conflicts(meal.recipe.contains, diet) : []
   return (
     <>
       <span className="recipe-heading">
         <Link to={`/households/${householdId}/recipes/${meal.recipe.id}`}>
           <strong>{meal.recipe.name}</strong>
         </Link>
+        {meal.cooked && <span className="badge badge-owner">{t('plan.cooked')}</span>}
         {meal.origin === 'GENERATED' && <span className="badge">{t('plan.generatedBadge')}</span>}
       </span>
+      {notEaten.length > 0 && (
+        <span role="alert" className="warning">
+          {t('diet.conflict', { traits: traitList(notEaten) })}
+        </span>
+      )}
       <span className="muted small">
         {t('recipes.minutes', { count: meal.recipe.totalMinutes })} · {t(`recipes.difficulty.${meal.recipe.difficulty}`)}
       </span>
@@ -265,8 +297,8 @@ function RecipePicker({
   const text = useDebounced(searchText, 300)
   const filter = { text, maxMinutes: null, course: null, page: 0 }
   const recipes = useQuery({
-    queryKey: queryKeys.recipeList(householdId, filter, lang),
-    queryFn: () => recipesApi.list(householdId, filter, lang),
+    queryKey: [...queryKeys.recipeList(householdId, filter, lang), ALL_RECIPES],
+    queryFn: () => recipesApi.list(householdId, filter, lang, ALL_RECIPES),
   })
 
   return (

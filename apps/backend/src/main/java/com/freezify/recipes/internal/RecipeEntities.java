@@ -226,6 +226,17 @@ interface CookedRecipeRepository extends JpaRepository<CookedRecipeEntity, UUID>
             + " where c.householdId = :householdId group by c.recipeId")
     Collection<LastCooked> lastCookedByRecipe(@Param("householdId") UUID householdId);
 
+    @Query("select c.recipeId as recipeId, c.cookedOn as cookedOn from CookedRecipeEntity c"
+            + " where c.householdId = :householdId and c.cookedOn between :from and :to")
+    Collection<CookedDay> cookedBetween(
+            @Param("householdId") UUID householdId, @Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    interface CookedDay {
+        UUID getRecipeId();
+
+        LocalDate getCookedOn();
+    }
+
     interface LastCooked {
         UUID getRecipeId();
 

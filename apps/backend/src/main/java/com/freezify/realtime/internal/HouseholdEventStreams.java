@@ -1,13 +1,16 @@
 package com.freezify.realtime.internal;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -29,16 +32,26 @@ public class HouseholdEventStreams {
     private record Subscriber(UUID userId, SseEmitter emitter) {}
 
     private final Map<UUID, List<Subscriber>> byHousehold = new ConcurrentHashMap<>();
-    private final Duration connectionTtl;
+    /** However soon the token expires, a connection is given this long. */
+    private static final Duration SHORTEST = Duration.ofSeconds(1);
 
-    HouseholdEventStreams(@Value("${freezify.realtime.connection-ttl}") Duration connectionTtl) {
+    private final Duration connectionTtl;
+    private final Clock clock;
+
+    HouseholdEventStreams(@Value("${freezify.realtime.connection-ttl}") Duration connectionTtl, Clock clock) {
         this.connectionTtl = connectionTtl;
+        this.clock = clock;
     }
 
-    /** The caller must have checked that the user belongs to the household. */
-    public SseEmitter open(UUID householdId, UUID userId) {
-        // Connections end on their own after a while, so that every client re-authenticates periodically.
-        SseEmitter emitter = new SseEmitter(connectionTtl.toMillis());
+    /**
+     * The caller must have checked that the user belongs to the household.
+     *
+     * @param tokenExpiresAt when the token the connection was opened with expires: the connection ends then
+     */
+    public SseEmitter open(UUID householdId, UUID userId, @Nullable Instant tokenExpiresAt) {
+        // Connections end on their own, at the latest when their token expires, so that a client keeps listening
+        // only for as long as it could still ask for the data.
+        SseEmitter emitter = new SseEmitter(lifetime(tokenExpiresAt).toMillis());
         Subscriber subscriber = new Subscriber(userId, emitter);
         Runnable forget = () -> remove(householdId, subscriber);
         emitter.onCompletion(forget);
@@ -51,6 +64,17 @@ public class HouseholdEventStreams {
 
         send(householdId, subscriber, SseEmitter.event().name("connected").data("{}"));
         return emitter;
+    }
+
+    Duration lifetime(@Nullable Instant tokenExpiresAt) {
+        if (tokenExpiresAt == null) {
+            return connectionTtl;
+        }
+        Duration untilExpiry = Duration.between(clock.instant(), tokenExpiresAt);
+        if (untilExpiry.compareTo(SHORTEST) < 0) {
+            return SHORTEST;
+        }
+        return untilExpiry.compareTo(connectionTtl) < 0 ? untilExpiry : connectionTtl;
     }
 
     public void publish(UUID householdId, String eventName) {

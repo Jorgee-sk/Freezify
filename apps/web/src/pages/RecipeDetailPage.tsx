@@ -10,6 +10,7 @@ import { currentLocale } from '../i18n'
 import { formatQuantity } from '../inventory/format'
 import { RecipeFacts } from '../recipes/RecipeFacts'
 import { conflicts, traitList } from '../recipes/diet'
+import { AddToPlan } from '../plan/AddToPlan'
 
 export function RecipeDetailPage() {
   const { householdId = '', recipeId = '' } = useParams()
@@ -109,6 +110,8 @@ export function RecipeDetailPage() {
           ))}
         </ol>
       </section>
+
+      <AddToPlan householdId={householdId} recipeId={recipeId} />
 
       <ErrorMessage error={markCooked.error} />
       <div className="button-row">

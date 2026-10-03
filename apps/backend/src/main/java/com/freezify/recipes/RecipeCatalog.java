@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -19,4 +20,9 @@ public interface RecipeCatalog {
 
     /** The last day the household cooked each recipe it ever cooked. */
     Map<UUID, LocalDate> lastCooked(UUID householdId);
+
+    /** What the household said it cooked between {@code from} and {@code to}, both included. */
+    Set<Cooked> cookedBetween(UUID householdId, LocalDate from, LocalDate to);
+
+    record Cooked(UUID recipeId, LocalDate day) {}
 }

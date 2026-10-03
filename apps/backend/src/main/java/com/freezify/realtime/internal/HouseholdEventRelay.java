@@ -4,6 +4,7 @@ import com.freezify.households.HouseholdEvents.HouseholdDeleted;
 import com.freezify.households.HouseholdEvents.MemberRemoved;
 import com.freezify.inventory.InventoryEvents.InventoryChanged;
 import com.freezify.mealplanning.MealPlanEvents.MealPlanChanged;
+import com.freezify.recipes.RecipeEvents.RecipeCooked;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -27,6 +28,12 @@ class HouseholdEventRelay {
 
     @TransactionalEventListener
     void on(MealPlanChanged event) {
+        streams.publish(event.householdId(), MEAL_PLAN_CHANGED);
+    }
+
+    /** The plan says which meals were cooked. */
+    @TransactionalEventListener
+    void on(RecipeCooked event) {
         streams.publish(event.householdId(), MEAL_PLAN_CHANGED);
     }
 

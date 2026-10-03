@@ -106,6 +106,7 @@ public class MealPlanService {
 
         List<StockItem> items = stock.of(householdId);
         Pantry pantry = pantryOf(items, now);
+        Set<RecipeCatalog.Cooked> cooked = recipes.cookedBetween(householdId, weekStart, weekEnd);
         // The first day each food is in a planned meal that uses an amount of it that cannot be counted.
         Map<UUID, LocalDate> uncountedUse = new HashMap<>();
         List<PlannedMeal> meals = new ArrayList<>();
@@ -140,7 +141,8 @@ public class MealPlanService {
                                 recipe.totalMinutes(),
                                 recipe.difficulty(),
                                 recipe.contains().stream().sorted().toList()),
-                        ingredients));
+                        ingredients,
+                        cooked.contains(new RecipeCatalog.Cooked(recipe.id(), entry.plannedOn()))));
             }
         }
         return new MealPlanView(
@@ -156,11 +158,8 @@ public class MealPlanService {
             throw ApiException.notFound("RECIPE_NOT_FOUND", "Recipe not found.");
         }
         boolean firstOfTheWeek = isEmptyWeek(householdId, date);
-        entries.findByHouseholdIdAndPlannedOnAndSlot(householdId, date, slot)
-                .ifPresentOrElse(
-                        entry -> entry.choose(recipeId, MealOrigin.MANUAL),
-                        () -> entries.save(new MealPlanEntryEntity(
-                                householdId, date, slot, recipeId, MealOrigin.MANUAL, userId)));
+        entries.chooseManually(
+                UUID.randomUUID(), householdId, date, slot.name(), recipeId, userId, today.now().toInstant());
         changed(householdId, userId, firstOfTheWeek);
     }
 
@@ -253,19 +252,21 @@ public class MealPlanService {
 
         List<Choice> choices = generator.generate(
                 empty, kept, candidates, pantryOf(stock.of(householdId), now), recipes.lastCooked(householdId), now);
+        int filled = 0;
         for (Choice choice : choices) {
-            entries.save(new MealPlanEntryEntity(
+            filled += entries.fillIfEmpty(
+                    UUID.randomUUID(),
                     householdId,
                     choice.meal().date(),
-                    choice.meal().slot(),
+                    choice.meal().slot().name(),
                     choice.recipe().id(),
-                    MealOrigin.GENERATED,
-                    userId));
+                    userId,
+                    today.now().toInstant());
         }
-        if (replaceGenerated || !choices.isEmpty()) {
-            changed(householdId, userId, firstOfTheWeek && !choices.isEmpty());
+        if (replaceGenerated || filled > 0) {
+            changed(householdId, userId, firstOfTheWeek && filled > 0);
         }
-        return new Generated(choices.size(), empty.size() - choices.size());
+        return new Generated(filled, empty.size() - filled);
     }
 
     private void changed(UUID householdId, UUID userId, boolean firstOfTheWeek) {

@@ -314,7 +314,7 @@
       }
     }
   },
-  "notifiedExpired": "{count, plural, =1{{name} expired {count} day ago} other{{name} expired {count} days ago}}",
+  "notifiedExpired": "{count, plural, =1{{name}: the expiry date was {count} day ago} other{{name}: the expiry date was {count} days ago}}",
   "@notifiedExpired": {
     "placeholders": {
       "name": {
@@ -325,7 +325,7 @@
       }
     }
   },
-  "notifiedToday": "{name} expires today",
+  "notifiedToday": "{name}: the expiry date is today",
   "@notifiedToday": {
     "placeholders": {
       "name": {
@@ -333,7 +333,7 @@
       }
     }
   },
-  "notifiedLeft": "{count, plural, =1{{name} expires in {count} day} other{{name} expires in {count} days}}",
+  "notifiedLeft": "{count, plural, =1{{name}: {count} day left before the expiry date} other{{name}: {count} days left before the expiry date}}",
   "@notifiedLeft": {
     "placeholders": {
       "name": {
@@ -344,7 +344,7 @@
       }
     }
   },
-  "notifiedExpiredEstimated": "{count, plural, =1{{name} probably expired {count} day ago (estimated date)} other{{name} probably expired {count} days ago (estimated date)}}",
+  "notifiedExpiredEstimated": "{count, plural, =1{{name}: the expiry date was probably {count} day ago (estimated date)} other{{name}: the expiry date was probably {count} days ago (estimated date)}}",
   "@notifiedExpiredEstimated": {
     "placeholders": {
       "name": {
@@ -355,7 +355,7 @@
       }
     }
   },
-  "notifiedTodayEstimated": "{name} probably expires today (estimated date)",
+  "notifiedTodayEstimated": "{name}: the expiry date is probably today (estimated date)",
   "@notifiedTodayEstimated": {
     "placeholders": {
       "name": {
@@ -363,7 +363,7 @@
       }
     }
   },
-  "notifiedLeftEstimated": "{count, plural, =1{{name} expires in about {count} day (estimated date)} other{{name} expires in about {count} days (estimated date)}}",
+  "notifiedLeftEstimated": "{count, plural, =1{{name}: about {count} day left before the expiry date (estimated date)} other{{name}: about {count} days left before the expiry date (estimated date)}}",
   "@notifiedLeftEstimated": {
     "placeholders": {
       "name": {
@@ -761,5 +761,26 @@
     }
   },
   "errorMealNotFound": "That meal is no longer in the plan.",
-  "errorWeekInThePast": "A week that is over cannot be planned."
+  "errorWeekInThePast": "A week that is over cannot be planned.",
+  "planCooked": "Cooked",
+  "planAddTitle": "Add to the plan",
+  "planAddDay": "Day",
+  "planAdd": "Add to the plan",
+  "planAdded": "Added to the plan: {place}.",
+  "@planAdded": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "planAddReplaces": "“{recipe}” is already there: it will be replaced.",
+  "@planAddReplaces": {
+    "placeholders": {
+      "recipe": {
+        "type": "String"
+      }
+    }
+  },
+  "planView": "See the plan"
 }

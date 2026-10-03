@@ -14,14 +14,23 @@ class PushWordingTests {
 
     @Test
     void namesASingleFoodAndSaysHowLongIsLeft() {
-        assertThat(body("es", food(3, false))).isEqualTo("Leche caduca en 3 días");
-        assertThat(body("es", food(1, false))).isEqualTo("Leche caduca en 1 día");
-        assertThat(body("es", food(0, false))).isEqualTo("Leche caduca hoy");
-        assertThat(body("es", food(-1, false))).isEqualTo("Leche caducó hace 1 día");
-        assertThat(body("es", food(-4, false))).isEqualTo("Leche caducó hace 4 días");
-        assertThat(body("en", food(3, false))).isEqualTo("Leche expires in 3 days");
-        assertThat(body("en", food(0, false))).isEqualTo("Leche expires today");
-        assertThat(body("en", food(-1, false))).isEqualTo("Leche expired 1 day ago");
+        assertThat(body("es", food(3, false))).isEqualTo("Leche: quedan 3 días para su fecha de caducidad");
+        assertThat(body("es", food(1, false))).isEqualTo("Leche: queda 1 día para su fecha de caducidad");
+        assertThat(body("es", food(0, false))).isEqualTo("Leche: su fecha de caducidad es hoy");
+        assertThat(body("es", food(-1, false))).isEqualTo("Leche: su fecha de caducidad pasó hace 1 día");
+        assertThat(body("es", food(-4, false))).isEqualTo("Leche: su fecha de caducidad pasó hace 4 días");
+        assertThat(body("en", food(3, false))).isEqualTo("Leche: 3 days left before the expiry date");
+        assertThat(body("en", food(0, false))).isEqualTo("Leche: the expiry date is today");
+        assertThat(body("en", food(-1, false))).isEqualTo("Leche: the expiry date was 1 day ago");
+    }
+
+    @Test
+    void readsRightWhateverTheNumberOfTheName() {
+        NotificationView.Item eggs = new NotificationView.Item("Huevos", DAY, false, 0);
+
+        // Not "Huevos caduca hoy": no verb agrees with the name.
+        assertThat(body("es", eggs)).isEqualTo("Huevos: su fecha de caducidad es hoy");
+        assertThat(body("en", eggs)).isEqualTo("Huevos: the expiry date is today");
     }
 
     @Test
@@ -30,9 +39,9 @@ class PushWordingTests {
             assertThat(body("es", food(days, true))).endsWith("(fecha estimada)");
             assertThat(body("en", food(days, true))).endsWith("(estimated date)");
         }
-        assertThat(body("es", food(1, true))).isEqualTo("Leche caduca en aproximadamente 1 día (fecha estimada)");
-        assertThat(body("es", food(0, true))).isEqualTo("Leche probablemente caduca hoy (fecha estimada)");
-        assertThat(body("en", food(-2, true))).isEqualTo("Leche probably expired 2 days ago (estimated date)");
+        assertThat(body("es", food(1, true))).isEqualTo("Leche: queda aproximadamente 1 día para su fecha de caducidad (fecha estimada)");
+        assertThat(body("es", food(0, true))).isEqualTo("Leche: su fecha de caducidad es probablemente hoy (fecha estimada)");
+        assertThat(body("en", food(-2, true))).isEqualTo("Leche: the expiry date was probably 2 days ago (estimated date)");
     }
 
     @Test
@@ -46,7 +55,7 @@ class PushWordingTests {
 
     @Test
     void speaksEnglishToLanguagesItDoesNotKnow() {
-        assertThat(body("fr", food(0, false))).isEqualTo("Leche expires today");
+        assertThat(body("fr", food(0, false))).isEqualTo("Leche: the expiry date is today");
     }
 
     @Test

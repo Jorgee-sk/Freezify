@@ -89,14 +89,14 @@ describe('notifications', () => {
     const several = within(
       (await list.findByText('Tienes 4 alimentos que deberías consumir pronto')).closest('a')!,
     )
-    expect(several.getByText('Yogur caducó hace 1 día')).toBeInTheDocument()
-    expect(several.getByText('Jamón caduca hoy')).toBeInTheDocument()
-    expect(several.getByText('Leche caduca en 2 días')).toBeInTheDocument()
+    expect(several.getByText('Yogur: su fecha de caducidad pasó hace 1 día')).toBeInTheDocument()
+    expect(several.getByText('Jamón: su fecha de caducidad es hoy')).toBeInTheDocument()
+    expect(several.getByText('Leche: quedan 2 días para su fecha de caducidad')).toBeInTheDocument()
     expect(several.getByText('y 1 más')).toBeInTheDocument()
     expect(several.getByText('Casa · 02/10/2026')).toBeInTheDocument()
     expect(several.getByText('Nuevo')).toBeInTheDocument()
 
-    const single = within(list.getByText('Brócoli caduca en 2 días').closest('a')!)
+    const single = within(list.getByText('Brócoli: quedan 2 días para su fecha de caducidad').closest('a')!)
     expect(single.getByText('Casa · 01/10/2026')).toBeInTheDocument()
     expect(single.queryByText('Nuevo')).not.toBeInTheDocument()
     expect(single.queryByRole('listitem')).not.toBeInTheDocument()
@@ -107,7 +107,7 @@ describe('notifications', () => {
     renderApp('/notifications')
 
     expect(
-      await screen.findByText('Merluza caduca en aproximadamente 1 día (fecha estimada)'),
+      await screen.findByText('Merluza: queda aproximadamente 1 día para su fecha de caducidad (fecha estimada)'),
     ).toBeInTheDocument()
   })
 
@@ -132,7 +132,7 @@ describe('notifications', () => {
     const user = userEvent.setup()
     renderApp('/notifications')
 
-    await user.click(await screen.findByRole('link', { name: /Leche caduca en 1 día/ }))
+    await user.click(await screen.findByRole('link', { name: /Leche: queda 1 día para su fecha de caducidad/ }))
 
     expect(await screen.findByRole('heading', { name: 'Inventario' })).toBeInTheDocument()
     expect(api.count('POST /notifications/n1/read')).toBe(1)
@@ -150,7 +150,7 @@ describe('notifications', () => {
     const user = userEvent.setup()
     renderApp('/notifications')
 
-    await user.click(await screen.findByRole('link', { name: /Leche caduca en 1 día/ }))
+    await user.click(await screen.findByRole('link', { name: /Leche: queda 1 día para su fecha de caducidad/ }))
 
     expect(await screen.findByRole('heading', { name: 'Inventario' })).toBeInTheDocument()
     expect(api.count('POST /notifications/n1/read')).toBe(0)

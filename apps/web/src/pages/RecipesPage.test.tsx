@@ -2,7 +2,9 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { MatchedIngredient, Recommendation, RecipeDetail, RecipeSummary } from '../api/recipes'
-import { fakeApi, problem } from '../test/fakeApi'
+import { todayIso } from '../inventory/format'
+import { addDays, weekdayAndDay } from '../plan/wording'
+import { eventStream, fakeApi, problem } from '../test/fakeApi'
 import { ANA, CASA, renderApp, signedIn } from '../test/renderApp'
 
 const CATALOG = 'GET /recipes'
@@ -102,6 +104,19 @@ describe('recipes', () => {
     expect(screen.getByRole('link', { name: /Volver al inventario/ })).toHaveAttribute('href', '/households/h1')
   })
 
+  it('recommends again when another member changes the inventory', async () => {
+    const stream = eventStream()
+    const api = server({ 'GET /households/h1/events': () => ({ response: stream.response }) })
+    renderApp('/households/h1/recipes')
+    await screen.findByText('Qué cocinar con lo que tienes')
+    await waitFor(() => expect(api.count('GET /households/h1/events')).toBe(1))
+    const before = api.count(RECOMMENDATIONS)
+
+    stream.send('inventory-changed')
+
+    await waitFor(() => expect(api.count(RECOMMENDATIONS)).toBeGreaterThan(before))
+  })
+
   it('says so when nothing at home can be cooked', async () => {
     server({ [RECOMMENDATIONS]: () => ({ body: [] }) })
     renderApp('/households/h1/recipes')
@@ -170,6 +185,68 @@ describe('recipes', () => {
     renderApp('/households/h1/recipes')
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Este hogar no existe o ya no perteneces a él.')
+  })
+})
+
+describe('adding a recipe to the plan', () => {
+  const today = todayIso()
+  const PLAN = 'GET /households/h1/meal-plan'
+  const plannedDinner = {
+    id: 'm1',
+    date: today,
+    slot: 'DINNER',
+    origin: 'MANUAL',
+    recipe: { id: 'r2', name: 'Tortilla de patatas', servings: 4, totalMinutes: 40, difficulty: 'MEDIUM', contains: [] },
+    ingredients: [],
+    cooked: false,
+  }
+  const week = (meals: unknown[]) => ({
+    body: { weekStart: today, weekEnd: addDays(today, 6), today, meals, unusedExpiring: [] },
+  })
+
+  it('says what it would replace, adds it and links to that week of the plan', async () => {
+    const api = server({
+      'GET /recipes/r1': () => ({ body: PASTA_DETAIL }),
+      [PLAN]: () => week([plannedDinner]),
+      [`PUT /households/h1/meal-plan/${today}/DINNER`]: () => ({ status: 204 }),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1/recipes/r1')
+
+    const form = within(await screen.findByRole('form', { name: 'Añadir al plan' }))
+    expect(form.getByRole('combobox', { name: 'Día' })).toHaveValue(today)
+    expect(form.getByRole('combobox', { name: 'Comida o cena' })).toHaveValue('DINNER')
+    expect(await form.findByText('Ahí ya está «Tortilla de patatas»: se sustituirá.')).toBeInTheDocument()
+
+    await user.click(form.getByRole('button', { name: 'Añadir al plan' }))
+
+    const status = await form.findByRole('status')
+    expect(status).toHaveTextContent(`Añadida al plan: ${weekdayAndDay(today)} · Cena.`)
+    expect(within(status).getByRole('link', { name: 'Ver el plan' })).toHaveAttribute(
+      'href',
+      `/households/h1/plan?week=${today}`,
+    )
+    expect(api.last(`PUT /households/h1/meal-plan/${today}/DINNER`)?.body).toEqual({ recipeId: 'r1' })
+  })
+
+  it('adds it to another day and meal, with nothing to replace there', async () => {
+    const tomorrow = addDays(today, 1)
+    const api = server({
+      'GET /recipes/r1': () => ({ body: PASTA_DETAIL }),
+      [PLAN]: () => week([plannedDinner]),
+      [`PUT /households/h1/meal-plan/${tomorrow}/LUNCH`]: () => ({ status: 204 }),
+    })
+    const user = userEvent.setup()
+    renderApp('/households/h1/recipes/r1')
+
+    const form = within(await screen.findByRole('form', { name: 'Añadir al plan' }))
+    await user.selectOptions(form.getByRole('combobox', { name: 'Día' }), tomorrow)
+    await user.selectOptions(form.getByRole('combobox', { name: 'Comida o cena' }), 'LUNCH')
+    expect(form.queryByText(/se sustituirá/)).not.toBeInTheDocument()
+    await user.click(form.getByRole('button', { name: 'Añadir al plan' }))
+
+    await form.findByRole('status')
+    expect(api.count(`PUT /households/h1/meal-plan/${tomorrow}/LUNCH`)).toBe(1)
   })
 })
 

@@ -2,8 +2,8 @@ import type { AppNotification, NotifiedItem } from '../api/notifications'
 import i18n from '../i18n'
 
 /**
- * "Leche caduca en 2 días". An estimated date is always worded as an estimate: it is the app's guess, not what
- * the package says.
+ * "Leche: quedan 2 días para su fecha de caducidad". Sentences do not depend on the number of the name
+ * ("Huevos"). An estimated date is always worded as an estimate: it is the app's guess, not what the package says.
  */
 export function itemSentence(item: NotifiedItem): string {
   const days = item.daysUntilExpiration

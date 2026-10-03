@@ -657,6 +657,16 @@ summary {
   overflow-y: auto;
 }
 
+.plan-add {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.plan-add p {
+  margin: 0;
+}
+
 .plan-picker li {
   display: flex;
   align-items: center;

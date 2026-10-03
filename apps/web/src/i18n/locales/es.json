@@ -83,7 +83,8 @@
     "NOTIFICATION_NOT_FOUND": "Este aviso ya no existe.",
     "RECIPE_NOT_FOUND": "Esta receta no existe.",
     "MEAL_NOT_FOUND": "Esa comida ya no está en el plan.",
-    "WEEK_IN_THE_PAST": "No se puede planificar una semana que ya ha pasado."
+    "WEEK_IN_THE_PAST": "No se puede planificar una semana que ya ha pasado.",
+    "CONCURRENT_MODIFICATION": "Otra persona ha cambiado esto a la vez. Vuelve a cargar y repite el cambio."
   },
   "inventory": {
     "title": "Inventario",
@@ -221,16 +222,16 @@
     "summary_one": "Tienes {{count}} alimento que deberías consumir pronto",
     "summary_other": "Tienes {{count}} alimentos que deberías consumir pronto",
     "item": {
-      "expired_one": "{{name}} caducó hace {{count}} día",
-      "expired_other": "{{name}} caducó hace {{count}} días",
-      "today": "{{name}} caduca hoy",
-      "left_one": "{{name}} caduca en {{count}} día",
-      "left_other": "{{name}} caduca en {{count}} días",
-      "expiredEstimated_one": "{{name}} probablemente caducó hace {{count}} día (fecha estimada)",
-      "expiredEstimated_other": "{{name}} probablemente caducó hace {{count}} días (fecha estimada)",
-      "todayEstimated": "{{name}} probablemente caduca hoy (fecha estimada)",
-      "leftEstimated_one": "{{name}} caduca en aproximadamente {{count}} día (fecha estimada)",
-      "leftEstimated_other": "{{name}} caduca en aproximadamente {{count}} días (fecha estimada)"
+      "expired_one": "{{name}}: su fecha de caducidad pasó hace {{count}} día",
+      "expired_other": "{{name}}: su fecha de caducidad pasó hace {{count}} días",
+      "today": "{{name}}: su fecha de caducidad es hoy",
+      "left_one": "{{name}}: queda {{count}} día para su fecha de caducidad",
+      "left_other": "{{name}}: quedan {{count}} días para su fecha de caducidad",
+      "expiredEstimated_one": "{{name}}: su fecha de caducidad probablemente pasó hace {{count}} día (fecha estimada)",
+      "expiredEstimated_other": "{{name}}: su fecha de caducidad probablemente pasó hace {{count}} días (fecha estimada)",
+      "todayEstimated": "{{name}}: su fecha de caducidad es probablemente hoy (fecha estimada)",
+      "leftEstimated_one": "{{name}}: queda aproximadamente {{count}} día para su fecha de caducidad (fecha estimada)",
+      "leftEstimated_other": "{{name}}: quedan aproximadamente {{count}} días para su fecha de caducidad (fecha estimada)"
     },
     "pref": {
       "enabled": "Avisarme de los alimentos que van a caducar",
@@ -420,6 +421,14 @@
     "moveTitle": "Mover a",
     "moveChoose": "Elige día y comida…",
     "movePlace": "{{day}} · {{slot}}",
-    "moveSwap": "{{place}} (se intercambia con {{recipe}})"
+    "moveSwap": "{{place}} (se intercambia con {{recipe}})",
+    "cooked": "Cocinada",
+    "addTitle": "Añadir al plan",
+    "addDay": "Día",
+    "addSlot": "Comida o cena",
+    "add": "Añadir al plan",
+    "added": "Añadida al plan: {{place}}.",
+    "addReplaces": "Ahí ya está «{{recipe}}»: se sustituirá.",
+    "view": "Ver el plan"
   }
 }

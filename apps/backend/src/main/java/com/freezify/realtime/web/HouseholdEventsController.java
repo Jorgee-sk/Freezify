@@ -40,6 +40,6 @@ class HouseholdEventsController {
         response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
         // Tells nginx to pass events through as they are written instead of buffering them.
         response.setHeader("X-Accel-Buffering", "no");
-        return streams.open(householdId, userId);
+        return streams.open(householdId, userId, jwt.getExpiresAt());
     }
 }

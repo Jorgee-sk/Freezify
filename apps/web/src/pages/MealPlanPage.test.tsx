@@ -54,6 +54,7 @@ const PASTA: PlannedMeal = {
       estimated: false,
     },
   ],
+  cooked: false,
 }
 const CHICKEN: PlannedMeal = {
   id: 'm2',
@@ -62,6 +63,7 @@ const CHICKEN: PlannedMeal = {
   origin: 'GENERATED',
   recipe: { id: 'r2', name: 'Pollo a la plancha con brócoli', servings: 2, totalMinutes: 25, difficulty: 'EASY', contains: ['MEAT'] },
   ingredients: [],
+  cooked: false,
 }
 
 function week(changes: Partial<MealPlan> = {}): MealPlan {
@@ -81,6 +83,7 @@ function server(routes: Parameters<typeof fakeApi>[0] = {}) {
     'GET /users/me': () => ({ body: ANA }),
     'GET /households/h1': () => ({ body: CASA }),
     [PLAN]: () => ({ body: week() }),
+    'GET /households/h1/diet': () => ({ body: { type: 'NONE', avoided: [] } }),
     [CATALOG]: () => ({
       body: {
         items: [recipe('r1', 'Pasta con calabacín y tomate'), recipe('r3', 'Tortilla de patatas')],
@@ -193,6 +196,63 @@ describe('meal plan', () => {
     // Only recipes the household eats are offered.
     expect(api.last(CATALOG)?.query.get('household')).toBe('h1')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('offers every recipe the household eats, not only a first page', async () => {
+    const api = server()
+    const user = userEvent.setup()
+    await openPlan()
+
+    await user.click(meal('lunes 5 oct', 'Comida').getByRole('button', { name: 'Elegir receta' }))
+
+    await waitFor(() => expect(api.last(CATALOG)?.query.get('size')).toBe('100'))
+  })
+
+  it('warns when a meal contains what the household does not eat', async () => {
+    server({
+      [PLAN]: () => ({ body: week({ meals: [PASTA, CHICKEN] }) }),
+      'GET /households/h1/diet': () => ({ body: { type: 'VEGETARIAN', avoided: [] } }),
+    })
+    await openPlan()
+
+    expect(
+      await meal('martes 6 oct', 'Cena').findByText('Esta receta contiene algo que en este hogar no se come: carne.'),
+    ).toBeInTheDocument()
+    expect(meal('lunes 5 oct', 'Comida').queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('says the household cooked a meal of today, and lets it say so', async () => {
+    let cooked = false
+    const api = server({
+      [PLAN]: () => ({ body: week({ meals: [{ ...PASTA, cooked }, CHICKEN] }) }),
+      'POST /households/h1/recipes/r1/cooked': () => {
+        cooked = true
+        return { status: 204 }
+      },
+    })
+    const user = userEvent.setup()
+    await openPlan()
+
+    // Only today's meals can be said to be cooked: the server records it as cooked today.
+    expect(meal('martes 6 oct', 'Cena').queryByRole('button', { name: 'La he cocinado' })).not.toBeInTheDocument()
+    await user.click(meal('lunes 5 oct', 'Comida').getByRole('button', { name: 'La he cocinado' }))
+
+    expect(await meal('lunes 5 oct', 'Comida').findByText('Cocinada')).toBeInTheDocument()
+    expect(meal('lunes 5 oct', 'Comida').queryByRole('button', { name: 'La he cocinado' })).not.toBeInTheDocument()
+    expect(api.count('POST /households/h1/recipes/r1/cooked')).toBe(1)
+  })
+
+  it('opens the week a link asks for', async () => {
+    const api = server({
+      [PLAN]: (_, { query }) =>
+        query.get('week') === '2026-10-14'
+          ? { body: week({ weekStart: '2026-10-12', weekEnd: '2026-10-18' }) }
+          : { body: week() },
+    })
+    renderApp('/households/h1/plan?week=2026-10-14')
+
+    expect(await screen.findByText('12 oct – 18 oct')).toBeInTheDocument()
+    expect(api.last(PLAN)?.query.get('week')).toBe('2026-10-14')
   })
 
   it('searches among the recipes to choose from', async () => {

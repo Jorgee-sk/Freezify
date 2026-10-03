@@ -61,7 +61,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: 'plan',
-                builder: (_, state) => MealPlanScreen(householdId: state.pathParameters['id']!),
+                builder: (_, state) => MealPlanScreen(
+                  householdId: state.pathParameters['id']!,
+                  initialWeek: state.uri.queryParameters['week'],
+                ),
               ),
               GoRoute(
                 path: 'diet',

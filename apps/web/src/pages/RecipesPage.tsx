@@ -1,5 +1,5 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { COURSES, TIME_LIMITS, dietApi, recipesApi } from '../api/recipes'
@@ -11,6 +11,7 @@ import { useDebounced } from '../inventory/useDebounced'
 import { RecipeFacts } from '../recipes/RecipeFacts'
 import { dietSummary } from '../recipes/diet'
 import { reasons } from '../recipes/explain'
+import { subscribeToHousehold } from '../realtime/householdEvents'
 
 /** How many recommendations are shown before the catalog. */
 const SHOWN_RECOMMENDATIONS = 5
@@ -39,6 +40,17 @@ export function RecipesPage() {
   })
 
   const diet = useQuery({ queryKey: queryKeys.diet(householdId), queryFn: () => dietApi.get(householdId) })
+
+  // Recommendations depend on the inventory: whatever another member changes shows up without reloading.
+  const queryClient = useQueryClient()
+  const listening = recommendations.isSuccess
+  useEffect(() => {
+    if (!listening) return
+    return subscribeToHousehold(householdId, (event) => {
+      if (event === 'meal-plan-changed') return
+      void queryClient.invalidateQueries({ queryKey: queryKeys.recommendations(householdId, lang) })
+    })
+  }, [householdId, lang, listening, queryClient])
   const restrictions = diet.data ? dietSummary(diet.data) : null
 
   /** Any change of filter starts again from the first page. */
