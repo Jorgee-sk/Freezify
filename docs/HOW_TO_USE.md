@@ -147,13 +147,50 @@ Para probarlo en un móvil Android (todavía sin hacer):
 
 La web no recibe push.
 
-### 2.5 Probar la API a mano
+### 2.5 IA para leer tickets (opcional)
+
+Sin configurar nada, el escaneo de tickets funciona: el móvil lee la foto con ML Kit y el backend reconoce
+los productos con reglas. Un modelo de lenguaje lee mejor los tickets difíciles, y hay dos formas gratuitas
+de tenerlo. En las dos, el backend solo envía el texto del ticket, con los números largos tapados.
+
+**Gemini (capa gratuita de Google)**, la más sencilla:
+
+1. Entra en Google AI Studio (<https://aistudio.google.com>) con tu cuenta de Google y crea una clave de la API.
+2. Arranca el backend con estas variables, en PowerShell:
+
+   ```powershell
+   $env:FREEZIFY_AI_PROVIDER = "openai-compatible"
+   $env:FREEZIFY_AI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+   $env:FREEZIFY_AI_API_KEY = "<tu clave>"
+   $env:FREEZIFY_AI_MODEL = "gemini-2.5-flash"
+   ./mvnw spring-boot:test-run
+   ```
+
+   El modelo es un ejemplo: en AI Studio se ve qué modelos ofrece la capa gratuita en cada momento.
+3. Al arrancar debe aparecer `Language model gemini-2.5-flash at generativelanguage.googleapis.com`. En la
+   revisión de un ticket leído así aparece "Leído con ayuda de IA".
+
+> ⚠️ En la capa gratuita, Google puede usar lo que se le envía para mejorar sus productos, y tiene límites de
+> peticiones por minuto y por día. Vale para probar con tus tickets; para usuarios reales usa la capa de
+> pago o Ollama. La clave es un secreto: no la escribas en ficheros del repositorio.
+
+**Ollama (un modelo en tu ordenador)**: gratis y privado, pero necesita un ordenador con bastante memoria.
+Instala Ollama, descarga un modelo que admita salida estructurada (por ejemplo `ollama pull qwen2.5:7b`) y
+arranca el backend con `FREEZIFY_AI_PROVIDER=openai-compatible`, `FREEZIFY_AI_BASE_URL=http://localhost:11434/v1`
+y `FREEZIFY_AI_MODEL=qwen2.5:7b`, sin clave.
+
+Cada persona puede provocar 30 llamadas al día (`FREEZIFY_AI_DAILY_CALLS_PER_USER`). Si el modelo falla,
+tarda más de 12 s o responde algo que no valida, el ticket se lee con las reglas.
+
+> 🟡 Esto solo se ha probado contra un servidor que imita la API de OpenAI, no contra Gemini ni Ollama reales.
+
+### 2.6 Probar la API a mano
 
 - **Swagger UI**: <http://localhost:8080/swagger-ui.html>. Regístrate con `POST /auth/register`, copia el
   `accessToken` de la respuesta, pulsa **Authorize** y pégalo. El token dura 15 minutos.
 - **Health**: <http://localhost:8080/actuator/health>.
 
-### 2.6 Tests
+### 2.7 Tests
 
 ```bash
 cd apps/backend
@@ -228,6 +265,7 @@ psql -h localhost -p 54329 -U postgres postgres
 | `food_items` | El inventario de cada hogar |
 | `food_outcomes` | Cada consumo o descarte, con su valor estimado |
 | `product_events` | Eventos de producto para métricas |
+| `receipt_aliases` | Cómo llaman los tickets a cada alimento: abreviaturas compartidas y lo que aprende cada hogar al revisar sus tickets |
 | `flyway_schema_history` | Qué migraciones se han aplicado |
 
 Consultas útiles:
@@ -294,6 +332,9 @@ FREEZIFY_FCM_CREDENTIALS_FILE_IN_CONTAINER=/run/secrets/freezify/firebase-servic
 6. La cookie de sesión de la web solo viaja por HTTPS. Si pruebas con Docker en `http://localhost:3000`, sin
    HTTPS, añade `FREEZIFY_REFRESH_COOKIE_SECURE=false` a `.env` o la sesión no sobrevivirá a una recarga. En un
    despliegue real, con HTTPS, no la pongas.
+
+7. Opcional: un modelo de lenguaje para leer tickets, con las mismas variables `FREEZIFY_AI_*` de la sección
+   2.5. Desde el contenedor, un Ollama de tu ordenador está en `http://host.docker.internal:11434/v1`.
 
 ### 4.2 Arrancar
 

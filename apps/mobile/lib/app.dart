@@ -16,6 +16,7 @@ import 'features/plan/meal_plan_screen.dart';
 import 'features/recipes/diet_screen.dart';
 import 'features/recipes/recipe_detail_screen.dart';
 import 'features/recipes/recipes_screen.dart';
+import 'features/scanning/scan_receipt_screen.dart';
 import 'features/shopping/shopping_list_screen.dart';
 import 'l10n/app_localizations.dart';
 
@@ -70,6 +71,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'shopping',
                 builder: (_, state) => ShoppingListScreen(householdId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: 'scan',
+                builder: (_, state) => ScanReceiptScreen(householdId: state.pathParameters['id']!),
               ),
               GoRoute(
                 path: 'diet',

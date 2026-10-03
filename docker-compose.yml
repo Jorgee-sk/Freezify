@@ -34,6 +34,12 @@ services:
       FREEZIFY_API_DOCS: ${FREEZIFY_API_DOCS:-false}
       # The web's session cookie is only sent over HTTPS; false only to try it over plain http.
       FREEZIFY_REFRESH_COOKIE_SECURE: ${FREEZIFY_REFRESH_COOKIE_SECURE:-true}
+      # Optional language model for receipts; "none" reads them by rules only.
+      FREEZIFY_AI_PROVIDER: ${FREEZIFY_AI_PROVIDER:-none}
+      FREEZIFY_AI_BASE_URL: ${FREEZIFY_AI_BASE_URL:-}
+      FREEZIFY_AI_API_KEY: ${FREEZIFY_AI_API_KEY:-}
+      FREEZIFY_AI_MODEL: ${FREEZIFY_AI_MODEL:-}
+      FREEZIFY_AI_DAILY_CALLS_PER_USER: ${FREEZIFY_AI_DAILY_CALLS_PER_USER:-30}
     volumes:
       # A folder outside the repository with the secrets that are files, mounted read-only.
       - ${FREEZIFY_SECRETS_DIR:-./.secrets}:/run/secrets/freezify:ro

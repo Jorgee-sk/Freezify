@@ -28,6 +28,7 @@ String errorMessage(AppLocalizations l10n, Object error) {
     'MEAL_NOT_FOUND' => l10n.errorMealNotFound,
     'WEEK_IN_THE_PAST' => l10n.errorWeekInThePast,
     'SHOPPING_ITEM_NOT_FOUND' => l10n.errorShoppingItemNotFound,
+    'PURCHASE_DATE_IN_FUTURE' => l10n.errorPurchaseDateInFuture,
     _ => l10n.errorGeneric,
   };
 }

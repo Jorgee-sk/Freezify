@@ -11,6 +11,91 @@
 | 4 — Recipes | 🟡 Funcionalidad completa (CI en verde en el pull request #12). Antes de usuarios reales hay que revisar los datos de alérgenos |
 | 5 — Smart Planning | 🟡 Funcionalidad completa (CI en verde en el pull request #14). Faltan las preferencias del usuario como factor |
 | 6 — Shopping | ✅ Completada (CI en verde en los pull requests #16 y #17) |
+| 7 — AI / OCR | 🟡 En curso: escaneo de tickets hecho (tests nuevos del móvil pendientes de CI). Faltan la foto de un alimento, la receta generada con IA y el asistente |
+
+## Fase 7 — AI / OCR 🟡
+
+Primera unidad: **escanear el ticket de la compra**. Todo es gratis por defecto: el OCR corre en el móvil y
+el backend lee el ticket con reglas; un modelo de lenguaje es opcional y puede ser gratuito (capa gratuita de
+Gemini u Ollama en local).
+
+### Completed
+
+- **Escanear un ticket desde el móvil** (botón de ticket en el inventario):
+  - Foto con la cámara o desde la galería. El texto se lee **en el teléfono** con Google ML Kit, sin conexión
+    y sin coste; **la foto no se envía** y la copia que queda en la caché de la app se borra al leerla.
+  - El OCR lee las columnas del ticket (productos y precios) por separado; la app vuelve a montar cada fila
+    por su altura en la foto.
+  - También se puede **pegar el texto** de un ticket digital; es la única vía donde no hay cámara (la versión
+    web de la app).
+- **Lectura del ticket en el backend** (`POST /households/{id}/scans/receipt`), que **no guarda nada**:
+  - **Por reglas**, siempre disponibles: producto y precio al final de la línea, número de unidades delante,
+    tamaños ("1L", "33CL", "6X125G", "12 UDS"), productos pesados con su línea "0,856 kg x 2,10 €/kg" y líneas
+    "3 x 1,29" bajo un producto. Descarta cabecera, totales, IVA, pago y descuentos, y lee la fecha del ticket
+    (solo si es de los últimos 30 días; si no, propone hoy).
+  - **Con un modelo de lenguaje, si se configura**: recibe el texto con los números largos tapados (tarjeta,
+    NIF, teléfono) y devuelve los productos en un esquema JSON. La respuesta se comprueba entera y **se
+    descarta entera** si no sigue el esquema o si cita algo que no está en el ticket; entonces se usan las
+    reglas. Cada persona tiene un límite diario de llamadas (30 por defecto) y la llamada no puede pasar de
+    12 s.
+  - **Cada línea se asocia a un alimento del catálogo por palabras**: plurales, tildes y palabras como "de" no
+    estorban; gana el nombre más concreto ("tomate triturado" antes que "tomate") y, a igualdad, el producto
+    que va primero ("CHOCOLATE CON LECHE" es chocolate). Si quedan dos alimentos empatados no se elige ninguno
+    y se ofrecen como candidatos.
+  - **28 abreviaturas de tickets** escritas a mano ("PECH POLLO", "AOVE", "ESPAGUETI"...), solo como
+    sugerencia.
+  - **El hogar enseña al sistema**: al confirmar, cada línea recuerda el alimento elegido para ese texto en ese
+    hogar ("QUESO MOZZ RALLADO" → mozzarella) y la próxima vez sale "Como la última vez". Decir que una línea
+    no es ningún alimento del catálogo olvida la elección. Otros hogares no ven lo que aprende uno.
+- **Revisión antes de añadir nada** (regla P2): cada línea muestra el texto del ticket, el alimento propuesto
+  y **qué se ha leído y qué se ha supuesto** ("1 l · del ticket", "1 ud · supuesto", "Reconocido en el
+  catálogo", "Sin alimento del catálogo", "Revisado por ti"), con la fecha de compra "leída del ticket" o "no
+  aparece en el ticket".
+  - Solo se proponen marcados los alimentos del catálogo; el resto (bolsa, detergente) queda desmarcado.
+  - Cada línea se puede corregir: alimento (candidatos o búsqueda en el catálogo), cantidad, unidad,
+    categoría, ubicación, precio y fecha de caducidad si se ve en el envase.
+  - Salir a mitad de la revisión pide confirmación.
+- **Confirmar** (`POST …/scans/receipt/confirm`) pone en el inventario lo marcado, con su precio y la fecha de
+  compra. Sin fecha de caducidad se estima, **marcada como estimación**; la que la persona lee en el envase es
+  suya. Si una línea falla no entra ninguna. Evento de producto `receipt_scanned`.
+- **Módulo `ai`** con `AiService` (casos de uso concretos) y `AiProvider`: sin modelo (por defecto) o
+  cualquier servicio con la API de OpenAI y salida estructurada (Gemini, Ollama, OpenAI...), elegido por
+  variables de entorno. Si se elige un proveedor y falta la URL o el modelo, el backend no arranca.
+
+### Tests
+
+| Qué | Resultado |
+|---|---|
+| Backend `./mvnw verify` | ✅ 340 tests (33 nuevos: lectura por reglas, asociación al catálogo, validación de la respuesta del modelo, cliente HTTP del proveedor, configuración y API de escaneo); 1 omitido, el que habla con Firebase real |
+| Mobile `flutter analyze` y APK debug con ML Kit | ✅ sin avisos / generado |
+| Mobile `flutter test` | 🟡 los **5 nuevos no se han ejecutado** (173 en total): correrán en la CI del pull request |
+| Ticket de ejemplo contra el backend real | ✅ un ticket de Mercadona escrito a mano, de 13 productos: los 11 alimentos asociados bien (también "PECH POLLO", "AOVE" y "ESPAGUETI 500G" → pasta 500 g), el tomate y el plátano con su peso, los yogures "2 x 4X125G" como 1000 g, la fecha leída y detergente y bolsa desmarcados |
+| App móvil (versión web) contra el backend real | ✅ texto pegado → revisión → "QUESO MOZZ RALLADO" corregido a mozzarella buscándolo en el catálogo → 5 productos en el inventario con precio y fechas estimadas; un segundo ticket propuso mozzarella "Como la última vez"; el inventario se refrescó al volver; salir a mitad de revisión pidió confirmación y no añadió nada |
+| Camino del modelo de lenguaje de punta a punta | ✅ con un servidor local que imita la API de OpenAI: el backend envió el esquema y la clave, el número de tarjeta llegó tapado, "PCHG PLL" se convirtió en pechuga de pollo 0,5 kg, y una respuesta con un producto inventado se descartó y se usaron las reglas |
+| Con **Gemini real** u **Ollama real** | ⏳ **no probado**: no hay clave ni Ollama en esta máquina (ver HOW_TO_USE 2.5) |
+| **Cámara y ML Kit en un móvil** | ⏳ **no probado**: no hay emulador ni dispositivo; solo se ha comprobado que el APK compila |
+
+### Pendiente en esta fase
+
+- Foto de un alimento con candidatos y confianza.
+- "Crea una receta con lo que tengo" con salida validada por esquema.
+- Asistente.
+- Escanear desde la web (hoy solo el móvil; la web podría pegar texto).
+
+### Known issues
+
+- **ML Kit sin probar en un teléfono**: la calidad real del OCR con tickets térmicos o arrugados es
+  desconocida (riesgo R2). La revisión es el camino principal precisamente por eso.
+- **Las reglas conocen los formatos habituales, no todos**: tickets con el precio en otra línea o con columnas
+  raras pueden salir mal leídos o vacíos. Sin modelo configurado no hay otra lectura.
+- **Capa gratuita de Gemini**: Google puede usar lo que se le envía para mejorar sus productos. Sirve para
+  probar; con usuarios reales hace falta la capa de pago u Ollama (ver HOW_TO_USE 2.5).
+- **El límite diario de llamadas vive en memoria**: se reinicia con el backend y no se comparte entre
+  instancias.
+- **Las abreviaturas son pocas y escritas a mano**; se irán completando con lo que aprenden los hogares.
+- **El formulario manual del inventario no usa los alias** del escaneo.
+- **Cada línea confirmada se recuerda**, también las que ya se reconocían por su nombre: la tabla crece con los
+  textos distintos que compra cada hogar (son pocos).
 
 ## Fase 6 — Shopping 🟡
 
@@ -612,7 +697,8 @@ fuente de datos oficial, un servicio de correo) o una decisión de producto:
 - **Ediciones simultáneas**: si dos miembros editan el mismo alimento uno tras otro, gana el último. Si dos
   peticiones se solapan de verdad sobre el mismo alimento, la segunda debería recibir 409
   `CONCURRENT_MODIFICATION` (columna `version`), que web y móvil explican; ese caso **no tiene test**.
-- **El catálogo no tiene alias ni sinónimos** ("jitomate", abreviaturas de ticket); previsto para la Fase 7.
+- **El catálogo no tiene sinónimos** ("jitomate"); desde la Fase 7 el escaneo de tickets entiende abreviaturas
+  y aprende de cada hogar, pero el formulario manual no los usa.
 - **Los eventos de producto no se borran con la cuenta** (no hay borrado de cuenta todavía).
 
 ## Fase 1 — Foundation ✅
@@ -650,7 +736,9 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request del lote 2 de problemas conocidos y confirmar en CI los 4 tests nuevos del móvil.
-2. Fase 7 — AI / OCR, cuando se decida el proveedor (ver ROADMAP).
-3. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
+1. Abrir el pull request del escaneo de tickets y confirmar en CI los 5 tests nuevos del móvil.
+2. Probar el escaneo con la cámara en un móvil Android y, si se quiere IA, con una clave gratuita de Gemini
+   (HOW_TO_USE 2.5).
+3. Fase 7, siguientes unidades: foto de un alimento y "crea una receta con lo que tengo".
+4. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
    con una fuente autorizada antes de abrir a usuarios reales.

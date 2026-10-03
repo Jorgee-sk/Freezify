@@ -108,6 +108,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     if (saved ?? false) _reload();
   }
 
+  Future<void> _scanReceipt() async {
+    final stocked = await context.push<bool>('/households/$_householdId/scan');
+    if (stocked ?? false) _reload();
+  }
+
   Future<void> _takeOut(InventoryItem item, {required bool discard}) async {
     final result = await showTakeOutSheet(context, item: item, discard: discard);
     if (result == null) return;
@@ -176,10 +181,24 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openForm,
-        icon: const Icon(Icons.add),
-        label: Text(l10n.addFood),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.small(
+            heroTag: 'scan-receipt',
+            tooltip: l10n.scanReceipt,
+            onPressed: _scanReceipt,
+            child: const Icon(Icons.receipt_long_outlined),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton.extended(
+            heroTag: 'add-food',
+            onPressed: _openForm,
+            icon: const Icon(Icons.add),
+            label: Text(l10n.addFood),
+          ),
+        ],
       ),
       body: household.hasError
           ? Center(

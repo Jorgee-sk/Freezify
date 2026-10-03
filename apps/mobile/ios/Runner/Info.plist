@@ -71,5 +71,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Freezify reads the photo of your shopping receipt on this device to list what you bought.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Freezify reads a photo of a shopping receipt you choose to list what you bought.</string>
 </dict>
 </plist>

@@ -71,9 +71,10 @@ tipos internos de otro.
 | `recipes` | Catálogo de recetas, recomendador y registro de lo cocinado | food, inventory, expiration, households | 4 ✔ |
 | `mealplanning` | Plan semanal, simulación de la despensa y generador | recipes, inventory, food, expiration, households | 5 ✔ |
 | `shopping` | Lista de la compra del hogar, llenada a partir del plan; lo comprado pasa al inventario | mealplanning, inventory, food, households | 6 ✔ |
-| `ai` | `AIProvider`, `AiService`, casos de uso de IA | common | 7 |
+| `ai` | `AiService` (casos de uso de IA) y `AiProvider` (sin modelo o API compatible con OpenAI) | food, common | 7 ✔ |
+| `scanning` | Escaneo de tickets: lectura por reglas o con IA, asociación al catálogo, alias aprendidos por hogar, confirmación al inventario | ai, food, inventory, households | 7 ✔ |
 | `integrations` | `ProductCatalogProvider` y fuentes externas | food | 7+ |
-| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory`, `notifications`, `recipes`, `mealplanning` y `shopping` | 2 ✔ / 8 |
+| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory`, `notifications`, `recipes`, `mealplanning`, `shopping` y `scanning` | 2 ✔ / 8 |
 | `realtime` | Flujos de eventos (SSE) por hogar | households; escucha eventos de `inventory`, `mealplanning`, `recipes`, `shopping` y `households` | 2 ✔ |
 
 Los módulos marcados con ✔, además de los cuatro de la Fase 1, existen en el código. Los de fases futuras **no existen todavía**: se crean cuando tienen contenido real.
@@ -162,6 +163,11 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D61 | La web lleva su refresh token en una **cookie `HttpOnly`** pedida con la cabecera `X-Freezify-Session: cookie`; el móvil sigue con el token en el cuerpo | Un XSS no puede llevarse el token; la cabecera, que otro sitio no puede enviar, protege la cookie de peticiones cruzadas sin un token CSRF aparte |
 | D62 | Las invitaciones se **revocan borrándolas**; las puede revocar quien las generó o el propietario | Quien ya se unió no depende del código; sin una columna de estado que mantener |
 | D63 | **Transferir** el hogar intercambia los papeles en una transacción | Siempre hay exactamente un propietario, y así el anterior puede abandonarlo |
+| D64 | El **OCR del ticket corre en el móvil** (ML Kit) y solo viaja el texto; la copia de la foto se borra | Gratis y sin conexión; las fotos no salen del teléfono ni hay que almacenarlas |
+| D65 | **Leer un ticket no guarda nada**; confirmar envía las líneas ya revisadas | Sin tablas de borradores que caduquen ni datos que retener; nada entra al inventario sin revisión (P2) |
+| D66 | Las **reglas** leen siempre el ticket; el modelo es opcional y su respuesta se valida y se **descarta entera** si falla | La app funciona sin IA y sin coste; un modelo que se equivoca o inventa no llega a la revisión |
+| D67 | Un único proveedor **compatible con la API de OpenAI** (Gemini, Ollama, OpenAI) sin SDK, elegido por variables de entorno | Cambiar de proveedor, o pasar de la capa gratuita a uno local, es configuración y no código |
+| D68 | **Alias por hogar** aprendidos al confirmar, sobre alias compartidos escritos a mano (`receipt_aliases`) | Cada hogar compra en sus tiendas: lo que corrige una vez se reconoce después (R1) |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -186,7 +192,7 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 
 Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`, `V4__notifications.sql`,
 `V5__device_tokens.sql`, `V6__recipes.sql`, `V7__dietary_restrictions.sql`, `V8__meal_plan.sql`,
-`V9__shopping_list.sql`):
+`V9__shopping_list.sql`, `V10__receipt_aliases.sql`):
 
 ```text
 users ──< refresh_tokens
@@ -205,6 +211,7 @@ foods ──< food_traits
 households ── household_diets
 households ──< meal_plan_entries >── recipes
 households ──< shopping_list_items >── foods (opcional)
+households (opcional) ──< receipt_aliases >── foods
 ```
 
 Entidades previstas por fase:
@@ -216,7 +223,7 @@ Entidades previstas por fase:
 | 4 ✔ | `Recipe`, `RecipeIngredient`, `CookedRecipe`, `FoodTrait`, `HouseholdDiet`; `UserPreference` (gustos personales) pendiente |
 | 5 | `MealPlanEntry` (hecha); `MealPlan` es la semana de un hogar, sin tabla (D46) |
 | 6 ✔ | `ShoppingListItem`; la lista es la del hogar, sin tabla (D57) |
-| 7 | `Scan`, `ScanResult`, `Product` |
+| 7 | `ReceiptAlias` (hecha); el escaneo no guarda borradores (D65); `Product` (códigos de barras) sin hacer |
 
 `Food` (alimento canónico, p. ej. "tomate") es la pieza que une todo: `FoodItem`, `RecipeIngredient` y
 `ShoppingListItem` apuntan a él. Sin esa normalización no hay matching fiable entre inventario y recetas.
@@ -291,6 +298,8 @@ Fase 4:
 | DELETE | `/households/{id}/shopping-list/items/checked` | Quitar todo lo comprado |
 | POST | `/households/{id}/shopping-list/items/checked/to-inventory?lang=` | Pasar lo comprado al inventario (lo que no tiene cantidad se queda) |
 | POST | `/households/{id}/shopping-list/from-plan` | Añadir lo que les falta a las comidas de una semana, de hoy en adelante |
+| POST | `/households/{id}/scans/receipt?lang=` | Leer el texto de un ticket en un borrador para revisar; no guarda nada |
+| POST | `/households/{id}/scans/receipt/confirm` | Poner en el inventario las líneas revisadas y recordar el alimento elegido para cada texto |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).
@@ -313,22 +322,29 @@ simples y solo si los datos de uso lo justifican (Fase 9).
 ## 7. IA (Fase 7)
 
 ```text
-Controller → caso de uso → AiService → AIProvider ─┬─ MockProvider   (tests, desarrollo)
-                                                    ├─ proveedor remoto (LLM con salida estructurada)
-                                                    └─ LocalProvider
+ScanController → ReceiptScanService ─┬─ ReceiptParser (reglas, siempre)
+                                     ├─ AiService.readReceipt → AiProvider ─┬─ NoAiProvider (por defecto)
+                                     │                                       └─ OpenAiCompatibleProvider
+                                     │                                           (Gemini, Ollama, OpenAI…)
+                                     └─ FoodMatcher (catálogo + receipt_aliases)
 ```
 
-- Los controladores nunca llaman a un LLM.
-- Toda salida se valida contra un esquema JSON; si no valida, se descarta.
-- El proveedor se elige por configuración; se cachea por hash de entrada cuando tenga sentido.
-- OCR: primero una librería madura (ML Kit en el dispositivo); el LLM solo para estructurar el texto.
+- Los controladores nunca llaman a un modelo; `AiService` expone casos de uso concretos, nunca un "chat".
+- Toda respuesta se valida en el backend contra el esquema pedido; si una parte no valida, o cita texto que
+  no está en la entrada, se descarta entera y se usa la vía sin IA. En los tests el proveedor se sustituye.
+- El proveedor se elige por variables de entorno (`FREEZIFY_AI_*`); sin ellas no hay modelo y todo funciona.
+- Al modelo solo le llega lo necesario: el texto del ticket con los números largos tapados.
+- Límite diario de llamadas por persona y tiempo máximo por llamada, para no agotar cuotas gratuitas.
+- No hay caché por hash: el mismo ticket rara vez se lee dos veces. Se añadirá si los datos de uso lo piden.
+- OCR: ML Kit en el dispositivo; el modelo solo estructura texto (D64).
 
 ## 8. Riesgos técnicos
 
 | # | Riesgo | Impacto | Mitigación |
 |---|---|---|---|
 | R1 | **Normalización de alimentos**: los tickets españoles abrevian ("TOM PERA 1K"); sin mapear a `Food` no hay recetas ni lista de la compra fiables | Alto | Catálogo canónico con alias desde Fase 2; revisión humana obligatoria; aprender alias de las correcciones del usuario |
-| R2 | **Calidad del OCR** en tickets arrugados o térmicos | Alto | OCR en dispositivo + estructuración posterior; la UI de revisión es el camino principal, no la excepción |
+| R2 | **Calidad del OCR** en tickets arrugados o térmicos | Alto | OCR en dispositivo + estructuración posterior; la UI de revisión es el camino principal, no la excepción. **Pendiente:** probar ML Kit con tickets reales en un móvil |
+| R14 | **Datos enviados a un modelo externo**: en la capa gratuita de Gemini, Google puede usarlos para mejorar sus productos | Medio | Solo se envía el texto del ticket, con los números largos tapados; el modelo es opcional. Con usuarios reales: capa de pago u Ollama, e informarlo en la política de privacidad |
 | R13 | **Datos de alérgenos** escritos a mano: un error puede ocultar un alérgeno a una persona alérgica | Alto | Marcado prudente, aviso visible de que no es una garantía y de comprobar la etiqueta. **Pendiente:** contrastar con una fuente autorizada antes del lanzamiento |
 | R3 | **Fechas estimadas** erróneas (seguridad alimentaria, responsabilidad) | Alto | Siempre etiquetadas; reglas conservadoras; nunca pisan la fecha del usuario. **Pendiente:** contrastar los días con una fuente autorizada antes del lanzamiento |
 | R4 | **Conversión de unidades** (recuento ↔ masa: "2 tomates" vs "300 g") | Medio | Peso medio por unidad en el catálogo; cuando no exista, no se convierte y se avisa |
