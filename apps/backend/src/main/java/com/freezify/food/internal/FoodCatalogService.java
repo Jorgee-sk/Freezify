@@ -43,6 +43,11 @@ class FoodCatalogService implements FoodCatalog {
     }
 
     @Override
+    public List<Food> all() {
+        return catalog().index().stream().map(Indexed::food).toList();
+    }
+
+    @Override
     public List<Food> search(String text, String language, int limit) {
         String wanted = FoodCatalog.normalize(text);
         if (wanted.isEmpty()) {

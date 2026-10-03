@@ -1300,4 +1300,141 @@ class AppLocalizationsEs extends AppLocalizations {
   String confirmRevoke(String code) {
     return 'El código $code dejará de servir para unirse. Quien ya se unió con él se queda.';
   }
+
+  @override
+  String get scanReceipt => 'Escanear ticket';
+
+  @override
+  String get scanIntro =>
+      'Haz una foto del ticket de la compra. El texto se lee en tu teléfono: la foto no se envía. Revisarás cada producto antes de añadir nada al inventario.';
+
+  @override
+  String get scanTakePhoto => 'Hacer foto del ticket';
+
+  @override
+  String get scanPickPhoto => 'Elegir una foto';
+
+  @override
+  String get scanNoPhotosHere => 'Aquí no se pueden leer fotos. Pega el texto del ticket o usa la app en el móvil.';
+
+  @override
+  String get scanNothingRead =>
+      'No se ha podido leer texto en la foto. Prueba con más luz y el ticket bien estirado, o pega su texto.';
+
+  @override
+  String get scanNoProducts => 'No hemos encontrado productos en este ticket.';
+
+  @override
+  String get scanPasteTitle => '¿Tienes el ticket en digital?';
+
+  @override
+  String get scanPasteHelp => 'Pega aquí su texto.';
+
+  @override
+  String get scanReceiptText => 'Texto del ticket';
+
+  @override
+  String get scanReadText => 'Leer ticket';
+
+  @override
+  String get scanReadByAi => 'Leído con ayuda de IA. Revisa cada producto antes de añadirlo.';
+
+  @override
+  String get scanReadByRules => 'Leído automáticamente. Revisa cada producto antes de añadirlo.';
+
+  @override
+  String get scanPurchaseDate => 'Fecha de compra';
+
+  @override
+  String scanDateFromReceipt(String date) {
+    return '$date · leída del ticket';
+  }
+
+  @override
+  String scanDateNotOnReceipt(String date) {
+    return '$date · no aparece en el ticket';
+  }
+
+  @override
+  String scanQuantityFromReceipt(String quantity) {
+    return '$quantity · del ticket';
+  }
+
+  @override
+  String scanQuantityAssumed(String quantity) {
+    return '$quantity · supuesto';
+  }
+
+  @override
+  String get scanMatchLearned => 'Como la última vez';
+
+  @override
+  String get scanMatchFound => 'Reconocido en el catálogo';
+
+  @override
+  String get scanMatchNone => 'Sin alimento del catálogo';
+
+  @override
+  String scanExpiresOn(String date) {
+    return 'Caduca el $date';
+  }
+
+  @override
+  String scanInclude(String name) {
+    return 'Añadir $name';
+  }
+
+  @override
+  String scanEditLineOf(String name) {
+    return 'Revisar $name';
+  }
+
+  @override
+  String get scanReviewed => 'Revisado por ti';
+
+  @override
+  String get scanEditLine => 'Revisar producto';
+
+  @override
+  String scanPrintedAs(String text) {
+    return 'En el ticket: $text';
+  }
+
+  @override
+  String get scanCandidates => '¿Es alguno de estos?';
+
+  @override
+  String get scanExpirationHelp => 'Si la ves en el envase. Si no, se estima.';
+
+  @override
+  String scanAddToInventory(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Añadir $count productos',
+      one: 'Añadir 1 producto',
+      zero: 'Nada que añadir',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scanAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count productos añadidos al inventario',
+      one: '1 producto añadido al inventario',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get scanDiscardConfirm => 'Si sales ahora se pierde la revisión de este ticket.';
+
+  @override
+  String get scanDiscard => 'Salir';
+
+  @override
+  String get errorPurchaseDateInFuture => 'La fecha de compra no puede ser posterior a hoy.';
 }

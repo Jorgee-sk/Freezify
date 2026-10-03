@@ -8,6 +8,9 @@ public interface FoodCatalog {
 
     Optional<Food> findById(UUID id);
 
+    /** Every food of the catalog. */
+    List<Food> all();
+
     /**
      * Foods whose name in {@code language} matches what the user is typing, ignoring case and accents.
      * Names that start with the text come before names that merely contain it.

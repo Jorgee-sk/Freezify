@@ -235,12 +235,12 @@ public class InventoryService implements ExpiringFood, HouseholdStock, Inventory
                                 item.category(),
                                 item.quantity(),
                                 item.storageLocation(),
-                                today.date(),
+                                item.purchaseDate() == null ? today.date() : item.purchaseDate(),
+                                item.expirationDate(),
                                 null,
                                 null,
                                 null,
-                                null,
-                                null,
+                                item.price(),
                                 null))
                 .id();
     }

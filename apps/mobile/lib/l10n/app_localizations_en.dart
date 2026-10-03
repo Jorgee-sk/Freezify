@@ -1295,4 +1295,142 @@ class AppLocalizationsEn extends AppLocalizations {
   String confirmRevoke(String code) {
     return 'Code $code will no longer let anyone join. Whoever already joined with it stays.';
   }
+
+  @override
+  String get scanReceipt => 'Scan receipt';
+
+  @override
+  String get scanIntro =>
+      'Take a photo of your shopping receipt. Its text is read on your phone: the photo is not sent. You will check every product before anything is added to the inventory.';
+
+  @override
+  String get scanTakePhoto => 'Take a photo of the receipt';
+
+  @override
+  String get scanPickPhoto => 'Choose a photo';
+
+  @override
+  String get scanNoPhotosHere =>
+      'Photos cannot be read here. Paste the text of the receipt, or use the app on your phone.';
+
+  @override
+  String get scanNothingRead =>
+      'No text could be read in the photo. Try again with more light and the receipt laid flat, or paste its text.';
+
+  @override
+  String get scanNoProducts => 'No products were found on this receipt.';
+
+  @override
+  String get scanPasteTitle => 'Is your receipt digital?';
+
+  @override
+  String get scanPasteHelp => 'Paste its text here.';
+
+  @override
+  String get scanReceiptText => 'Text of the receipt';
+
+  @override
+  String get scanReadText => 'Read receipt';
+
+  @override
+  String get scanReadByAi => 'Read with the help of AI. Check every product before adding it.';
+
+  @override
+  String get scanReadByRules => 'Read automatically. Check every product before adding it.';
+
+  @override
+  String get scanPurchaseDate => 'Purchase date';
+
+  @override
+  String scanDateFromReceipt(String date) {
+    return '$date · read from the receipt';
+  }
+
+  @override
+  String scanDateNotOnReceipt(String date) {
+    return '$date · not on the receipt';
+  }
+
+  @override
+  String scanQuantityFromReceipt(String quantity) {
+    return '$quantity · from the receipt';
+  }
+
+  @override
+  String scanQuantityAssumed(String quantity) {
+    return '$quantity · assumed';
+  }
+
+  @override
+  String get scanMatchLearned => 'As last time';
+
+  @override
+  String get scanMatchFound => 'Found in the catalog';
+
+  @override
+  String get scanMatchNone => 'Not a catalog food';
+
+  @override
+  String scanExpiresOn(String date) {
+    return 'Expires on $date';
+  }
+
+  @override
+  String scanInclude(String name) {
+    return 'Add $name';
+  }
+
+  @override
+  String scanEditLineOf(String name) {
+    return 'Check $name';
+  }
+
+  @override
+  String get scanReviewed => 'Checked by you';
+
+  @override
+  String get scanEditLine => 'Check product';
+
+  @override
+  String scanPrintedAs(String text) {
+    return 'On the receipt: $text';
+  }
+
+  @override
+  String get scanCandidates => 'Is it one of these?';
+
+  @override
+  String get scanExpirationHelp => 'If you can see it on the package. Otherwise it is estimated.';
+
+  @override
+  String scanAddToInventory(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Add $count products',
+      one: 'Add 1 product',
+      zero: 'Nothing to add',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String scanAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count products added to the inventory',
+      one: '1 product added to the inventory',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get scanDiscardConfirm => 'If you leave now, the review of this receipt is lost.';
+
+  @override
+  String get scanDiscard => 'Leave';
+
+  @override
+  String get errorPurchaseDateInFuture => 'The purchase date cannot be later than today.';
 }

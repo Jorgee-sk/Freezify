@@ -91,6 +91,17 @@ freezify:
     # inside the app. The key itself never goes into the repository or an image.
     fcm-credentials-file: ${FREEZIFY_FCM_CREDENTIALS_FILE:}
     fcm-endpoint: https://fcm.googleapis.com
+  ai:
+    # Optional language model that reads receipts better than the rules alone: "none" or "openai-compatible"
+    # (Google Gemini, a local Ollama, OpenAI...). Without one the application works and reads receipts by rules.
+    provider: ${FREEZIFY_AI_PROVIDER:none}
+    base-url: ${FREEZIFY_AI_BASE_URL:}
+    api-key: ${FREEZIFY_AI_API_KEY:}
+    model: ${FREEZIFY_AI_MODEL:}
+    # Less than the apps wait for an answer (15 s), so that a slow model leaves time to fall back to the rules.
+    timeout: 12s
+    # Calls each person may cause per day, to keep costs and free quotas in hand.
+    daily-calls-per-user: ${FREEZIFY_AI_DAILY_CALLS_PER_USER:30}
   realtime:
     # Event streams end after this long; clients reconnect and are authenticated again.
     connection-ttl: 30m

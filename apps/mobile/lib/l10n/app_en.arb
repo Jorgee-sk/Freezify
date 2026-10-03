@@ -899,5 +899,109 @@
         "type": "String"
       }
     }
-  }
+  },
+  "scanReceipt": "Scan receipt",
+  "scanIntro": "Take a photo of your shopping receipt. Its text is read on your phone: the photo is not sent. You will check every product before anything is added to the inventory.",
+  "scanTakePhoto": "Take a photo of the receipt",
+  "scanPickPhoto": "Choose a photo",
+  "scanNoPhotosHere": "Photos cannot be read here. Paste the text of the receipt, or use the app on your phone.",
+  "scanNothingRead": "No text could be read in the photo. Try again with more light and the receipt laid flat, or paste its text.",
+  "scanNoProducts": "No products were found on this receipt.",
+  "scanPasteTitle": "Is your receipt digital?",
+  "scanPasteHelp": "Paste its text here.",
+  "scanReceiptText": "Text of the receipt",
+  "scanReadText": "Read receipt",
+  "scanReadByAi": "Read with the help of AI. Check every product before adding it.",
+  "scanReadByRules": "Read automatically. Check every product before adding it.",
+  "scanPurchaseDate": "Purchase date",
+  "scanDateFromReceipt": "{date} · read from the receipt",
+  "@scanDateFromReceipt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "scanDateNotOnReceipt": "{date} · not on the receipt",
+  "@scanDateNotOnReceipt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "scanQuantityFromReceipt": "{quantity} · from the receipt",
+  "@scanQuantityFromReceipt": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "scanQuantityAssumed": "{quantity} · assumed",
+  "@scanQuantityAssumed": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "scanMatchLearned": "As last time",
+  "scanMatchFound": "Found in the catalog",
+  "scanMatchNone": "Not a catalog food",
+  "scanExpiresOn": "Expires on {date}",
+  "@scanExpiresOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "scanInclude": "Add {name}",
+  "@scanInclude": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scanEditLineOf": "Check {name}",
+  "@scanEditLineOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scanReviewed": "Checked by you",
+  "scanEditLine": "Check product",
+  "scanPrintedAs": "On the receipt: {text}",
+  "@scanPrintedAs": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "scanCandidates": "Is it one of these?",
+  "scanExpirationHelp": "If you can see it on the package. Otherwise it is estimated.",
+  "scanAddToInventory": "{count, plural, =0{Nothing to add} =1{Add 1 product} other{Add {count} products}}",
+  "@scanAddToInventory": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanAdded": "{count, plural, =1{1 product added to the inventory} other{{count} products added to the inventory}}",
+  "@scanAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanDiscardConfirm": "If you leave now, the review of this receipt is lost.",
+  "scanDiscard": "Leave",
+  "errorPurchaseDateInFuture": "The purchase date cannot be later than today."
 }

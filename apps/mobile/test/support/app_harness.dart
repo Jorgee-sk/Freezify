@@ -7,6 +7,7 @@ import 'package:freezify/app.dart';
 import 'package:freezify/core/api_client.dart';
 import 'package:freezify/core/providers.dart';
 import 'package:freezify/features/notifications/push_messaging.dart';
+import 'package:freezify/features/scanning/receipt_ocr.dart';
 
 import 'fake_backend.dart';
 
@@ -17,6 +18,7 @@ Future<void> pumpFreezify(
   InMemoryTokenStorage storage, {
   Locale deviceLocale = const Locale('es'),
   FakePushMessaging? push,
+  FakeReceiptOcr? ocr,
 }) async {
   // The app resolves its language from the list of preferred locales, not from the single locale.
   tester.platformDispatcher.localesTestValue = [deviceLocale];
@@ -30,6 +32,8 @@ Future<void> pumpFreezify(
         ),
         // Never the real push service; unless a test says otherwise, this device cannot receive pushes.
         pushMessagingProvider.overrideWithValue(push ?? FakePushMessaging()),
+        // Never the real camera and OCR; unless a test says otherwise, photos cannot be read on this device.
+        receiptOcrProvider.overrideWithValue(ocr ?? FakeReceiptOcr()),
       ],
       child: const FreezifyApp(),
     ),
@@ -77,4 +81,23 @@ class FakePushMessaging implements PushMessaging {
 
   /// The user taps a notification.
   void tap() => _taps.add(null);
+}
+
+/// Stands in for the camera and the on-device OCR.
+class FakeReceiptOcr implements ReceiptOcr {
+  FakeReceiptOcr({this.available = false, this.text});
+
+  @override
+  final bool available;
+
+  /// What reading a photo gives; null means the person cancelled.
+  String? text;
+
+  final List<PhotoSource> reads = [];
+
+  @override
+  Future<String?> read(PhotoSource source) async {
+    reads.add(source);
+    return text;
+  }
 }

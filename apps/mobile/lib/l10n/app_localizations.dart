@@ -2119,6 +2119,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Code {code} will no longer let anyone join. Whoever already joined with it stays.'**
   String confirmRevoke(String code);
+
+  /// No description provided for @scanReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan receipt'**
+  String get scanReceipt;
+
+  /// No description provided for @scanIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo of your shopping receipt. Its text is read on your phone: the photo is not sent. You will check every product before anything is added to the inventory.'**
+  String get scanIntro;
+
+  /// No description provided for @scanTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo of the receipt'**
+  String get scanTakePhoto;
+
+  /// No description provided for @scanPickPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a photo'**
+  String get scanPickPhoto;
+
+  /// No description provided for @scanNoPhotosHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos cannot be read here. Paste the text of the receipt, or use the app on your phone.'**
+  String get scanNoPhotosHere;
+
+  /// No description provided for @scanNothingRead.
+  ///
+  /// In en, this message translates to:
+  /// **'No text could be read in the photo. Try again with more light and the receipt laid flat, or paste its text.'**
+  String get scanNothingRead;
+
+  /// No description provided for @scanNoProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'No products were found on this receipt.'**
+  String get scanNoProducts;
+
+  /// No description provided for @scanPasteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Is your receipt digital?'**
+  String get scanPasteTitle;
+
+  /// No description provided for @scanPasteHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste its text here.'**
+  String get scanPasteHelp;
+
+  /// No description provided for @scanReceiptText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text of the receipt'**
+  String get scanReceiptText;
+
+  /// No description provided for @scanReadText.
+  ///
+  /// In en, this message translates to:
+  /// **'Read receipt'**
+  String get scanReadText;
+
+  /// No description provided for @scanReadByAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Read with the help of AI. Check every product before adding it.'**
+  String get scanReadByAi;
+
+  /// No description provided for @scanReadByRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Read automatically. Check every product before adding it.'**
+  String get scanReadByRules;
+
+  /// No description provided for @scanPurchaseDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase date'**
+  String get scanPurchaseDate;
+
+  /// No description provided for @scanDateFromReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} · read from the receipt'**
+  String scanDateFromReceipt(String date);
+
+  /// No description provided for @scanDateNotOnReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} · not on the receipt'**
+  String scanDateNotOnReceipt(String date);
+
+  /// No description provided for @scanQuantityFromReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} · from the receipt'**
+  String scanQuantityFromReceipt(String quantity);
+
+  /// No description provided for @scanQuantityAssumed.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} · assumed'**
+  String scanQuantityAssumed(String quantity);
+
+  /// No description provided for @scanMatchLearned.
+  ///
+  /// In en, this message translates to:
+  /// **'As last time'**
+  String get scanMatchLearned;
+
+  /// No description provided for @scanMatchFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Found in the catalog'**
+  String get scanMatchFound;
+
+  /// No description provided for @scanMatchNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a catalog food'**
+  String get scanMatchNone;
+
+  /// No description provided for @scanExpiresOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires on {date}'**
+  String scanExpiresOn(String date);
+
+  /// No description provided for @scanInclude.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {name}'**
+  String scanInclude(String name);
+
+  /// No description provided for @scanEditLineOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Check {name}'**
+  String scanEditLineOf(String name);
+
+  /// No description provided for @scanReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked by you'**
+  String get scanReviewed;
+
+  /// No description provided for @scanEditLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Check product'**
+  String get scanEditLine;
+
+  /// No description provided for @scanPrintedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'On the receipt: {text}'**
+  String scanPrintedAs(String text);
+
+  /// No description provided for @scanCandidates.
+  ///
+  /// In en, this message translates to:
+  /// **'Is it one of these?'**
+  String get scanCandidates;
+
+  /// No description provided for @scanExpirationHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'If you can see it on the package. Otherwise it is estimated.'**
+  String get scanExpirationHelp;
+
+  /// No description provided for @scanAddToInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing to add} =1{Add 1 product} other{Add {count} products}}'**
+  String scanAddToInventory(int count);
+
+  /// No description provided for @scanAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 product added to the inventory} other{{count} products added to the inventory}}'**
+  String scanAdded(int count);
+
+  /// No description provided for @scanDiscardConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'If you leave now, the review of this receipt is lost.'**
+  String get scanDiscardConfirm;
+
+  /// No description provided for @scanDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get scanDiscard;
+
+  /// No description provided for @errorPurchaseDateInFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'The purchase date cannot be later than today.'**
+  String get errorPurchaseDateInFuture;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
