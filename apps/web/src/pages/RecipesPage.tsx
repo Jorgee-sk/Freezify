@@ -2,7 +2,7 @@ import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-quer
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { COURSES, TIME_LIMITS, dietApi, recipesApi } from '../api/recipes'
+import { COURSES, TIME_LIMITS, aiApi, dietApi, recipesApi } from '../api/recipes'
 import type { Course, Recommendation } from '../api/recipes'
 import { queryKeys } from '../api/queryKeys'
 import { ErrorMessage } from '../components/ErrorMessage'
@@ -40,6 +40,8 @@ export function RecipesPage() {
   })
 
   const diet = useQuery({ queryKey: queryKeys.diet(householdId), queryFn: () => dietApi.get(householdId) })
+  // Only offered where the server has a language model.
+  const ai = useQuery({ queryKey: queryKeys.ai, queryFn: aiApi.status, staleTime: Infinity })
 
   // Recommendations depend on the inventory: whatever another member changes shows up without reloading.
   const queryClient = useQueryClient()
@@ -75,6 +77,13 @@ export function RecipesPage() {
           <span>{restrictions ? t('diet.applied', { restrictions }) : t('diet.none')}</span>
           <Link to={`/households/${householdId}/diet`}>{t('diet.change')}</Link>
         </p>
+      )}
+
+      {ai.data?.enabled && (
+        <Link to={`/households/${householdId}/recipes/generate`} className="card recipe-card">
+          <strong>{t('generated.link')}</strong>
+          <span className="muted small">{t('generated.linkHelp')}</span>
+        </Link>
       )}
 
       <section aria-labelledby="recommended-title">

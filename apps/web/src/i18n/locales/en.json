@@ -94,7 +94,12 @@
     "MEAL_NOT_FOUND": "That meal is no longer in the plan.",
     "WEEK_IN_THE_PAST": "A week that is over cannot be planned.",
     "CONCURRENT_MODIFICATION": "Someone else changed this at the same time. Reload and make the change again.",
-    "SHOPPING_ITEM_NOT_FOUND": "That is no longer on the list."
+    "SHOPPING_ITEM_NOT_FOUND": "That is no longer on the list.",
+    "AI_NOT_CONFIGURED": "This installation has no AI configured.",
+    "AI_LIMIT_REACHED": "You have used all of today’s AI requests. Try again tomorrow.",
+    "AI_UNAVAILABLE": "The AI did not give a usable recipe. Try again.",
+    "NOTHING_TO_COOK_WITH": "There is nothing in the inventory, within its date, that your household eats.",
+    "PURCHASE_DATE_IN_FUTURE": "The purchase date cannot be later than today."
   },
   "inventory": {
     "title": "Inventory",
@@ -472,5 +477,17 @@
     "stocked_other": "{{count}} foods have been added to the inventory.",
     "stockedNone": "Nothing has been added to the inventory.",
     "leftWithoutAmount": "Still on the list because they do not say how much was bought: {{names}}. Give the amount and try again."
+  },
+  "generated": {
+    "link": "Create a recipe with what I have",
+    "linkHelp": "With AI, only with what is at home and following the household’s diet.",
+    "title": "A recipe with what you have",
+    "intro": "An AI writes a recipe using only the food in your inventory that your household eats, and uses first what expires first.",
+    "servings": "Servings",
+    "create": "Create recipe",
+    "again": "Create another",
+    "writing": "Writing the recipe…",
+    "notice": "Recipe written by AI from your inventory. Check amounts and times, and that meat, fish and eggs are fully cooked.",
+    "optional": "optional"
   }
 }

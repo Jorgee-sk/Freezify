@@ -6,8 +6,10 @@ import com.freezify.food.FoodTrait;
 import com.freezify.recipes.internal.Diet;
 import com.freezify.recipes.Recipe.Course;
 import com.freezify.recipes.Recipe.Difficulty;
+import com.freezify.recipes.internal.RecipeGenerator;
 import com.freezify.recipes.internal.RecipeService;
 import com.freezify.recipes.internal.RecipeService.Filter;
+import com.freezify.recipes.internal.RecipeViews.GeneratedRecipe;
 import com.freezify.recipes.internal.RecipeViews.Recommendation;
 import com.freezify.recipes.internal.RecipeViews.RecipeDetail;
 import com.freezify.recipes.internal.RecipeViews.RecipeSummary;
@@ -44,9 +46,11 @@ class RecipeController {
     private static final String LANGUAGE_MESSAGE = "must be 'es' or 'en'";
 
     private final RecipeService recipes;
+    private final RecipeGenerator generator;
 
-    RecipeController(RecipeService recipes) {
+    RecipeController(RecipeService recipes, RecipeGenerator generator) {
         this.recipes = recipes;
+        this.generator = generator;
     }
 
     /** The recipes of the catalog. With {@code household}, without what that household does not eat. */
@@ -82,6 +86,22 @@ class RecipeController {
             @RequestParam(defaultValue = "10") @Min(1) @Max(50) int limit) {
         return recipes.recommend(householdId, CurrentUser.id(jwt), lang, limit);
     }
+
+    /**
+     * A recipe written by a language model with what the household has and eats. Shown, not stored. Needs a model
+     * configured (`GET /ai`).
+     */
+    @PostMapping("/households/{householdId}/recipes/generated")
+    GeneratedRecipe generate(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID householdId,
+            @RequestParam(defaultValue = "es") @Pattern(regexp = LANGUAGE, message = LANGUAGE_MESSAGE) String lang,
+            @Valid @RequestBody(required = false) @Nullable GenerateRequest request) {
+        int servings = request == null || request.servings() == null ? 2 : request.servings();
+        return generator.generate(householdId, CurrentUser.id(jwt), lang, servings);
+    }
+
+    record GenerateRequest(@Nullable @Min(1) @Max(8) Integer servings) {}
 
     /** What is not cooked in the household. */
     @GetMapping("/households/{householdId}/diet")

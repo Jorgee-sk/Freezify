@@ -112,6 +112,36 @@ export const ALL_RECIPES = 100
 /** Enough to hold every recipe that uses something at home, so that any recipe can be looked up in it. */
 export const ALL_RECOMMENDATIONS = 50
 
+/** An ingredient of a recipe written by AI, with the date of what the household has of it. */
+export interface GeneratedIngredient {
+  /** The catalog food, when it is one. */
+  foodId: string | null
+  name: string
+  amount: number
+  unit: Unit
+  optional: boolean
+  /** Salt, oil or water, assumed in any kitchen. */
+  staple: boolean
+  /** Days until the earliest date of that food at home, when it has one. */
+  daysLeft: number | null
+  priority: ExpirationPriority | null
+  /** Estimated dates must be worded as estimates. */
+  estimated: boolean
+}
+
+/** A recipe a language model wrote with what the household has. Shown, not stored. */
+export interface GeneratedRecipe {
+  title: string
+  summary: string
+  servings: number
+  minutes: number
+  difficulty: Difficulty
+  ingredients: GeneratedIngredient[]
+  steps: string[]
+}
+
+export const SERVINGS = [1, 2, 3, 4, 5, 6, 7, 8]
+
 export const recipesApi = {
   /** The catalog without what the household does not eat. */
   /** `size` defaults to a page of the catalog; the most the server gives at once is 100. */
@@ -132,6 +162,12 @@ export const recipesApi = {
     api<Recommendation[]>(
       `/households/${householdId}/recipes/recommendations?${new URLSearchParams({ lang, limit: String(ALL_RECOMMENDATIONS) })}`,
     ),
+  /** Needs a language model configured on the server (see `aiApi.status`). */
+  generate: (householdId: string, lang: Locale, servings: number) =>
+    api<GeneratedRecipe>(`/households/${householdId}/recipes/generated?${new URLSearchParams({ lang })}`, {
+      method: 'POST',
+      body: { servings },
+    }),
   markCooked: (householdId: string, recipeId: string) =>
     api<void>(`/households/${householdId}/recipes/${recipeId}/cooked`, { method: 'POST' }),
 }
@@ -139,4 +175,9 @@ export const recipesApi = {
 export const dietApi = {
   get: (householdId: string) => api<Diet>(`/households/${householdId}/diet`),
   update: (householdId: string, diet: Diet) => api<Diet>(`/households/${householdId}/diet`, { method: 'PUT', body: diet }),
+}
+
+export const aiApi = {
+  /** Whether the server has a language model: without one, nothing that needs it is offered. */
+  status: () => api<{ enabled: boolean }>('/ai'),
 }

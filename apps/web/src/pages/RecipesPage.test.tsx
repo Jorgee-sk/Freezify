@@ -82,6 +82,7 @@ function server(routes: Parameters<typeof fakeApi>[0] = {}) {
     [CATALOG]: () => page([PASTA, TORTILLA]),
     'GET /households/h1/diet': () => ({ body: { type: 'NONE', avoided: [] } }),
     [RECOMMENDATIONS]: () => ({ body: [PASTA_RECOMMENDATION] }),
+    'GET /ai': () => ({ body: { enabled: false } }),
     ...routes,
   })
 }

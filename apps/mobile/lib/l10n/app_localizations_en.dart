@@ -1433,4 +1433,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPurchaseDateInFuture => 'The purchase date cannot be later than today.';
+
+  @override
+  String get generatedLink => 'Create a recipe with what I have';
+
+  @override
+  String get generatedLinkHelp => 'With AI, only with what is at home and following the household’s diet.';
+
+  @override
+  String get generatedTitle => 'A recipe with what you have';
+
+  @override
+  String get generatedIntro =>
+      'An AI writes a recipe using only the food in your inventory that your household eats, and uses first what expires first.';
+
+  @override
+  String get generatedServings => 'Servings';
+
+  @override
+  String get generatedCreate => 'Create recipe';
+
+  @override
+  String get generatedAgain => 'Create another';
+
+  @override
+  String get generatedWriting => 'Writing the recipe…';
+
+  @override
+  String get generatedNotice =>
+      'Recipe written by AI from your inventory. Check amounts and times, and that meat, fish and eggs are fully cooked.';
+
+  @override
+  String get generatedOptional => 'optional';
+
+  @override
+  String get errorAiNotConfigured => 'This installation has no AI configured.';
+
+  @override
+  String get errorAiLimitReached => 'You have used all of today’s AI requests. Try again tomorrow.';
+
+  @override
+  String get errorAiUnavailable => 'The AI did not give a usable recipe. Try again.';
+
+  @override
+  String get errorNothingToCookWith => 'There is nothing in the inventory, within its date, that your household eats.';
 }

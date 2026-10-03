@@ -371,5 +371,19 @@
   "scanAdded": "{count, plural, =1{1 producto añadido al inventario} other{{count} productos añadidos al inventario}}",
   "scanDiscardConfirm": "Si sales ahora se pierde la revisión de este ticket.",
   "scanDiscard": "Salir",
-  "errorPurchaseDateInFuture": "La fecha de compra no puede ser posterior a hoy."
+  "errorPurchaseDateInFuture": "La fecha de compra no puede ser posterior a hoy.",
+  "generatedLink": "Crear una receta con lo que tengo",
+  "generatedLinkHelp": "Con IA, solo con lo que hay en casa y respetando la dieta del hogar.",
+  "generatedTitle": "Receta con lo que tienes",
+  "generatedIntro": "Una IA escribe una receta solo con los alimentos de tu inventario que se comen en tu hogar, y usa antes los que caducan antes.",
+  "generatedServings": "Raciones",
+  "generatedCreate": "Crear receta",
+  "generatedAgain": "Crear otra",
+  "generatedWriting": "Escribiendo la receta…",
+  "generatedNotice": "Receta escrita por IA a partir de tu inventario. Revisa cantidades y tiempos, y que la carne, el pescado y los huevos queden bien hechos.",
+  "generatedOptional": "opcional",
+  "errorAiNotConfigured": "Esta instalación no tiene IA configurada.",
+  "errorAiLimitReached": "Has usado todas las peticiones de IA de hoy. Vuelve a intentarlo mañana.",
+  "errorAiUnavailable": "La IA no ha dado una receta válida. Inténtalo de nuevo.",
+  "errorNothingToCookWith": "No hay en el inventario nada sin caducar que se coma en tu hogar."
 }

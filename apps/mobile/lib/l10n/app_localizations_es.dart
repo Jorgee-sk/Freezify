@@ -1437,4 +1437,48 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorPurchaseDateInFuture => 'La fecha de compra no puede ser posterior a hoy.';
+
+  @override
+  String get generatedLink => 'Crear una receta con lo que tengo';
+
+  @override
+  String get generatedLinkHelp => 'Con IA, solo con lo que hay en casa y respetando la dieta del hogar.';
+
+  @override
+  String get generatedTitle => 'Receta con lo que tienes';
+
+  @override
+  String get generatedIntro =>
+      'Una IA escribe una receta solo con los alimentos de tu inventario que se comen en tu hogar, y usa antes los que caducan antes.';
+
+  @override
+  String get generatedServings => 'Raciones';
+
+  @override
+  String get generatedCreate => 'Crear receta';
+
+  @override
+  String get generatedAgain => 'Crear otra';
+
+  @override
+  String get generatedWriting => 'Escribiendo la receta…';
+
+  @override
+  String get generatedNotice =>
+      'Receta escrita por IA a partir de tu inventario. Revisa cantidades y tiempos, y que la carne, el pescado y los huevos queden bien hechos.';
+
+  @override
+  String get generatedOptional => 'opcional';
+
+  @override
+  String get errorAiNotConfigured => 'Esta instalación no tiene IA configurada.';
+
+  @override
+  String get errorAiLimitReached => 'Has usado todas las peticiones de IA de hoy. Vuelve a intentarlo mañana.';
+
+  @override
+  String get errorAiUnavailable => 'La IA no ha dado una receta válida. Inténtalo de nuevo.';
+
+  @override
+  String get errorNothingToCookWith => 'No hay en el inventario nada sin caducar que se coma en tu hogar.';
 }

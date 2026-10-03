@@ -29,6 +29,10 @@ String errorMessage(AppLocalizations l10n, Object error) {
     'WEEK_IN_THE_PAST' => l10n.errorWeekInThePast,
     'SHOPPING_ITEM_NOT_FOUND' => l10n.errorShoppingItemNotFound,
     'PURCHASE_DATE_IN_FUTURE' => l10n.errorPurchaseDateInFuture,
+    'AI_NOT_CONFIGURED' => l10n.errorAiNotConfigured,
+    'AI_LIMIT_REACHED' => l10n.errorAiLimitReached,
+    'AI_UNAVAILABLE' => l10n.errorAiUnavailable,
+    'NOTHING_TO_COOK_WITH' => l10n.errorNothingToCookWith,
     _ => l10n.errorGeneric,
   };
 }
