@@ -103,7 +103,7 @@
   "errorRateLimited": "Too many attempts. Please wait a moment.",
   "errorHouseholdNotFound": "This household doesn't exist or you no longer belong to it.",
   "errorNotOwner": "Only the household owner can do this.",
-  "errorOwnerCannotLeave": "The owner cannot leave the household. Delete it if you no longer need it.",
+  "errorOwnerCannotLeave": "The owner cannot leave the household. First make another member the owner, or delete it.",
   "errorAlreadyMember": "You already belong to this household.",
   "errorInvitationNotFound": "The code is invalid or has expired.",
   "errorMemberNotFound": "That person no longer belongs to the household.",
@@ -859,6 +859,43 @@
   "@shoppingLeftWithoutAmount": {
     "placeholders": {
       "names": {
+        "type": "String"
+      }
+    }
+  },
+  "transferOwnership": "Make owner",
+  "transferTo": "Make {name} the owner",
+  "@transferTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmTransfer": "{name} will become the owner of the household and you will stay as a member. Only {name} can give it back.",
+  "@confirmTransfer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ownerLeavesHint": "To leave the household without deleting it, first make another member the owner.",
+  "activeCodes": "Active codes",
+  "activeCodesHelp": "Anyone with one of these codes can join while it is valid. Revoke it if it should no longer work.",
+  "revoke": "Revoke",
+  "revokeCode": "Revoke code {code}",
+  "@revokeCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmRevoke": "Code {code} will no longer let anyone join. Whoever already joined with it stays.",
+  "@confirmRevoke": {
+    "placeholders": {
+      "code": {
         "type": "String"
       }
     }

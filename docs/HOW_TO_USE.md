@@ -291,6 +291,10 @@ FREEZIFY_FCM_CREDENTIALS_FILE_IN_CONTAINER=/run/secrets/freezify/firebase-servic
 5. Opcional: `FREEZIFY_API_DOCS=true` publica la descripción de la API (Swagger UI). Por defecto está
    desactivada; en local sin Docker (`spring-boot:test-run`) siempre está activa.
 
+6. La cookie de sesión de la web solo viaja por HTTPS. Si pruebas con Docker en `http://localhost:3000`, sin
+   HTTPS, añade `FREEZIFY_REFRESH_COOKIE_SECURE=false` a `.env` o la sesión no sobrevivirá a una recarga. En un
+   despliegue real, con HTTPS, no la pongas.
+
 ### 4.2 Arrancar
 
 ```bash
@@ -406,8 +410,6 @@ Estos puntos ya están identificados en `docs/STATUS.md` y bloquean un lanzamien
 |---|---|
 | Verificación de correo y recuperación de contraseña | Hoy quien olvida la contraseña pierde la cuenta |
 | Eliminación de cuenta y de sus datos | Obligación del RGPD |
-| Refresh token de la web en una cookie `HttpOnly` | Hoy está en `localStorage`, expuesto a XSS |
-| Swagger UI y `/v3/api-docs` cerrados en producción | Hoy son públicos |
 | El backend solo accesible a través del proxy | Confía en las cabeceras `X-Forwarded-*` para el límite de peticiones |
 | Tiempo real probado a través de nginx | Solo se ha probado contra el backend directamente |
 | Política de privacidad y aviso legal | Se tratan datos personales |

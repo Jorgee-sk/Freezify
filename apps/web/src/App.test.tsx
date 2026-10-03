@@ -38,7 +38,10 @@ describe('authentication', () => {
     expect(await screen.findByRole('link', { name: /Casa/ })).toHaveAttribute('href', '/households/h1')
     expect(screen.getByText('2 miembros')).toBeInTheDocument()
     expect(server.last('POST /auth/login')?.body).toEqual({ email: 'ana@example.com', password: 'correct-horse' })
-    expect(session.refreshToken()).toBe('refresh-1')
+    // The refresh token goes into an HttpOnly cookie, never into storage that a script can read.
+    expect(server.last('POST /auth/login')?.headers['X-Freezify-Session']).toBe('cookie')
+    expect(JSON.stringify({ ...localStorage })).not.toContain('refresh-1')
+    expect(session.mayResume()).toBe(true)
   })
 
   it('shows a translated message when the credentials are wrong', async () => {
@@ -76,8 +79,8 @@ describe('authentication', () => {
     })
   })
 
-  it('restores the session from the stored refresh token', async () => {
-    localStorage.setItem('freezify.refreshToken', 'refresh-1')
+  it('restores the session from the cookie', async () => {
+    localStorage.setItem('freezify.session', '1')
     fakeApi({
       'POST /auth/refresh': () => ({ body: { accessToken: 'access-2', refreshToken: 'refresh-2' } }),
       'GET /users/me': () => ({ body: ANA }),
@@ -89,7 +92,7 @@ describe('authentication', () => {
   })
 
   it('returns to the login page when the stored session is no longer valid', async () => {
-    localStorage.setItem('freezify.refreshToken', 'revoked')
+    localStorage.setItem('freezify.session', '1')
     fakeApi({
       'POST /auth/refresh': () => problem(401, 'INVALID_REFRESH_TOKEN'),
       'GET /users/me': () => problem(401, 'UNAUTHORIZED'),
@@ -97,7 +100,7 @@ describe('authentication', () => {
     renderApp('/')
 
     expect(await screen.findByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
-    expect(session.refreshToken()).toBeNull()
+    expect(session.mayResume()).toBe(false)
   })
 
   it('signs out, revoking the refresh token', async () => {
@@ -113,8 +116,10 @@ describe('authentication', () => {
     await user.click(await screen.findByRole('button', { name: 'Cerrar sesión' }))
 
     expect(await screen.findByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument()
-    expect(server.last('POST /auth/logout')?.body).toEqual({ refreshToken: 'refresh-1' })
-    expect(session.refreshToken()).toBeNull()
+    // The cookie goes with the request; nothing is sent in the body.
+    expect(server.last('POST /auth/logout')?.body).toBeUndefined()
+    expect(server.last('POST /auth/logout')?.headers['X-Freezify-Session']).toBe('cookie')
+    expect(session.mayResume()).toBe(false)
   })
 
   it('switches language', async () => {
@@ -175,6 +180,7 @@ describe('households', () => {
       'GET /households/h1/members': () => ({
         body: [{ userId: 'u1', displayName: 'Ana', email: ANA.email, role: 'OWNER', joinedAt: '2026-10-01T10:00:00Z' }],
       }),
+      'GET /households/h1/invitations': () => ({ body: [] }),
     })
     renderApp('/households/h1/settings')
 
@@ -190,6 +196,7 @@ describe('households', () => {
       'GET /users/me': () => ({ body: ANA }),
       'GET /households/h1': () => ({ body: CASA }),
       'GET /households/h1/members': () => ({ body: [] }),
+      'GET /households/h1/invitations': () => ({ body: [] }),
       'POST /households/h1/invitations': () => ({
         status: 201,
         body: { code: 'ABCD2345', expiresAt: '2026-10-08T10:00:00Z' },
@@ -210,6 +217,7 @@ describe('households', () => {
       'GET /users/me': () => ({ body: ANA }),
       'GET /households/h1': () => ({ body: CASA }),
       'GET /households/h1/members': () => ({ body: [] }),
+      'GET /households/h1/invitations': () => ({ body: [] }),
       'GET /households': () => ({ body: [] }),
       'DELETE /households/h1': () => ({ status: 204 }),
     })
@@ -234,6 +242,7 @@ describe('households', () => {
       'GET /users/me': () => ({ body: ANA }),
       'GET /households/h1': () => ({ body: { ...CASA, role: 'MEMBER' } }),
       'GET /households/h1/members': () => ({ body: [] }),
+      'GET /households/h1/invitations': () => ({ body: [] }),
     })
     renderApp('/households/h1/settings')
 

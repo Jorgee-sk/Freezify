@@ -43,7 +43,7 @@ describe('readEvents', () => {
 
 describe('subscribeToHousehold', () => {
   it('sends the session token and reports inventory changes', async () => {
-    session.store({ accessToken: 'access-1', refreshToken: 'refresh-1' })
+    session.store({ accessToken: 'access-1' })
     const stream = eventStream()
     const api = fakeApi({ [EVENTS]: () => ({ response: stream.response }) })
     const onEvent = vi.fn()
@@ -61,7 +61,7 @@ describe('subscribeToHousehold', () => {
   })
 
   it('reconnects when the connection drops and reports that something may have been missed', async () => {
-    session.store({ accessToken: 'access-1', refreshToken: 'refresh-1' })
+    session.store({ accessToken: 'access-1' })
     const first = eventStream()
     const second = eventStream()
     const streams = [first, second]
@@ -81,7 +81,7 @@ describe('subscribeToHousehold', () => {
   })
 
   it('keeps trying while the server cannot be reached', async () => {
-    session.store({ accessToken: 'access-1', refreshToken: 'refresh-1' })
+    session.store({ accessToken: 'access-1' })
     let attempts = 0
     const stream = eventStream()
     const api = fakeApi({
@@ -98,7 +98,7 @@ describe('subscribeToHousehold', () => {
   })
 
   it('renews an expired session before listening', async () => {
-    session.store({ accessToken: 'expired', refreshToken: 'refresh-1' })
+    session.store({ accessToken: 'expired' })
     const stream = eventStream()
     const api = fakeApi({
       [EVENTS]: (_, { headers }) =>
@@ -114,7 +114,7 @@ describe('subscribeToHousehold', () => {
   })
 
   it('stops for good when the user no longer belongs to the household', async () => {
-    session.store({ accessToken: 'access-1', refreshToken: 'refresh-1' })
+    session.store({ accessToken: 'access-1' })
     const api = fakeApi({ [EVENTS]: () => problem(404, 'HOUSEHOLD_NOT_FOUND') })
 
     subscribeToHousehold('h1', () => {}, FAST)
@@ -125,7 +125,7 @@ describe('subscribeToHousehold', () => {
   })
 
   it('does not reconnect after unsubscribing', async () => {
-    session.store({ accessToken: 'access-1', refreshToken: 'refresh-1' })
+    session.store({ accessToken: 'access-1' })
     const stream = eventStream()
     const api = fakeApi({ [EVENTS]: () => ({ response: stream.response }) })
 

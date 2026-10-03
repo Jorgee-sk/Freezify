@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
 
 @ConfigurationProperties("freezify.auth")
@@ -13,7 +14,9 @@ public record AuthProperties(
         @NotBlank String jwtSecret,
         @NotBlank String issuer,
         @NotNull Duration accessTokenTtl,
-        @NotNull Duration refreshTokenTtl) {
+        @NotNull Duration refreshTokenTtl,
+        // Only sent over HTTPS. Turned off for local development over plain http only.
+        @DefaultValue("true") boolean refreshCookieSecure) {
 
     private static final int MIN_SECRET_BYTES = 32;
 

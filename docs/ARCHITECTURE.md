@@ -159,6 +159,9 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D58 | Lo que falta se calcula en el módulo del plan (`PlanNeeds`) con la misma despensa simulada | Una sola forma de saber qué hay cada día: la lista y el plan nunca se contradicen |
 | D59 | Las líneas del plan se **recalculan** al volver a llenar la lista; las que toca una persona pasan a ser suyas | La lista sigue al plan sin duplicar, y nada de lo que alguien escribió se pierde |
 | D60 | Llenar la lista toma un **bloqueo de PostgreSQL por hogar** (`pg_advisory_xact_lock`) | Dos miembros a la vez no duplican líneas, sin una tabla más que bloquear |
+| D61 | La web lleva su refresh token en una **cookie `HttpOnly`** pedida con la cabecera `X-Freezify-Session: cookie`; el móvil sigue con el token en el cuerpo | Un XSS no puede llevarse el token; la cabecera, que otro sitio no puede enviar, protege la cookie de peticiones cruzadas sin un token CSRF aparte |
+| D62 | Las invitaciones se **revocan borrándolas**; las puede revocar quien las generó o el propietario | Quien ya se unió no depende del código; sin una columna de estado que mantener |
+| D63 | **Transferir** el hogar intercambia los papeles en una transacción | Siempre hay exactamente un propietario, y así el anterior puede abandonarlo |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -228,14 +231,17 @@ Fase 1:
 |---|---|---|
 | POST | `/auth/register` | Alta; devuelve tokens y usuario |
 | POST | `/auth/login` | Login |
-| POST | `/auth/refresh` | Rota el refresh token |
-| POST | `/auth/logout` | Revoca el refresh token |
+| POST | `/auth/refresh` | Rota el refresh token (del cuerpo, o de la cookie con `X-Freezify-Session: cookie`) |
+| POST | `/auth/logout` | Revoca el refresh token y, en la web, borra la cookie |
 | GET / PATCH | `/users/me` | Perfil |
 | POST / GET | `/households` | Crear / listar los míos |
 | GET / PATCH / DELETE | `/households/{id}` | Detalle / renombrar (owner) / eliminar (owner) |
 | GET | `/households/{id}/members` | Miembros |
 | DELETE | `/households/{id}/members/{userId}` | Expulsar (owner) o abandonar (uno mismo) |
 | POST | `/households/{id}/invitations` | Genera un código de invitación |
+| GET | `/households/{id}/invitations` | Códigos que aún permiten unirse |
+| DELETE | `/households/{id}/invitations/{code}` | Revoca un código (quien lo generó o el propietario) |
+| POST | `/households/{id}/owner` | El propietario hace propietario a otro miembro |
 | POST | `/households/join` | Unirse con un código |
 
 Fase 2 (todo bajo `/households/{id}/inventory` salvo el catálogo):
@@ -297,7 +303,7 @@ en las colecciones que puedan crecer (a partir de Fase 2).
 | Estado servidor | TanStack Query | Riverpod |
 | Navegación | React Router | go_router |
 | HTTP | `fetch` con wrapper tipado y refresh automático | dio con interceptor de refresh |
-| Tokens | Access en memoria; refresh en `localStorage` (ver riesgo R8) | `flutter_secure_storage` (Keystore / Keychain) |
+| Tokens | Access en memoria; refresh en una cookie `HttpOnly` que ningún script lee (D61) | `flutter_secure_storage` (Keystore / Keychain) |
 | i18n | i18next (es, en) | `flutter_localizations` + ARB (es, en) |
 | Tests | Vitest + Testing Library | `flutter_test` |
 
@@ -329,7 +335,7 @@ Controller → caso de uso → AiService → AIProvider ─┬─ MockProvider  
 | R5 | **Contenido de recetas**: licencias y normalización de ingredientes | Medio | Conjunto inicial propio y pequeño; no importar datasets sin revisar licencia |
 | R6 | **Coste y latencia de IA** | Medio | `AIProvider` intercambiable, caché, límites por usuario, determinista por defecto |
 | R7 | **Push en iOS**: requiere macOS, cuenta de Apple Developer y APNs | Medio | El entorno de desarrollo actual es Windows: iOS no se puede compilar ni probar aquí |
-| R8 | Refresh token de la web en `localStorage` (expuesto a XSS) | Medio | Aceptado en Fase 1; migrar a cookie `HttpOnly` + `SameSite` antes de abrir al público |
+| R8 | Refresh token de la web robado por XSS | Medio | ✅ Mitigado: cookie `HttpOnly`, `Secure`, `SameSite=Strict`, limitada a `/api/v1/auth` y que solo se usa con la cabecera `X-Freezify-Session` (D61). Un XSS aún podría usar la sesión mientras la página está abierta, pero no llevársela |
 | R9 | Sincronización offline y conflictos | Medio | Acotar a lectura en caché en el MVP |
 | R10 | **RGPD**: imágenes de tickets, borrado de cuenta | Medio | Retención configurable, borrado en cascada, minimización desde el diseño |
 | R11 | Versiones muy recientes (Spring Boot 4.1, TypeScript 7, Vite 8) | Bajo | Versiones fijadas; CI en cada cambio |

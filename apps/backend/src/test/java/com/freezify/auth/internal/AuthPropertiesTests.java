@@ -11,13 +11,13 @@ class AuthPropertiesTests {
     @Test
     void rejectsSecretsTooShortForHs256() {
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> new AuthProperties("too-short", "freezify", Duration.ofMinutes(15), Duration.ofDays(30)))
+                .isThrownBy(() -> new AuthProperties("too-short", "freezify", Duration.ofMinutes(15), Duration.ofDays(30), true))
                 .withMessageContaining("FREEZIFY_JWT_SECRET");
     }
 
     @Test
     void acceptsA256BitSecret() {
-        assertThatCode(() -> new AuthProperties("x".repeat(32), "freezify", Duration.ofMinutes(15), Duration.ofDays(30)))
+        assertThatCode(() -> new AuthProperties("x".repeat(32), "freezify", Duration.ofMinutes(15), Duration.ofDays(30), true))
                 .doesNotThrowAnyException();
     }
 }

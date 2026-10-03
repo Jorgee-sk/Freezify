@@ -59,7 +59,16 @@
     "confirmLeave": "¿Seguro que quieres abandonar «{{name}}»?",
     "confirmDelete": "Se eliminará «{{name}}» para todos sus miembros. Esta acción no se puede deshacer. ¿Continuar?",
     "settings": "Miembros y ajustes",
-    "backToInventory": "Volver al inventario"
+    "backToInventory": "Volver al inventario",
+    "transfer": "Hacer propietario",
+    "transferTo": "Hacer propietario a {{name}}",
+    "confirmTransfer": "{{name}} pasará a ser el propietario del hogar y tú seguirás como miembro. Solo {{name}} podrá devolvértelo. ¿Continuar?",
+    "ownerLeaves": "Para abandonar el hogar sin eliminarlo, haz propietario antes a otro miembro.",
+    "activeCodes": "Códigos activos",
+    "activeCodesHelp": "Cualquiera que tenga uno de estos códigos puede unirse mientras sea válido. Revócalo si ya no quieres que sirva.",
+    "revoke": "Revocar",
+    "revokeCode": "Revocar el código {{code}}",
+    "confirmRevoke": "El código {{code}} dejará de servir para unirse. Quien ya se unió con él se queda. ¿Continuar?"
   },
   "errors": {
     "generic": "Algo ha salido mal. Inténtalo de nuevo.",
@@ -71,7 +80,7 @@
     "RATE_LIMITED": "Demasiados intentos. Espera un momento.",
     "HOUSEHOLD_NOT_FOUND": "Este hogar no existe o ya no perteneces a él.",
     "NOT_HOUSEHOLD_OWNER": "Solo el propietario del hogar puede hacer esto.",
-    "OWNER_CANNOT_LEAVE": "El propietario no puede abandonar el hogar. Elimínalo si ya no lo necesitas.",
+    "OWNER_CANNOT_LEAVE": "El propietario no puede abandonar el hogar. Haz propietario antes a otro miembro, o elimínalo.",
     "ALREADY_MEMBER": "Ya perteneces a este hogar.",
     "INVITATION_NOT_FOUND": "El código no es válido o ha caducado.",
     "MEMBER_NOT_FOUND": "Esa persona ya no pertenece al hogar.",

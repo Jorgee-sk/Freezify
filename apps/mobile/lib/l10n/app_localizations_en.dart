@@ -186,7 +186,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorNotOwner => 'Only the household owner can do this.';
 
   @override
-  String get errorOwnerCannotLeave => 'The owner cannot leave the household. Delete it if you no longer need it.';
+  String get errorOwnerCannotLeave =>
+      'The owner cannot leave the household. First make another member the owner, or delete it.';
 
   @override
   String get errorAlreadyMember => 'You already belong to this household.';
@@ -1257,5 +1258,41 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String shoppingLeftWithoutAmount(String names) {
     return 'Still on the list because they do not say how much was bought: $names. Give the amount and try again.';
+  }
+
+  @override
+  String get transferOwnership => 'Make owner';
+
+  @override
+  String transferTo(String name) {
+    return 'Make $name the owner';
+  }
+
+  @override
+  String confirmTransfer(String name) {
+    return '$name will become the owner of the household and you will stay as a member. Only $name can give it back.';
+  }
+
+  @override
+  String get ownerLeavesHint => 'To leave the household without deleting it, first make another member the owner.';
+
+  @override
+  String get activeCodes => 'Active codes';
+
+  @override
+  String get activeCodesHelp =>
+      'Anyone with one of these codes can join while it is valid. Revoke it if it should no longer work.';
+
+  @override
+  String get revoke => 'Revoke';
+
+  @override
+  String revokeCode(String code) {
+    return 'Revoke code $code';
+  }
+
+  @override
+  String confirmRevoke(String code) {
+    return 'Code $code will no longer let anyone join. Whoever already joined with it stays.';
   }
 }

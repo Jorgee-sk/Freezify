@@ -53,7 +53,10 @@ public class HouseholdService implements HouseholdAccess, HouseholdDirectory {
 
     public record MemberView(UUID userId, String displayName, String email, HouseholdRole role, Instant joinedAt) {}
 
-    public record InvitationView(String code, Instant expiresAt) {}
+    /**
+     * @param createdBy who generated the code; they and the owner can revoke it
+     */
+    public record InvitationView(String code, Instant expiresAt, UUID createdBy) {}
 
     @Override
     @Transactional(readOnly = true)
@@ -169,7 +172,8 @@ public class HouseholdService implements HouseholdAccess, HouseholdDirectory {
         boolean leaving = actorId.equals(targetUserId);
         if (leaving && actorRole == HouseholdRole.OWNER) {
             throw ApiException.conflict(
-                    "OWNER_CANNOT_LEAVE", "The owner cannot leave the household; delete it instead.");
+                    "OWNER_CANNOT_LEAVE",
+                    "The owner cannot leave the household; hand it over to another member or delete it.");
         }
         if (!leaving && actorRole != HouseholdRole.OWNER) {
             throw ApiException.forbidden("NOT_HOUSEHOLD_OWNER", "Only the household owner can remove members.");
@@ -190,7 +194,56 @@ public class HouseholdService implements HouseholdAccess, HouseholdDirectory {
         } while (invitations.existsByCode(code));
         HouseholdInvitationEntity invitation = invitations.save(
                 new HouseholdInvitationEntity(householdId, code, userId, now, now.plus(properties.invitationTtl())));
-        return new InvitationView(invitation.code(), invitation.expiresAt());
+        return view(invitation);
+    }
+
+    /** The codes that still let someone join. Any member sees them: any member can share them. */
+    @Transactional(readOnly = true)
+    public List<InvitationView> invitations(UUID householdId, UUID userId) {
+        requireMember(householdId, userId);
+        return invitations.findByHouseholdIdAndExpiresAtAfterOrderByExpiresAtAscIdAsc(householdId, clock.instant()).stream()
+                .map(HouseholdService::view)
+                .toList();
+    }
+
+    /**
+     * Stops a code from letting anyone else join. Whoever generated it can revoke it, and so can the owner. Those
+     * who already joined with it stay.
+     */
+    @Transactional
+    public void revokeInvitation(UUID householdId, UUID userId, String rawCode) {
+        HouseholdRole role = requireMember(householdId, userId);
+        HouseholdInvitationEntity invitation = invitations
+                .findByHouseholdIdAndCode(householdId, InvitationCodes.normalize(rawCode))
+                .orElseThrow(() -> ApiException.notFound(
+                        "INVITATION_NOT_FOUND", "The invitation code is invalid or has expired."));
+        if (role != HouseholdRole.OWNER && !invitation.createdBy().equals(userId)) {
+            throw ApiException.forbidden(
+                    "NOT_HOUSEHOLD_OWNER", "Only the owner or whoever generated the code can revoke it.");
+        }
+        invitations.delete(invitation);
+    }
+
+    /**
+     * Hands the household over to another member, who becomes its owner; the previous owner stays as a member and
+     * can then leave. There is always exactly one owner.
+     */
+    @Transactional
+    public void transferOwnership(UUID householdId, UUID ownerId, UUID newOwnerId) {
+        requireOwner(householdId, ownerId);
+        if (ownerId.equals(newOwnerId)) {
+            return;
+        }
+        HouseholdMemberEntity newOwner = members.findByHouseholdIdAndUserId(householdId, newOwnerId)
+                .orElseThrow(() -> ApiException.notFound("MEMBER_NOT_FOUND", "Member not found."));
+        HouseholdMemberEntity owner = members.findByHouseholdIdAndUserId(householdId, ownerId)
+                .orElseThrow(HouseholdService::householdNotFound);
+        owner.becomes(HouseholdRole.MEMBER);
+        newOwner.becomes(HouseholdRole.OWNER);
+    }
+
+    private static InvitationView view(HouseholdInvitationEntity invitation) {
+        return new InvitationView(invitation.code(), invitation.expiresAt(), invitation.createdBy());
     }
 
     @Transactional

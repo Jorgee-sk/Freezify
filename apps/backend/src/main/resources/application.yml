@@ -50,6 +50,8 @@ freezify:
     issuer: ${FREEZIFY_JWT_ISSUER:freezify}
     access-token-ttl: 15m
     refresh-token-ttl: 30d
+    # The browser's refresh token cookie is only sent over HTTPS. Only local development over http turns it off.
+    refresh-cookie-secure: ${FREEZIFY_REFRESH_COOKIE_SECURE:true}
   cors:
     allowed-origins: ${FREEZIFY_CORS_ALLOWED_ORIGINS:http://localhost:5173}
   rate-limit:

@@ -59,7 +59,16 @@
     "confirmLeave": "Are you sure you want to leave “{{name}}”?",
     "confirmDelete": "“{{name}}” will be deleted for all its members. This cannot be undone. Continue?",
     "settings": "Members and settings",
-    "backToInventory": "Back to the inventory"
+    "backToInventory": "Back to the inventory",
+    "transfer": "Make owner",
+    "transferTo": "Make {{name}} the owner",
+    "confirmTransfer": "{{name}} will become the owner of the household and you will stay as a member. Only {{name}} can give it back. Continue?",
+    "ownerLeaves": "To leave the household without deleting it, first make another member the owner.",
+    "activeCodes": "Active codes",
+    "activeCodesHelp": "Anyone with one of these codes can join while it is valid. Revoke it if it should no longer work.",
+    "revoke": "Revoke",
+    "revokeCode": "Revoke code {{code}}",
+    "confirmRevoke": "Code {{code}} will no longer let anyone join. Whoever already joined with it stays. Continue?"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -71,7 +80,7 @@
     "RATE_LIMITED": "Too many attempts. Please wait a moment.",
     "HOUSEHOLD_NOT_FOUND": "This household doesn't exist or you no longer belong to it.",
     "NOT_HOUSEHOLD_OWNER": "Only the household owner can do this.",
-    "OWNER_CANNOT_LEAVE": "The owner cannot leave the household. Delete it if you no longer need it.",
+    "OWNER_CANNOT_LEAVE": "The owner cannot leave the household. First make another member the owner, or delete it.",
     "ALREADY_MEMBER": "You already belong to this household.",
     "INVITATION_NOT_FOUND": "The code is invalid or has expired.",
     "MEMBER_NOT_FOUND": "That person no longer belongs to the household.",
