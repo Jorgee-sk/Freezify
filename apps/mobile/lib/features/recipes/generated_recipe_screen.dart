@@ -45,6 +45,35 @@ class GeneratedIngredient {
   final bool estimated;
 }
 
+/// Food a generated recipe may use: what the model is given, without the staples.
+class AvailableFood {
+  const AvailableFood({
+    required this.foodId,
+    required this.name,
+    required this.quantity,
+    required this.daysLeft,
+    required this.estimated,
+  });
+
+  factory AvailableFood.fromJson(Map<String, dynamic> json) => AvailableFood(
+    foodId: json['foodId'] as String?,
+    name: json['name'] as String,
+    quantity: Quantity((json['amount'] as num).toDouble(), Unit.parse(json['unit'] as String)),
+    daysLeft: json['daysLeft'] as int?,
+    estimated: json['estimated'] as bool,
+  );
+
+  /// Only catalog foods can be required.
+  final String? foodId;
+  final String name;
+  final Quantity quantity;
+  final int? daysLeft;
+  final bool estimated;
+}
+
+/// How many foods a generated recipe can be told to use.
+const maxMustUse = 3;
+
 /// A recipe a language model wrote with what the household has. Shown, not stored.
 class GeneratedRecipe {
   const GeneratedRecipe({
@@ -87,10 +116,21 @@ class GeneratedRecipeRepository {
   /// Whether the server has a language model: without one, nothing that needs it is offered.
   Future<bool> aiEnabled() async => (await _api.get('/ai') as Map<String, dynamic>)['enabled'] as bool;
 
-  Future<GeneratedRecipe> generate(String householdId, String language, int servings) async => GeneratedRecipe.fromJson(
-    await _api.post('/households/$householdId/recipes/generated?lang=$language', body: {'servings': servings})
-        as Map<String, dynamic>,
-  );
+  Future<List<AvailableFood>> available(String householdId, String language) async {
+    final json =
+        await _api.get('/households/$householdId/recipes/generated/ingredients?lang=$language') as List<dynamic>;
+    return [for (final item in json) AvailableFood.fromJson(item as Map<String, dynamic>)];
+  }
+
+  /// [use]: catalog foods the recipe has to use.
+  Future<GeneratedRecipe> generate(String householdId, String language, int servings, List<String> use) async =>
+      GeneratedRecipe.fromJson(
+        await _api.post(
+              '/households/$householdId/recipes/generated?lang=$language',
+              body: {'servings': servings, 'use': use},
+            )
+            as Map<String, dynamic>,
+      );
 }
 
 final generatedRecipeRepositoryProvider = Provider<GeneratedRecipeRepository>(
@@ -99,6 +139,12 @@ final generatedRecipeRepositoryProvider = Provider<GeneratedRecipeRepository>(
 
 /// It only changes with the server's configuration, so it is asked once.
 final aiEnabledProvider = FutureProvider<bool>((ref) => ref.watch(generatedRecipeRepositoryProvider).aiEnabled());
+
+/// What the model would be given: shown, so that nothing about it is a mystery.
+final availableFoodProvider = FutureProvider.autoDispose
+    .family<List<AvailableFood>, ({String householdId, String language})>(
+      (ref, key) => ref.watch(generatedRecipeRepositoryProvider).available(key.householdId, key.language),
+    );
 
 /// "Create a recipe with what I have": a language model writes one from the household's inventory.
 class GeneratedRecipeScreen extends ConsumerStatefulWidget {
@@ -112,6 +158,7 @@ class GeneratedRecipeScreen extends ConsumerStatefulWidget {
 
 class _GeneratedRecipeScreenState extends ConsumerState<GeneratedRecipeScreen> {
   int _servings = 2;
+  final List<String> _mustUse = [];
   GeneratedRecipe? _recipe;
   Object? _error;
   bool _busy = false;
@@ -125,7 +172,7 @@ class _GeneratedRecipeScreenState extends ConsumerState<GeneratedRecipeScreen> {
     try {
       final recipe = await ref
           .read(generatedRecipeRepositoryProvider)
-          .generate(widget.householdId, language, _servings);
+          .generate(widget.householdId, language, _servings, List.of(_mustUse));
       if (mounted) {
         setState(() {
           _recipe = recipe;
@@ -155,6 +202,44 @@ class _GeneratedRecipeScreenState extends ConsumerState<GeneratedRecipeScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text(l10n.generatedIntro, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 16),
+          ...ref
+              .watch(availableFoodProvider((householdId: widget.householdId, language: l10n.localeName)))
+              .when(
+                loading: () => const [LinearProgressIndicator()],
+                error: (error, _) => [
+                  Text(errorMessage(l10n, error), style: TextStyle(color: theme.colorScheme.error)),
+                ],
+                data: (foods) => [
+                  Text(l10n.generatedAvailable, style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    foods.isEmpty ? l10n.errorNothingToCookWith : l10n.generatedMustUseHelp(maxMustUse),
+                    style: muted,
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      for (final food in foods)
+                        FilterChip(
+                          label: Text(_chipLabel(l10n, food)),
+                          selected: food.foodId != null && _mustUse.contains(food.foodId),
+                          // Food that is not a catalog food is given to the AI but cannot be required.
+                          onSelected:
+                              _busy ||
+                                  food.foodId == null ||
+                                  (_mustUse.length >= maxMustUse && !_mustUse.contains(food.foodId))
+                              ? null
+                              : (selected) => setState(
+                                  () => selected ? _mustUse.add(food.foodId!) : _mustUse.remove(food.foodId),
+                                ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -228,6 +313,19 @@ class _GeneratedRecipeScreenState extends ConsumerState<GeneratedRecipeScreen> {
       ),
     );
   }
+}
+
+String _chipLabel(AppLocalizations l10n, AvailableFood food) {
+  final days = food.daysLeft;
+  final parts = [food.name, formatQuantity(l10n, food.quantity)];
+  if (days != null && days <= _pressingDays) {
+    parts.add(
+      days == 0
+          ? (food.estimated ? l10n.badgeTodayEstimated : l10n.badgeToday)
+          : (food.estimated ? l10n.badgeDaysEstimated(days) : l10n.badgeDays(days)),
+    );
+  }
+  return parts.join(' · ');
 }
 
 class _IngredientTile extends StatelessWidget {

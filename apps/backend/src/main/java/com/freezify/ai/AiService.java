@@ -71,8 +71,10 @@ public interface AiService {
      * @param language    {@code es} or {@code en}: the language of the recipe
      * @param ingredients everything the recipe may use; nothing else
      * @param avoided     what the household does not eat, in plain words, as a reminder for the model
+     * @param mustUse     keys of the ingredients the recipe has to use, not as optional
      */
-    record RecipeRequest(String language, int servings, List<Ingredient> ingredients, List<String> avoided) {}
+    record RecipeRequest(
+            String language, int servings, List<Ingredient> ingredients, List<String> avoided, List<String> mustUse) {}
 
     /**
      * @param key      how the model refers to it

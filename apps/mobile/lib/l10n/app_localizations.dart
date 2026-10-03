@@ -2407,6 +2407,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'There is nothing in the inventory, within its date, that your household eats.'**
   String get errorNothingToCookWith;
+
+  /// No description provided for @generatedAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'What the AI may use'**
+  String get generatedAvailable;
+
+  /// No description provided for @generatedMustUseHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up to {count} foods the recipe has to use.'**
+  String generatedMustUseHelp(int count);
+
+  /// No description provided for @errorFoodNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'That food is no longer at home, is past its date or is not eaten in your household.'**
+  String get errorFoodNotAvailable;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

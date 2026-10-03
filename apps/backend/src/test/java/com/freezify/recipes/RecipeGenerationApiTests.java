@@ -152,6 +152,38 @@ class RecipeGenerationApiTests extends ApiTestSupport {
     }
 
     @Test
+    void showsWhatARecipeMayUseAndCanBeToldWhatItMustUse() throws Exception {
+        stock("Calabacín", "2", "UNIT", TODAY.plusDays(1));
+        stock("Pechuga de pollo", "300", "GRAM", TODAY.plusDays(3));
+        stock("Jamón serrano", "100", "GRAM", TODAY.plusDays(20));
+        mvc.perform(as(jorge, json(put("/api/v1/households/" + householdId + "/diet"), """
+                        {"type": "NONE", "avoided": ["PORK"]}
+                        """)))
+                .andExpect(status().isOk());
+
+        mvc.perform(as(jorge, get("/api/v1/households/" + householdId + "/recipes/generated/ingredients")))
+                .andExpect(status().isOk())
+                // What the model would be given, without staples and without what the household does not eat.
+                .andExpect(jsonPath("$[*].name", contains("Calabacín", "Pechuga de pollo")))
+                .andExpect(jsonPath("$[0].daysLeft").value(1))
+                .andExpect(jsonPath("$[1].amount").value(300))
+                .andExpect(jsonPath("$[1].foodId").value(foodId("Pechuga de pollo")));
+
+        ArgumentCaptor<RecipeRequest> asked = ArgumentCaptor.forClass(RecipeRequest.class);
+        when(ai.writeRecipe(asked.capture(), any())).thenReturn(Answer.not(Outcome.FAILED));
+        generate(jorge, "{\"use\": [\"" + foodId("Pechuga de pollo") + "\"]}");
+        assertThat(asked.getValue().mustUse()).containsExactly(key(asked.getValue(), "Pechuga de pollo"));
+
+        // Not what is not at home, nor what the household does not eat.
+        generate(jorge, "{\"use\": [\"" + foodId("Huevos") + "\"]}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("FOOD_NOT_AVAILABLE"));
+        generate(jorge, "{\"use\": [\"" + foodId("Jamón serrano") + "\"]}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("FOOD_NOT_AVAILABLE"));
+    }
+
+    @Test
     void saysWhyThereIsNoRecipe() throws Exception {
         generate(jorge, "").andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("NOTHING_TO_COOK_WITH"));
 

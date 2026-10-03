@@ -85,6 +85,15 @@ public final class RecipeViews {
             @Nullable Long daysSinceCooked) {}
 
     /**
+     * Food a generated recipe may use.
+     *
+     * @param foodId   the catalog food, when it is one: only those can be required
+     * @param daysLeft days until the earliest date of that food at home, when it has one
+     */
+    public record AvailableFood(
+            @Nullable UUID foodId, String name, BigDecimal amount, Unit unit, @Nullable Long daysLeft, boolean estimated) {}
+
+    /**
      * A recipe a language model wrote with what the household has. Not part of the catalog and not stored.
      *
      * @param ingredients the staples last, and among the rest what the recipe needs before what is optional

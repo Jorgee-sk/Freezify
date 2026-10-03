@@ -13,6 +13,24 @@ const _nothingToConsumeFirst = {
 };
 
 const _generate = 'POST /households/h1/recipes/generated';
+const _available = 'GET /households/h1/recipes/generated/ingredients';
+
+Map<String, Object?> _atHome(String? foodId, String name, num amount, String unit, int? daysLeft) => {
+  'foodId': foodId,
+  'name': name,
+  'amount': amount,
+  'unit': unit,
+  'daysLeft': daysLeft,
+  'estimated': false,
+};
+
+final _foodsAtHome = [
+  _atHome('f-zucchini', 'Calabacín', 2, 'UNIT', 1),
+  _atHome('f-chicken', 'Pechuga de pollo', 400, 'GRAM', 3),
+  _atHome('f-rice', 'Arroz', 1000, 'GRAM', null),
+  _atHome('f-eggs', 'Huevos', 6, 'UNIT', 10),
+  _atHome(null, 'Salsa de la abuela', 1, 'UNIT', 4),
+];
 
 Map<String, Object?> _ingredient(
   String name, {
@@ -67,6 +85,7 @@ void main() {
     'GET /households/h1/recipes/recommendations': (_) => const FakeResponse.ok(<Object>[]),
     'GET /ai': (_) => const FakeResponse.ok({'enabled': true}),
     _generate: (_) => FakeResponse.ok(_recipe),
+    _available: (_) => FakeResponse.ok(_foodsAtHome),
     ...extra,
   });
 
@@ -106,18 +125,18 @@ void main() {
       await tester.tap(find.text('Crear receta'));
       await tester.pumpAndSettle();
 
-      expect(backend.last(_generate).body, {'servings': 3});
+      expect(backend.last(_generate).body, {'servings': 3, 'use': <String>[]});
       expect(backend.last(_generate).query['lang'], 'es');
       expect(find.text('Pollo salteado con calabacín'), findsOneWidget);
       expect(find.text('20 min · Fácil · 3 raciones'), findsOneWidget);
       expect(find.textContaining('Receta escrita por IA'), findsOneWidget);
-      expect(find.text('Caduca en unos 3 días (estimada)'), findsOneWidget);
-      expect(find.text('Caduca en 1 día'), findsOneWidget);
+      // The list builds lazily: the ingredients and the steps may be below the test screen.
+      await tester.scrollUntilVisible(find.text('Caduca en unos 3 días (estimada)'), 200);
+      await tester.scrollUntilVisible(find.text('Caduca en 1 día'), 200);
       // Far from its date: nothing to point out.
-      expect(find.textContaining('200'), findsNothing);
-      expect(find.text('150 g · opcional'), findsOneWidget);
-      expect(find.text('2 g · básico de cocina'), findsOneWidget);
-
+      expect(find.textContaining('200 días'), findsNothing);
+      await tester.scrollUntilVisible(find.text('150 g · opcional'), 200);
+      await tester.scrollUntilVisible(find.text('2 g · básico de cocina'), 200);
       await tester.scrollUntilVisible(find.text('Saltéalos con aceite y sal.'), 200);
       expect(find.text('Corta el pollo y el calabacín.'), findsOneWidget);
 
@@ -125,6 +144,41 @@ void main() {
       await tester.tap(find.text('Crear otra'));
       await tester.pumpAndSettle();
       expect(backend.count(_generate), 2);
+    });
+
+    testWidgets('shows what the AI may use and lets people pick up to three foods it must use', (tester) async {
+      final backend = backendWith();
+      await openRecipes(tester, backend);
+      await tester.tap(find.text('Crear una receta con lo que tengo'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Lo que la IA puede usar'), findsOneWidget);
+      expect(find.text('Calabacín · 2 uds · Caduca en 1 día'), findsOneWidget);
+      expect(find.text('Arroz · 1000 g'), findsOneWidget);
+      FilterChip chip(String label) => tester.widget<FilterChip>(find.widgetWithText(FilterChip, label));
+      // Food that is not a catalog food is given to the AI but cannot be required.
+      expect(chip('Salsa de la abuela · 1 ud · Caduca en 4 días').onSelected, isNull);
+
+      for (final label in [
+        'Calabacín · 2 uds · Caduca en 1 día',
+        'Pechuga de pollo · 400 g · Caduca en 3 días',
+        'Arroz · 1000 g',
+      ]) {
+        await tester.tap(find.widgetWithText(FilterChip, label));
+        await tester.pumpAndSettle();
+      }
+      // Three at most.
+      expect(chip('Huevos · 6 uds').onSelected, isNull);
+      await tester.tap(find.widgetWithText(FilterChip, 'Arroz · 1000 g'));
+      await tester.pumpAndSettle();
+      expect(chip('Huevos · 6 uds').onSelected, isNotNull);
+
+      await tester.tap(find.text('Crear receta'));
+      await tester.pumpAndSettle();
+      expect(backend.last(_generate).body, {
+        'servings': 2,
+        'use': ['f-zucchini', 'f-chicken'],
+      });
     });
 
     testWidgets('says why there is no recipe', (tester) async {

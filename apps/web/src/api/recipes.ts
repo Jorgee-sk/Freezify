@@ -140,7 +140,20 @@ export interface GeneratedRecipe {
   steps: string[]
 }
 
+/** Food a generated recipe may use: what the model is given, without the staples. */
+export interface AvailableFood {
+  /** Only catalog foods can be required. */
+  foodId: string | null
+  name: string
+  amount: number
+  unit: Unit
+  daysLeft: number | null
+  estimated: boolean
+}
+
 export const SERVINGS = [1, 2, 3, 4, 5, 6, 7, 8]
+/** How many foods a generated recipe can be told to use. */
+export const MAX_MUST_USE = 3
 
 export const recipesApi = {
   /** The catalog without what the household does not eat. */
@@ -163,10 +176,12 @@ export const recipesApi = {
       `/households/${householdId}/recipes/recommendations?${new URLSearchParams({ lang, limit: String(ALL_RECOMMENDATIONS) })}`,
     ),
   /** Needs a language model configured on the server (see `aiApi.status`). */
-  generate: (householdId: string, lang: Locale, servings: number) =>
+  available: (householdId: string, lang: Locale) =>
+    api<AvailableFood[]>(`/households/${householdId}/recipes/generated/ingredients?${new URLSearchParams({ lang })}`),
+  generate: (householdId: string, lang: Locale, servings: number, use: string[]) =>
     api<GeneratedRecipe>(`/households/${householdId}/recipes/generated?${new URLSearchParams({ lang })}`, {
       method: 'POST',
-      body: { servings },
+      body: { servings, use },
     }),
   markCooked: (householdId: string, recipeId: string) =>
     api<void>(`/households/${householdId}/recipes/${recipeId}/cooked`, { method: 'POST' }),

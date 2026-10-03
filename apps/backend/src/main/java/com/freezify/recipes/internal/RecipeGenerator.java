@@ -16,6 +16,7 @@ import com.freezify.food.Quantity;
 import com.freezify.inventory.HouseholdStock;
 import com.freezify.inventory.HouseholdStock.StockItem;
 import com.freezify.recipes.RecipeEvents.RecipeGenerated;
+import com.freezify.recipes.internal.RecipeViews.AvailableFood;
 import com.freezify.recipes.internal.RecipeViews.GeneratedIngredient;
 import com.freezify.recipes.internal.RecipeViews.GeneratedRecipe;
 import java.time.LocalDate;
@@ -74,8 +75,30 @@ public class RecipeGenerator {
         this.today = today;
     }
 
-    /** Not in a transaction: the model may take a while, and nothing is written. */
-    public GeneratedRecipe generate(UUID householdId, UUID userId, String language, int servings) {
+    /**
+     * What a generated recipe may use, the most pressing first, without the staples. It is what the model is
+     * given, so people can see it, and choose among the catalog foods what the recipe must use.
+     */
+    public List<AvailableFood> available(UUID householdId, UUID userId, String language) {
+        Diet diet = recipes.dietOf(householdId, userId);
+        return offer(householdId, diet, language, today.date()).stream()
+                .filter(entry -> !entry.ingredient().staple())
+                .map(entry -> new AvailableFood(
+                        entry.foodId(),
+                        entry.name(),
+                        entry.ingredient().quantity().amount(),
+                        entry.ingredient().quantity().unit(),
+                        entry.ingredient().daysLeft(),
+                        entry.estimated()))
+                .toList();
+    }
+
+    /**
+     * Not in a transaction: the model may take a while, and nothing is written.
+     *
+     * @param mustUse catalog foods the recipe has to use; each must be among the {@link #available} ones
+     */
+    public GeneratedRecipe generate(UUID householdId, UUID userId, String language, int servings, Set<UUID> mustUse) {
         // Checks membership too.
         Diet diet = recipes.dietOf(householdId, userId);
         if (!ai.enabled()) {
@@ -86,12 +109,23 @@ public class RecipeGenerator {
         if (offered.stream().allMatch(entry -> entry.ingredient().staple())) {
             throw ApiException.conflict("NOTHING_TO_COOK_WITH", "There is no food at home that the household eats.");
         }
+        List<String> mustUseKeys = new ArrayList<>();
+        for (UUID foodId : mustUse) {
+            Offered entry = offered.stream()
+                    .filter(candidate -> !candidate.ingredient().staple() && foodId.equals(candidate.foodId()))
+                    .findFirst()
+                    .orElseThrow(() -> ApiException.conflict(
+                            "FOOD_NOT_AVAILABLE",
+                            "That food is not at home, is past its date or is not eaten in the household."));
+            mustUseKeys.add(entry.ingredient().key());
+        }
 
         RecipeRequest request = new RecipeRequest(
                 language,
                 servings,
                 offered.stream().map(Offered::ingredient).toList(),
-                diet.excluded().stream().map(trait -> trait.name().toLowerCase(Locale.ROOT)).toList());
+                diet.excluded().stream().map(trait -> trait.name().toLowerCase(Locale.ROOT)).toList(),
+                mustUseKeys);
         Answer<WrittenRecipe> answer = ai.writeRecipe(request, userId);
         WrittenRecipe written = switch (answer.outcome()) {
             case OK -> answer.value();
@@ -105,13 +139,14 @@ public class RecipeGenerator {
         Map<String, Offered> byKey = new LinkedHashMap<>();
         offered.forEach(entry -> byKey.put(entry.ingredient().key(), entry));
         // The foods it uses, and the staples, which may season anything.
-        Set<UUID> allowedFoods = new HashSet<>();
-        offered.stream()
-                .filter(entry -> entry.foodId() != null)
+        List<Offered> allowed = offered.stream()
                 .filter(entry -> entry.ingredient().staple() || written.ingredients().stream()
                         .anyMatch(used -> used.key().equals(entry.ingredient().key())))
-                .forEach(entry -> allowedFoods.add(entry.foodId()));
-        if (FoodMentions.mentionsOtherFood(catalog.all(), allowedFoods, language, text(written))) {
+                .toList();
+        Set<UUID> allowedFoods = new HashSet<>();
+        allowed.stream().filter(entry -> entry.foodId() != null).forEach(entry -> allowedFoods.add(entry.foodId()));
+        List<String> allowedNames = allowed.stream().map(Offered::name).toList();
+        if (FoodMentions.mentionsOtherFood(catalog.all(), allowedFoods, allowedNames, language, text(written))) {
             throw unusable();
         }
 

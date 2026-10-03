@@ -1481,4 +1481,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorNothingToCookWith => 'No hay en el inventario nada sin caducar que se coma en tu hogar.';
+
+  @override
+  String get generatedAvailable => 'Lo que la IA puede usar';
+
+  @override
+  String generatedMustUseHelp(int count) {
+    return 'Marca hasta $count alimentos que la receta tenga que usar sí o sí.';
+  }
+
+  @override
+  String get errorFoodNotAvailable => 'Ese alimento ya no está en casa, ha pasado su fecha o no se come en tu hogar.';
 }

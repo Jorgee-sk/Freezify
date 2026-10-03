@@ -37,6 +37,7 @@ final class RecipeWriting {
             in the list may be used for seasoning.
             - Never use more of an ingredient than the amount given, and use the unit given or one that \
             measures the same thing (grams and kilograms, millilitres and litres).
+            - Use every ingredient whose key is under "mustUse", and not as optional.
             - Prefer the ingredients with fewest days left; it is fine to leave ingredients unused.
             - Mark as optional the ingredients the recipe works without.
             - Cook for the number of servings given. Make sure meat, fish and eggs are fully cooked.
@@ -76,6 +77,7 @@ final class RecipeWriting {
         input.put("language", request.language());
         input.put("servings", request.servings());
         input.put("avoid", request.avoided());
+        input.put("mustUse", request.mustUse());
         input.put("ingredients", request.ingredients().stream()
                 .map(ingredient -> {
                     Map<String, Object> entry = new LinkedHashMap<>();
@@ -155,6 +157,11 @@ final class RecipeWriting {
         }
         if (!usesFood) {
             return Answers.rejected("a recipe that needs nothing from the household");
+        }
+        for (String required : request.mustUse()) {
+            if (used.stream().noneMatch(ingredient -> ingredient.key().equals(required) && !ingredient.optional())) {
+                return Answers.rejected("a recipe without an ingredient it had to use");
+            }
         }
         return Optional.of(new WrittenRecipe(title, summary, minutes.asInt(), difficulty, List.copyOf(used), List.copyOf(steps)));
     }

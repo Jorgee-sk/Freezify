@@ -64,7 +64,7 @@ tipos internos de otro.
 | `users` | Cuenta de usuario y perfil | common | 1 |
 | `auth` | Registro, login, tokens, configuración de seguridad | users, common | 1 |
 | `households` | Hogares, miembros, invitaciones, **control de acceso por hogar** | users, common | 1 |
-| `food` | Catálogo canónico de alimentos, categorías, unidades y cantidades | common | 2 ✔ |
+| `food` | Catálogo canónico de alimentos, categorías, unidades y cantidades; alias (abreviaturas y nombres de cada hogar) | common | 2 ✔ |
 | `inventory` | Alimentos del hogar, consumo y descarte | households, food | 2 ✔ |
 | `expiration` | Niveles de prioridad y estimación de fechas por reglas de vida útil | food | 3 ✔ |
 | `notifications` | Avisos de caducidad dentro de la app, preferencias, dispositivos y envío push por FCM | households, inventory, expiration, food, users | 3 ✔ |
@@ -171,6 +171,8 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D69 | La receta con IA **solo recibe lo que hay en casa y el hogar come**, y su respuesta se valida dos veces: contra lo enviado (módulo `ai`) y contra el catálogo (módulo `recipes`) | Lo que el hogar no come nunca llega al modelo; una receta que usa o nombra lo que no hay no llega a nadie (P5) |
 | D70 | La receta generada **no se guarda** y su porqué se calcula con las fechas del inventario | Sin recetas de calidad desconocida en el catálogo; la explicación no la inventa el modelo (P3) |
 | D71 | El **límite diario de IA se cuenta en la base de datos** con un `insert … on conflict … returning` | Sobrevive a reinicios, vale con varias instancias y dos llamadas a la vez no se cuelan |
+| D72 | Los **alias de alimentos son del módulo `food`** (`FoodAliases`), aunque los aprenda el escaneo | El inventario los usa para reconocer nombres escritos a mano sin depender del escaneo (que depende del inventario) |
+| D73 | Las recetas generadas se comprueban también contra una **lista escrita a mano de alérgenos y carnes fuera del catálogo** | Lo que más daño haría que el modelo añadiera por su cuenta es lo que alguien no puede comer |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -305,7 +307,8 @@ Fase 4:
 | POST | `/households/{id}/scans/receipt?lang=` | Leer el texto de un ticket en un borrador para revisar; no guarda nada |
 | POST | `/households/{id}/scans/receipt/confirm` | Poner en el inventario las líneas revisadas y recordar el alimento elegido para cada texto |
 | GET | `/ai` | Si el servidor tiene un modelo de lenguaje |
-| POST | `/households/{id}/recipes/generated?lang=` | Receta escrita por IA con lo que hay en casa y el hogar come (1–8 raciones); no se guarda |
+| GET | `/households/{id}/recipes/generated/ingredients?lang=` | Lo que una receta generada puede usar: lo que se le daría al modelo, sin los básicos |
+| POST | `/households/{id}/recipes/generated?lang=` | Receta escrita por IA con lo que hay en casa y el hogar come (1–8 raciones; `use`: hasta 3 alimentos que tiene que usar); no se guarda |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).

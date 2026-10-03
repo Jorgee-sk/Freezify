@@ -1,9 +1,10 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { SERVINGS, recipesApi } from '../api/recipes'
-import type { GeneratedIngredient, GeneratedRecipe } from '../api/recipes'
+import { MAX_MUST_USE, SERVINGS, recipesApi } from '../api/recipes'
+import type { AvailableFood, GeneratedIngredient, GeneratedRecipe } from '../api/recipes'
+import { queryKeys } from '../api/queryKeys'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { currentLocale } from '../i18n'
 import { formatQuantity } from '../inventory/format'
@@ -17,8 +18,19 @@ export function GeneratedRecipePage() {
   const { t } = useTranslation()
   const lang = currentLocale()
   const [servings, setServings] = useState(2)
+  const [mustUse, setMustUse] = useState<string[]>([])
 
-  const generate = useMutation({ mutationFn: () => recipesApi.generate(householdId, lang, servings) })
+  // What the model will be given: shown, so that nothing about it is a mystery.
+  const available = useQuery({
+    queryKey: queryKeys.generatedIngredients(householdId, lang),
+    queryFn: () => recipesApi.available(householdId, lang),
+    staleTime: 0,
+  })
+  const generate = useMutation({ mutationFn: () => recipesApi.generate(householdId, lang, servings, mustUse) })
+
+  function toggle(foodId: string) {
+    setMustUse((current) => (current.includes(foodId) ? current.filter((id) => id !== foodId) : [...current, foodId]))
+  }
   const recipe = generate.data
 
   return (
@@ -29,7 +41,35 @@ export function GeneratedRecipePage() {
       <h1>{t('generated.title')}</h1>
       <p className="muted">{t('generated.intro')}</p>
 
-      <div className="filters">
+      {available.data && (
+        <section aria-labelledby="generated-available">
+          <h2 id="generated-available">{t('generated.available')}</h2>
+          {available.data.length === 0 ? (
+            <p className="muted">{t('errors.NOTHING_TO_COOK_WITH')}</p>
+          ) : (
+            <>
+              <p className="muted small">{t('generated.mustUseHelp', { count: MAX_MUST_USE })}</p>
+              <ul className="chips" aria-labelledby="generated-available">
+                {available.data.map((food) => (
+                  <li key={food.foodId ?? food.name}>
+                    <AvailableChip
+                      food={food}
+                      chosen={food.foodId !== null && mustUse.includes(food.foodId)}
+                      disabled={
+                        food.foodId === null || (mustUse.length >= MAX_MUST_USE && !mustUse.includes(food.foodId))
+                      }
+                      onToggle={() => food.foodId && toggle(food.foodId)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
+      <ErrorMessage error={available.error} />
+
+      <div className="button-row">
         <label htmlFor="generated-servings">{t('generated.servings')}</label>
         <select id="generated-servings" value={servings} onChange={(event) => setServings(Number(event.target.value))}>
             {SERVINGS.map((count) => (
@@ -97,6 +137,34 @@ function WrittenRecipe({ recipe }: { recipe: GeneratedRecipe }) {
         </ol>
       </section>
     </article>
+  )
+}
+
+/** A food at home, which can be required (pressed) when it is a catalog food. */
+function AvailableChip({
+  food,
+  chosen,
+  disabled,
+  onToggle,
+}: {
+  food: AvailableFood
+  chosen: boolean
+  disabled: boolean
+  onToggle: () => void
+}) {
+  const { t } = useTranslation()
+  const days = food.daysLeft
+  const expiry =
+    days === null || days > PRESSING_DAYS
+      ? null
+      : days === 0
+        ? t(food.estimated ? 'recipes.badge.todayEstimated' : 'recipes.badge.today')
+        : t(food.estimated ? 'recipes.badge.daysEstimated' : 'recipes.badge.days', { count: days })
+  return (
+    <button type="button" className="chip" aria-pressed={chosen} disabled={disabled} onClick={onToggle}>
+      {food.name} · {formatQuantity({ amount: food.amount, unit: food.unit })}
+      {expiry && ` · ${expiry}`}
+    </button>
   )
 }
 

@@ -99,7 +99,8 @@
     "AI_LIMIT_REACHED": "You have used all of today’s AI requests. Try again tomorrow.",
     "AI_UNAVAILABLE": "The AI did not give a usable recipe. Try again.",
     "NOTHING_TO_COOK_WITH": "There is nothing in the inventory, within its date, that your household eats.",
-    "PURCHASE_DATE_IN_FUTURE": "The purchase date cannot be later than today."
+    "PURCHASE_DATE_IN_FUTURE": "The purchase date cannot be later than today.",
+    "FOOD_NOT_AVAILABLE": "That food is no longer at home, is past its date or is not eaten in your household."
   },
   "inventory": {
     "title": "Inventory",
@@ -488,6 +489,8 @@
     "again": "Create another",
     "writing": "Writing the recipe…",
     "notice": "Recipe written by AI from your inventory. Check amounts and times, and that meat, fish and eggs are fully cooked.",
-    "optional": "optional"
+    "optional": "optional",
+    "available": "What the AI may use",
+    "mustUseHelp": "Pick up to {{count}} foods the recipe has to use."
   }
 }

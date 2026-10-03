@@ -35,12 +35,35 @@ class FoodMentionsTests {
 
     @Test
     void onlyNamesInTheLanguageOfTheRecipeCount() {
-        assertThat(FoodMentions.mentionsOtherFood(CATALOG, Set.of(), "en", "Whisk two eggs.")).isTrue();
-        assertThat(FoodMentions.mentionsOtherFood(CATALOG, Set.of(), "en", "Bate dos huevos.")).isFalse();
+        assertThat(FoodMentions.mentionsOtherFood(CATALOG, Set.of(), List.of(), "en", "Whisk two eggs.")).isTrue();
+        assertThat(FoodMentions.mentionsOtherFood(CATALOG, Set.of(), List.of(), "en", "Bate dos huevos.")).isFalse();
+    }
+
+    @Test
+    void findsAllergensOutsideTheCatalog() {
+        assertThat(FoodMentions.mentionsOtherFood(CATALOG, Set.of(EGGS.id()), List.of("Huevos"), "es",
+                        "Bate los huevos y espolvorea almendras tostadas."))
+                .isTrue();
+        assertThat(FoodMentions.mentionsOtherFood(CATALOG, Set.of(), List.of(), "en", "Finish with sesame seeds."))
+                .isTrue();
+        assertThat(FoodMentions.mentionsOtherFood(CATALOG, Set.of(), List.of(), "es", "Añade una cucharada de mostaza."))
+                .isTrue();
+    }
+
+    @Test
+    void aFoodOutsideTheCatalogIsFineWhenTheRecipeUsesIt() {
+        // "pollo" is in the name of what it uses.
+        assertThat(FoodMentions.mentionsOtherFood(CATALOG, Set.of(), List.of("Pechuga de pollo"), "es",
+                        "Dora el pollo por los dos lados."))
+                .isFalse();
+        // Food that the household added by hand, without a catalog food.
+        assertThat(FoodMentions.mentionsOtherFood(CATALOG, Set.of(), List.of("Almendras de la abuela"), "es",
+                        "Tuesta las almendras."))
+                .isFalse();
     }
 
     private static boolean mentions(Set<UUID> allowed, String text) {
-        return FoodMentions.mentionsOtherFood(CATALOG, allowed, "es", text);
+        return FoodMentions.mentionsOtherFood(CATALOG, allowed, List.of(), "es", text);
     }
 
     private static Food food(String es, String en) {

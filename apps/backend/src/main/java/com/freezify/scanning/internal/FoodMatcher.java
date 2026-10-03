@@ -1,14 +1,12 @@
 package com.freezify.scanning.internal;
 
 import com.freezify.food.Food;
-import com.freezify.food.FoodCatalog;
+import com.freezify.food.FoodAliases;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import com.freezify.scanning.internal.ScanViews.MatchedBy;
 import org.jspecify.annotations.Nullable;
@@ -32,7 +30,6 @@ final class FoodMatcher {
 
     private record Hit(UUID foodId, int words, int position, MatchedBy how) {}
 
-    private static final Set<String> FILLERS = Set.of("de", "del", "la", "el", "en", "con", "para", "y", "al", "a");
     private static final int MAX_CANDIDATES = 4;
 
     private final List<Phrase> phrases = new ArrayList<>();
@@ -53,7 +50,7 @@ final class FoodMatcher {
 
     /** The form in which a line's text is remembered: its words, normalized. */
     static String key(String text) {
-        return String.join(" ", words(text));
+        return FoodAliases.key(text);
     }
 
     /**
@@ -137,8 +134,6 @@ final class FoodMatcher {
     }
 
     private static List<String> words(String text) {
-        return Arrays.stream(FoodCatalog.normalize(text).split("[^a-z0-9]+"))
-                .filter(word -> !word.isEmpty() && !FILLERS.contains(word) && !word.chars().allMatch(Character::isDigit))
-                .toList();
+        return FoodAliases.words(text);
     }
 }

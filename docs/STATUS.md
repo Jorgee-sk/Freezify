@@ -43,6 +43,16 @@
 - Errores con su motivo: sin IA configurada (503 `AI_NOT_CONFIGURED`), límite del día gastado (429
   `AI_LIMIT_REACHED`), respuesta inservible (502 `AI_UNAVAILABLE`), nada en casa (409 `NOTHING_TO_COOK_WITH`).
 - Evento de producto `recipe_generated`.
+- **Elegir qué usar**: la pantalla enseña lo que la IA puede usar (lo mismo que se le envía, con cantidades y
+  caducidades; `GET …/recipes/generated/ingredients`) y deja marcar hasta 3 alimentos del catálogo que la
+  receta tiene que usar sí o sí. La respuesta que no los use, o los use como opcionales, se descarta. Pedir uno
+  que no está en casa, ha caducado o no se come en el hogar da 409 `FOOD_NOT_AVAILABLE`.
+- **Alimentos fuera del catálogo**: la comprobación de nombres conoce además una lista escrita a mano de
+  alimentos que no están en el catálogo: los alérgenos de declaración obligatoria en la UE (frutos secos,
+  sésamo, soja, moluscos, crustáceos, pescados, mostaza, apio, altramuz, gluten como pan rallado o cuscús) y
+  carnes ("pollo", "cerdo", "ternera"...). Una receta que los nombra sin usarlos se descarta ("espolvorea
+  almendras" sin almendras). Si la receta usa algo cuyo nombre los contiene ("Pechuga de pollo"), sí puede
+  nombrarlos.
 - **Problema conocido resuelto: el límite diario de llamadas se guarda en la base de datos** (`V11__ai_usage.sql`)
   en lugar de en memoria: reiniciar el backend ya no lo reinicia y varias instancias comparten la cuenta. Se
   cuenta con una sola sentencia, así que dos llamadas a la vez no se cuelan; solo se guarda la última semana.
@@ -51,22 +61,33 @@
 
 | Qué | Resultado |
 |---|---|
-| Backend `./mvnw verify` | ✅ 354 tests (14 nuevos: validación de la receta del modelo, menciones de alimentos, límite diario en la base de datos y API de la receta); 1 omitido, el que habla con Firebase real |
-| Web lint / test / build | ✅ sin avisos / 173 tests (4 nuevos) / correcto |
+| Backend `./mvnw verify` | ✅ 359 tests (19 nuevos: validación de la receta del modelo, alimentos que tiene que usar, menciones de alimentos y alérgenos, límite diario en la base de datos, API de la receta y nombres escritos a mano en el inventario); 1 omitido, el que habla con Firebase real |
+| Web lint / test / build | ✅ sin avisos / 174 tests (5 nuevos) / correcto |
 | Mobile `flutter analyze` | ✅ sin avisos |
-| Mobile `flutter test` | 🟡 los **3 nuevos no se han ejecutado** (176 en total): correrán en la CI del pull request |
+| Mobile `flutter test` | 🟡 en la primera CI del pull request falló uno de los 3 nuevos: la fila "Sal" quedaba fuera de la pantalla de test, y una lista que se construye al hacer scroll no la había creado. Corregido el test (hace scroll antes de comprobarla); los **4 nuevos no se han vuelto a ejecutar** (177 en total) |
 | Web contra el backend real y un modelo simulado | ✅ un hogar con calabacín (1 día), pollo (3 días), arroz y jamón, que no come cerdo: al modelo le llegaron calabacín, pollo, arroz y los básicos, sin el jamón y con "pork" como aviso; la receta mostró las cantidades usadas, "Caduca en 1 día" y "Caduca en 3 días", y la sal como opcional y básico; una segunda respuesta que añadía "nata para cocinar" se rechazó con "La IA no ha dado una receta válida" |
 | App móvil (versión web) contra el backend real | ✅ el botón aparece en Recetas con IA configurada; la receta, el aviso, los ingredientes con su caducidad y los pasos se ven bien |
+| Lista de lo que la IA puede usar (web, backend real) | ✅ en un hogar que no come cerdo salieron calabacín ("Caduca en 1 día"), pechuga de pollo y arroz, sin el jamón; marcar el calabacín lo dejó pulsado. La selección de pollo para la receta solo se ha probado en los tests (con IA simulada) |
 | Con **Gemini real** u **Ollama real** | ⏳ **no probado** (no hay clave ni Ollama en esta máquina) |
+
+- **Problema conocido resuelto: el inventario reconoce los nombres escritos a mano.** Al añadir o editar un
+  alimento sin elegirlo del catálogo, si el nombre es exactamente el de un alimento del catálogo ("leche"),
+  una abreviatura compartida ("AOVE") o un nombre que el hogar confirmó al revisar un ticket ("Queso mozz.
+  rallado"), queda asociado a ese alimento (con su categoría si no se eligió otra), y cuenta para recetas,
+  fechas estimadas y la lista de la compra. El nombre se guarda tal como se escribió; cualquier otro nombre
+  sigue siendo texto libre. Los alias pasan a ser una API del módulo `food` (`FoodAliases`), que usan el
+  escaneo y el inventario.
 
 #### Known issues
 
-- **La comprobación de nombres no es perfecta**: solo reconoce alimentos del catálogo. Si el modelo nombra algo
-  que no está en el catálogo ("almendras"), no se detecta; por eso el aviso pide revisar la receta. Y en algún
-  caso raro puede rechazar una receta buena (una palabra de un paso que coincide con un alimento).
-- **Las instrucciones de cocinado las escribe el modelo**: tiempos y temperaturas no se comprueban; lo cubre
-  el aviso visible.
-- **No se puede guardar ni marcar como cocinada** una receta generada, ni elegir qué alimento usar sí o sí.
+- **La comprobación de nombres reconoce el catálogo y una lista de alérgenos y carnes, no todo**: un alimento
+  que no está en ninguno de los dos ("trufa") no se detecta; por eso el aviso pide revisar la receta. Y en algún
+  caso raro puede rechazar una receta buena ("nuez moscada" cuenta como nuez). La lista está escrita a mano.
+- **Las instrucciones de cocinado las escribe el modelo**: tiempos y temperaturas no se comprueban, porque no
+  hay una regla fiable que lo haga; lo cubre el aviso visible. No se puede resolver en código.
+- **No se puede guardar ni marcar como cocinada** una receta generada. Es a propósito (D70): marcar como
+  cocinada solo sirve para las recetas del catálogo (variedad del plan y recomendaciones), y guardar recetas
+  de calidad desconocida sería una función nueva que el MVP no pide. (Resuelto: elegir qué alimentos usar.)
 
 ### Primera unidad: escanear el ticket de la compra
 
@@ -146,7 +167,8 @@ Gemini u Ollama en local).
   probar; con usuarios reales hace falta la capa de pago u Ollama (ver HOW_TO_USE 2.5).
 - (Resuelto en la segunda unidad: el límite diario de llamadas se guarda en la base de datos.)
 - **Las abreviaturas son pocas y escritas a mano**; se irán completando con lo que aprenden los hogares.
-- **El formulario manual del inventario no usa los alias** del escaneo.
+- (Resuelto: el alta y la edición a mano del inventario reconocen los nombres del catálogo y los alias; ver
+  la segunda unidad.)
 - **Cada línea confirmada se recuerda**, también las que ya se reconocían por su nombre: la tabla crece con los
   textos distintos que compra cada hogar (son pocos).
 
@@ -751,7 +773,7 @@ fuente de datos oficial, un servicio de correo) o una decisión de producto:
   peticiones se solapan de verdad sobre el mismo alimento, la segunda debería recibir 409
   `CONCURRENT_MODIFICATION` (columna `version`), que web y móvil explican; ese caso **no tiene test**.
 - **El catálogo no tiene sinónimos** ("jitomate"); desde la Fase 7 el escaneo de tickets entiende abreviaturas
-  y aprende de cada hogar, pero el formulario manual no los usa.
+  y aprende de cada hogar, y el alta a mano en el inventario reconoce esos mismos nombres.
 - **Los eventos de producto no se borran con la cuenta** (no hay borrado de cuenta todavía).
 
 ## Fase 1 — Foundation ✅

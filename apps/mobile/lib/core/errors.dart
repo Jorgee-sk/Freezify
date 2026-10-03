@@ -33,6 +33,7 @@ String errorMessage(AppLocalizations l10n, Object error) {
     'AI_LIMIT_REACHED' => l10n.errorAiLimitReached,
     'AI_UNAVAILABLE' => l10n.errorAiUnavailable,
     'NOTHING_TO_COOK_WITH' => l10n.errorNothingToCookWith,
+    'FOOD_NOT_AVAILABLE' => l10n.errorFoodNotAvailable,
     _ => l10n.errorGeneric,
   };
 }

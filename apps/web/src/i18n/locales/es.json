@@ -99,7 +99,8 @@
     "AI_LIMIT_REACHED": "Has usado todas las peticiones de IA de hoy. Vuelve a intentarlo mañana.",
     "AI_UNAVAILABLE": "La IA no ha dado una receta válida. Inténtalo de nuevo.",
     "NOTHING_TO_COOK_WITH": "No hay en el inventario nada sin caducar que se coma en tu hogar.",
-    "PURCHASE_DATE_IN_FUTURE": "La fecha de compra no puede ser posterior a hoy."
+    "PURCHASE_DATE_IN_FUTURE": "La fecha de compra no puede ser posterior a hoy.",
+    "FOOD_NOT_AVAILABLE": "Ese alimento ya no está en casa, ha pasado su fecha o no se come en tu hogar."
   },
   "inventory": {
     "title": "Inventario",
@@ -488,6 +489,8 @@
     "again": "Crear otra",
     "writing": "Escribiendo la receta…",
     "notice": "Receta escrita por IA a partir de tu inventario. Revisa cantidades y tiempos, y que la carne, el pescado y los huevos queden bien hechos.",
-    "optional": "opcional"
+    "optional": "opcional",
+    "available": "Lo que la IA puede usar",
+    "mustUseHelp": "Marca hasta {{count}} alimentos que la receta tenga que usar sí o sí."
   }
 }

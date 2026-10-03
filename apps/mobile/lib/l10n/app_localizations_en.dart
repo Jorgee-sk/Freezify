@@ -1477,4 +1477,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorNothingToCookWith => 'There is nothing in the inventory, within its date, that your household eats.';
+
+  @override
+  String get generatedAvailable => 'What the AI may use';
+
+  @override
+  String generatedMustUseHelp(int count) {
+    return 'Pick up to $count foods the recipe has to use.';
+  }
+
+  @override
+  String get errorFoodNotAvailable =>
+      'That food is no longer at home, is past its date or is not eaten in your household.';
 }

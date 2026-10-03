@@ -617,6 +617,53 @@ class InventoryApiTests extends ApiTestSupport {
                 .isEqualTo(20);
     }
 
+    @Test
+    void aNameTypedByHandThatIsACatalogFoodBecomesThatFood() throws Exception {
+        add(jorge, """
+                        {"name": "leche", "quantity": {"amount": 1, "unit": "LITER"}, "storageLocation": "REFRIGERATOR"}
+                        """)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.foodId").value(catalogFoodId("Leche")))
+                .andExpect(jsonPath("$.name").value("leche"))
+                .andExpect(jsonPath("$.category").value("DAIRY"));
+        // A shared receipt abbreviation counts too.
+        add(jorge, """
+                        {"name": "AOVE", "quantity": {"amount": 1, "unit": "LITER"}, "storageLocation": "PANTRY"}
+                        """)
+                .andExpect(jsonPath("$.foodId").value(catalogFoodId("Aceite de oliva")));
+        // Anything else stays as written.
+        add(jorge, """
+                        {"name": "Leche de almendras casera", "quantity": {"amount": 1, "unit": "LITER"},
+                         "storageLocation": "REFRIGERATOR"}
+                        """)
+                .andExpect(jsonPath("$.foodId").value(nullValue()))
+                .andExpect(jsonPath("$.category").value("OTHER"));
+    }
+
+    @Test
+    void aNameTheHouseholdConfirmedOnAReceiptIsKnownWhenTypedByHand() throws Exception {
+        String mozzarella = catalogFoodId("Mozzarella");
+        mvc.perform(as(jorge, json(post("/api/v1/households/" + householdId + "/scans/receipt/confirm"), """
+                        {"lines": [{"text": "QUESO MOZZ RALLADO", "foodId": "%s", "name": "Mozzarella",
+                                    "quantity": {"amount": 1, "unit": "UNIT"}}]}""".formatted(mozzarella))))
+                .andExpect(status().isOk());
+
+        add(jorge, """
+                        {"name": "Queso mozz. rallado", "quantity": {"amount": 1, "unit": "UNIT"},
+                         "storageLocation": "REFRIGERATOR"}
+                        """)
+                .andExpect(jsonPath("$.foodId").value(mozzarella));
+
+        // Another household's names are its own.
+        TestUser lucia = register("Lucía");
+        String otherHousehold = createHousehold(lucia, "Otra casa");
+        mvc.perform(as(lucia, json(post("/api/v1/households/" + otherHousehold + "/inventory"), """
+                        {"name": "Queso mozz. rallado", "quantity": {"amount": 1, "unit": "UNIT"},
+                         "storageLocation": "REFRIGERATOR"}
+                        """)))
+                .andExpect(jsonPath("$.foodId").value(nullValue()));
+    }
+
     private String consumeFirst() {
         return "/api/v1/households/" + householdId + "/inventory/consume-first";
     }

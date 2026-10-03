@@ -138,7 +138,9 @@ class DefaultAiServiceTests {
                         new Ingredient("i2", "Pechuga de pollo", Quantity.of("400", Unit.GRAM), 3L, false),
                         new Ingredient("i3", "Arroz", Quantity.of("1", Unit.KILOGRAM), null, false),
                         new Ingredient("s1", "Sal", Quantity.of("1", Unit.GRAM), null, true)),
-                List.of("pork"));
+                List.of("pork"),
+                // The chicken has to be in it.
+                List.of("i2"));
 
         private String recipe(String ingredients) {
             return """
@@ -177,6 +179,7 @@ class DefaultAiServiceTests {
             assertThat(input.path("language").asString()).isEqualTo("es");
             assertThat(input.path("servings").asInt()).isEqualTo(2);
             assertThat(input.path("avoid").path(0).asString()).isEqualTo("pork");
+            assertThat(input.path("mustUse").path(0).asString()).isEqualTo("i2");
             assertThat(input.path("ingredients").path(0).path("name").asString()).isEqualTo("Calabacín");
             assertThat(input.path("ingredients").path(0).path("daysLeft").asInt()).isEqualTo(1);
             assertThat(input.path("ingredients").path(1).path("amount").isNumber()).isTrue();
@@ -201,7 +204,12 @@ class DefaultAiServiceTests {
                     "nothing from the household but salt",
                     "{\"key\": \"s1\", \"amount\": 1, \"unit\": \"GRAM\", \"optional\": false}",
                     "only optional food",
-                    "{\"key\": \"i1\", \"amount\": 1, \"unit\": \"UNIT\", \"optional\": true}");
+                    "{\"key\": \"i1\", \"amount\": 1, \"unit\": \"UNIT\", \"optional\": true}",
+                    "without what it had to use",
+                    "{\"key\": \"i1\", \"amount\": 1, \"unit\": \"UNIT\", \"optional\": false}",
+                    "with what it had to use as optional",
+                    "{\"key\": \"i1\", \"amount\": 1, \"unit\": \"UNIT\", \"optional\": false},"
+                            + "{\"key\": \"i2\", \"amount\": 100, \"unit\": \"GRAM\", \"optional\": true}");
             wrong.forEach((why, ingredients) -> {
                 answer = recipe(ingredients);
                 assertThat(service(provider, 50).writeRecipe(request, UUID.randomUUID()).outcome())

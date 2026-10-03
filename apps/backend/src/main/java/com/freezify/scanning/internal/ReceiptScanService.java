@@ -4,6 +4,7 @@ import com.freezify.ai.AiService;
 import com.freezify.common.ApiException;
 import com.freezify.common.Today;
 import com.freezify.food.Food;
+import com.freezify.food.FoodAliases;
 import com.freezify.food.FoodCatalog;
 import com.freezify.food.FoodCategory;
 import com.freezify.food.Quantity;
@@ -20,16 +21,12 @@ import com.freezify.scanning.internal.ScanViews.ReceiptDraft;
 import com.freezify.scanning.internal.ScanViews.Stocked;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,7 +65,7 @@ public class ReceiptScanService {
     private final FoodCatalog catalog;
     private final AiService ai;
     private final InventoryIntake inventory;
-    private final JdbcTemplate jdbc;
+    private final FoodAliases aliases;
     private final ApplicationEventPublisher events;
     private final Today today;
     private final ReceiptParser parser = new ReceiptParser();
@@ -78,14 +75,14 @@ public class ReceiptScanService {
             FoodCatalog catalog,
             AiService ai,
             InventoryIntake inventory,
-            JdbcTemplate jdbc,
+            FoodAliases aliases,
             ApplicationEventPublisher events,
             Today today) {
         this.access = access;
         this.catalog = catalog;
         this.ai = ai;
         this.inventory = inventory;
-        this.jdbc = jdbc;
+        this.aliases = aliases;
         this.events = events;
         this.today = today;
     }
@@ -105,7 +102,7 @@ public class ReceiptScanService {
             read = byModel.get().stream().map(ReceiptScanService::fromModel).toList();
         }
 
-        FoodMatcher matcher = new FoodMatcher(catalog.all(), aliases(null), aliases(householdId));
+        FoodMatcher matcher = new FoodMatcher(catalog.all(), aliases.shared(), aliases.learned(householdId));
         List<Line> lines = read.stream()
                 .limit(MAX_LINES)
                 .map(line -> draft(line, matcher, language))
@@ -141,7 +138,10 @@ public class ReceiptScanService {
                             purchaseDate,
                             line.expirationDate(),
                             line.price()));
-            remember(householdId, line.text(), line.foodId());
+            // The household's choice for this text wins next time; saying it is no catalog food forgets it.
+            if (line.text() != null) {
+                aliases.remember(householdId, line.text(), line.foodId());
+            }
         }
         events.publishEvent(new ReceiptScanned(householdId, userId, lines.size()));
         return new Stocked(lines.size());
@@ -175,42 +175,6 @@ public class ReceiptScanService {
                 line.quantity() != null,
                 line.price(),
                 food != null);
-    }
-
-    /** @param householdId {@code null} for the shared aliases */
-    private Map<String, UUID> aliases(@Nullable UUID householdId) {
-        Map<String, UUID> aliases = new HashMap<>();
-        String sql = householdId == null
-                ? "select text, food_id from receipt_aliases where household_id is null"
-                : "select text, food_id from receipt_aliases where household_id = ?";
-        Object[] arguments = householdId == null ? new Object[0] : new Object[] {householdId};
-        jdbc.query(sql, row -> {
-            aliases.put(row.getString("text"), row.getObject("food_id", UUID.class));
-        }, arguments);
-        return aliases;
-    }
-
-    /**
-     * The household's choice for this text wins next time. Saying it is no catalog food forgets an earlier choice.
-     */
-    private void remember(UUID householdId, @Nullable String text, @Nullable UUID foodId) {
-        String key = text == null ? "" : FoodMatcher.key(text);
-        if (key.isEmpty() || key.length() > 120) {
-            return;
-        }
-        if (foodId == null) {
-            jdbc.update("delete from receipt_aliases where household_id = ? and text = ?", householdId, key);
-            return;
-        }
-        jdbc.update(
-                """
-                insert into receipt_aliases (household_id, text, food_id, updated_at) values (?, ?, ?, now())
-                on conflict (household_id, text) where household_id is not null
-                do update set food_id = excluded.food_id, updated_at = excluded.updated_at
-                """,
-                householdId,
-                key,
-                foodId);
     }
 
     private static String sentenceCase(String text) {

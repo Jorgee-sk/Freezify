@@ -385,5 +385,8 @@
   "errorAiNotConfigured": "Esta instalación no tiene IA configurada.",
   "errorAiLimitReached": "Has usado todas las peticiones de IA de hoy. Vuelve a intentarlo mañana.",
   "errorAiUnavailable": "La IA no ha dado una receta válida. Inténtalo de nuevo.",
-  "errorNothingToCookWith": "No hay en el inventario nada sin caducar que se coma en tu hogar."
+  "errorNothingToCookWith": "No hay en el inventario nada sin caducar que se coma en tu hogar.",
+  "generatedAvailable": "Lo que la IA puede usar",
+  "generatedMustUseHelp": "Marca hasta {count} alimentos que la receta tenga que usar sí o sí.",
+  "errorFoodNotAvailable": "Ese alimento ya no está en casa, ha pasado su fecha o no se come en tu hogar."
 }

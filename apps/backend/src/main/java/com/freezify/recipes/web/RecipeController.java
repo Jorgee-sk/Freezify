@@ -9,6 +9,7 @@ import com.freezify.recipes.Recipe.Difficulty;
 import com.freezify.recipes.internal.RecipeGenerator;
 import com.freezify.recipes.internal.RecipeService;
 import com.freezify.recipes.internal.RecipeService.Filter;
+import com.freezify.recipes.internal.RecipeViews.AvailableFood;
 import com.freezify.recipes.internal.RecipeViews.GeneratedRecipe;
 import com.freezify.recipes.internal.RecipeViews.Recommendation;
 import com.freezify.recipes.internal.RecipeViews.RecipeDetail;
@@ -98,10 +99,22 @@ class RecipeController {
             @RequestParam(defaultValue = "es") @Pattern(regexp = LANGUAGE, message = LANGUAGE_MESSAGE) String lang,
             @Valid @RequestBody(required = false) @Nullable GenerateRequest request) {
         int servings = request == null || request.servings() == null ? 2 : request.servings();
-        return generator.generate(householdId, CurrentUser.id(jwt), lang, servings);
+        Set<UUID> use = request == null || request.use() == null ? Set.of() : Set.copyOf(request.use());
+        return generator.generate(householdId, CurrentUser.id(jwt), lang, servings, use);
     }
 
-    record GenerateRequest(@Nullable @Min(1) @Max(8) Integer servings) {}
+    /** @param use catalog foods the recipe has to use */
+    record GenerateRequest(
+            @Nullable @Min(1) @Max(8) Integer servings, @Nullable @Size(max = 3) List<@NotNull UUID> use) {}
+
+    /** What a generated recipe may use: what the model would be given, without the staples. */
+    @GetMapping("/households/{householdId}/recipes/generated/ingredients")
+    List<AvailableFood> available(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID householdId,
+            @RequestParam(defaultValue = "es") @Pattern(regexp = LANGUAGE, message = LANGUAGE_MESSAGE) String lang) {
+        return generator.available(householdId, CurrentUser.id(jwt), lang);
+    }
 
     /** What is not cooked in the household. */
     @GetMapping("/households/{householdId}/diet")
