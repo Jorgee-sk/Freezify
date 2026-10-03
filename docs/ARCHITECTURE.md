@@ -151,6 +151,10 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D50 | La variedad es una **regla** (qué recetas pueden entrar) antes que un factor, con una excepción: aprovechar algo a punto de caducar | Con mucha cantidad de un alimento, ningún peso evita repetirlo cada día; pero evitar el desperdicio es el objetivo del producto |
 | D51 | Generar **no toca lo que eligió una persona**, y solo reemplaza lo generado si se pide | Una operación automática no debe perder decisiones del usuario |
 | D52 | Un alimento medido de forma no comparable con la receta **no se descuenta** | No se sabe cuánto se usa; afirmar que se acaba o que sobra sería inventar un dato |
+| D53 | Elegir la receta de una comida es **una sola instrucción** (`insert … on conflict`) | Sin leer y luego escribir no hay carrera entre dos miembros; el generador usa `do nothing` para no pisar lo elegido |
+| D54 | Los avisos se redactan como **"Nombre: frase sobre su fecha"** | Los nombres del catálogo pueden ser plurales; ninguna frase hace concordar un verbo con ellos |
+| D55 | Un flujo de tiempo real **dura como mucho lo que su token** | Quien ya no podría pedir los datos no debe seguir oyendo que cambian |
+| D56 | La descripción de la API (Swagger) **no se publica por defecto** | Una instancia desplegada no debe describir su API a cualquiera; se activa por variable de entorno |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -210,7 +214,7 @@ Entidades previstas por fase:
 
 ## 5. API
 
-REST versionada bajo `/api/v1`, documentada con OpenAPI (`/v3/api-docs`, Swagger UI en `/swagger-ui.html`).
+REST versionada bajo `/api/v1`, documentada con OpenAPI (`/v3/api-docs`, Swagger UI en `/swagger-ui.html`; desactivados salvo con `FREEZIFY_API_DOCS=true` o en local, D56).
 
 Fase 1:
 

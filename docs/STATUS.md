@@ -9,7 +9,65 @@
 | 2 — Inventory | ✅ Completada (CI en verde en el pull request #3) |
 | 3 — Expiration Engine | 🟡 Código completo; **falta comprobar en un móvil Android que el push llega**, y hasta entonces no se da por cerrada |
 | 4 — Recipes | 🟡 Funcionalidad completa (CI en verde en el pull request #12). Antes de usuarios reales hay que revisar los datos de alérgenos |
-| 5 — Smart Planning | 🟡 Funcionalidad completa, con los tests nuevos del móvil pendientes de CI. Faltan las preferencias del usuario como factor |
+| 5 — Smart Planning | 🟡 Funcionalidad completa (CI en verde en el pull request #14). Faltan las preferencias del usuario como factor |
+
+## Problemas conocidos resueltos — lote 1 (2026-10-03)
+
+Problemas de la lista de "Known issues" de fases anteriores que se podían arreglar en código y probar aquí.
+
+### Completed
+
+- **Avisos de caducidad bien redactados con nombres en plural** (web, móvil y push): "Huevos: su fecha de
+  caducidad es hoy" en lugar de "Huevos caduca hoy". Ninguna frase hace concordar un verbo con el nombre.
+- **Plan de comidas**:
+  - Dos miembros que eligen a la vez la misma comida ya no chocan: la elección es una sola instrucción en
+    base de datos y gana la última. Lo que rellena el generador nunca sustituye a lo que un miembro eligió
+    mientras tanto.
+  - Cada comida dice si se cocinó ese día, y las de hoy tienen "La he cocinado". Marcar una receta como
+    cocinada actualiza el plan en tiempo real.
+  - Aviso en la comida si su receta contiene algo que el hogar no come (elegida a mano, o planificada antes
+    de cambiar las restricciones).
+  - **Añadir al plan desde la receta** (web y móvil): día de los próximos 14 y comida o cena, avisando antes
+    de qué receta se sustituiría. Lleva al plan en esa semana.
+  - El selector de recetas de la web muestra todas las que el hogar come, no solo 20.
+- **Las recomendaciones de la web se actualizan solas** cuando otro miembro cambia el inventario.
+- **Fechas estimadas para alimentos antiguos**: el barrido de cada noche (y al arrancar) estima la fecha de
+  los alimentos en casa que no tienen ninguna pero podrían tenerla por sus reglas. Sin regla, sigue sin fecha.
+- **Limpieza de avisos**: cada noche se borran los avisos de hace más de 90 días
+  (`freezify.notifications.retention`).
+- **Los flujos de tiempo real terminan cuando caduca el token** con el que se abrieron, no hasta 30 minutos
+  después.
+- **Swagger UI y `/v3/api-docs` desactivados por defecto**; se activan con `FREEZIFY_API_DOCS=true`. En local
+  sin Docker siguen activos.
+- **Docker**: la clave de Firebase llega al contenedor del backend desde una carpeta fuera del repositorio
+  (`FREEZIFY_SECRETS_DIR`, montada solo lectura), y la CI comprueba que `docker-compose.yml` es válido.
+- **La web explica el error de edición simultánea** (`CONCURRENT_MODIFICATION`) en lugar de dar un mensaje
+  genérico.
+
+### Tests
+
+| Qué | Resultado |
+|---|---|
+| Backend `./mvnw verify` | ✅ 269 tests (10 nuevos); 1 omitido, el que habla con Firebase real |
+| Test de elección simultánea | ✅ con el código anterior falla 3 de 3 veces (una de las dos peticiones recibe un error); con el nuevo pasa |
+| Web lint / test / build | ✅ sin avisos / 147 tests (8 nuevos) / correcto |
+| Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
+| Mobile `flutter test` | 🟡 los **5 nuevos no se han ejecutado** (151 en total): correrán en la CI del próximo pull request |
+| Contra el backend y la base locales reales | ✅ al arrancar, el barrido estimó la fecha de 1 alimento antiguo sin fecha; con la API en modo local, `/v3/api-docs` y Swagger UI responden; el aviso real de un hogar de prueba se lee "Champiñones: quedan aproximadamente 4 días para su fecha de caducidad (fecha estimada)"; en la web, el plan avisó de la carne y el pescado de dos comidas en un hogar vegetariano, "La he cocinado" dejó la comida como "Cocinada", y "Añadir al plan" avisó de la receta que sustituiría, la añadió y llevó a esa semana |
+| Código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ "La he cocinado" en una comida de hoy, y "Añadir al plan" con el aviso de sustitución, el aviso de confirmación y el enlace al plan |
+| `docker compose` con la clave | ⏳ sin probar: no hay Docker aquí; la CI solo valida el fichero |
+
+### No resuelto en este lote
+
+Siguen en la lista de cada fase, porque necesitan algo que aquí no hay (un dispositivo, un Mac, Docker, una
+fuente de datos oficial, un servicio de correo) o una decisión de producto:
+
+- Probar el push en un móvil Android; push en iOS.
+- Revisar los datos de vida útil y de alérgenos con una fuente autorizada.
+- Verificación de correo, recuperación de contraseña y borrado de cuenta (necesitan enviar correos).
+- Refresh token de la web en una cookie `HttpOnly` (riesgo R8): cambia cómo se inicia sesión; irá en su propio
+  lote.
+- Transferir un hogar, revocar invitaciones, preferencias personales y otras funciones nuevas.
 
 ## Fase 5 — Smart Planning 🟡
 
@@ -73,7 +131,7 @@
 | Web lint / test / build | ✅ sin avisos / 139 tests (23 del plan: 13 de la página y 10 de las frases) / correcto |
 | Plan, web contra el backend real | ✅ mostró la semana generada con sus frases y el aviso del yogur; en la semana siguiente generó 14 comidas, y se quitó una comida, se eligió otra receta y se movió sobre otra (se intercambiaron y cada una conservó su origen) |
 | Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
-| Mobile `flutter test` | 🟡 123 pasaron en CI (pull request #12); los **23 nuevos del plan no se han ejecutado** (146 en total): correrán en la CI del próximo pull request |
+| Mobile `flutter test` | ✅ 146 en CI (pull request #14), con los 23 nuevos del plan |
 | Plan, código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ generó 6 comidas con sus frases (la fecha estimada de los champiñones, dicha como estimada), y se movió una comida sobre otra, se cambió su receta y se quitó, sin errores en consola. No se probó "Rehacer la propuesta" ni el cambio de semana en esta versión |
 
 ### Pendiente en esta fase
@@ -92,17 +150,11 @@
 - **"Mismo tipo de plato" es una regla sencilla** (ingrediente base o carne, pescado o huevo en común); el
   ingrediente base es el primero de la receta.
 - **Solo comida y cena**: no se planifican desayunos ni postres, aunque se pueden poner a mano.
-- **Marcar una comida del plan como cocinada no existe**: "La he cocinado" sigue estando en la receta y el
-  plan no lo refleja.
+- **Solo se puede marcar como cocinada una comida de hoy**: el servidor anota lo cocinado con la fecha de hoy.
 - **No hay "vaciar la semana"** ni copia de una semana a otra.
 - **Mover una comida solo dentro de la semana en pantalla**, eligiendo el destino de una lista; no se
   arrastra. La API sí permite mover entre semanas.
-- **No se puede añadir una receta al plan desde la propia receta**: se elige desde el plan.
-- **El selector de recetas de la web muestra las 20 primeras**; el resto se alcanza buscando.
-- **Al elegir una receta a mano no se avisa si contiene algo que el hogar no come**: el selector ya solo
-  ofrece las que come, pero la API acepta cualquiera.
-- **Dos miembros que eligen a la vez la misma comida vacía**: la segunda petición falla con un error genérico
-  en lugar de un mensaje claro. Sin test.
+- **Desde la receta solo se puede añadir a los próximos 14 días**; más allá, desde el plan.
 - **Los alimentos fuera del catálogo** no encajan en ninguna receta: aparecen siempre como "el plan no los
   usa" si caducan en la semana.
 - **El día es el de `Europe/Madrid`** para todos los hogares, como en el resto de la aplicación.
@@ -181,10 +233,6 @@
 ### Known issues
 
 - **La app móvil pide el catálogo entero de una vez** (hasta 100 recetas) en lugar de paginar; la web pagina.
-- **La web no actualiza las recomendaciones en tiempo real** si otro miembro cambia el inventario mientras
-  la página está abierta; se piden de nuevo cada vez que se entra.
-- **Los avisos de caducidad se redactan mal con nombres en plural** ("Huevos caduca hoy"); en las recetas ya
-  está resuelto con frases que no dependen del número.
 - **Lo que contiene cada alimento está escrito a mano, no sale de etiquetas ni de una fuente oficial.** Es
   deliberadamente prudente (la pasta cuenta como "con huevo", el jamón cocido como "con lácteos, gluten y
   soja"), pero puede haber errores en los dos sentidos y no cubre trazas. Hay que revisarlo con una fuente
@@ -327,8 +375,6 @@
 - **Los días de las reglas no salen de una fuente oficial**: son valores conservadores de conocimiento
   general, escritos a mano. Hay que contrastarlos con una fuente autorizada (AESAN, FoodKeeper) antes de
   abrir a usuarios reales; es el riesgo R3 de `ARCHITECTURE.md`.
-- **Los alimentos sin fecha añadidos antes de esta versión no reciben estimación** hasta que se editan o se
-  abren.
 - **No se puede pedir "sin fecha"** para un alimento que tiene regla: si el usuario no da fecha, se estima.
 - **El formulario no muestra la estimación antes de guardar**; se ve después, en la lista.
 - **Ningún push se ha entregado todavía a un dispositivo**: lo comprobado es que Firebase acepta las
@@ -346,7 +392,7 @@
   muchos usuarios habrá que sacarlo a una cola.
 - **No hay reintentos**: un push que falla (red, Firebase caído) no se vuelve a intentar.
 - **El identificador de la app iOS sigue siendo `com.freezify.freezify`**; solo se ha cambiado Android.
-- **Con Docker la clave no llega al contenedor**: `docker-compose.yml` aún no la monta.
+- **La clave de Firebase con Docker no se ha probado**: `docker-compose.yml` la monta, pero nunca se ha ejecutado.
 - **La hora de los avisos es la de `Europe/Madrid`** para todos los usuarios, y así se indica en la pantalla
   de preferencias.
 - **La comprobación de avisos lee de una vez todos los alimentos próximos a caducar de todos los hogares**,
@@ -356,7 +402,6 @@
 - **La app móvil muestra solo los 50 avisos más recientes**; la web pagina.
 - **La campana no se actualiza en tiempo real**: la web la refresca cada 5 minutos y al volver a la pestaña;
   el móvil, al volver a la app y al tirar para refrescar.
-- **No hay limpieza de avisos antiguos**: se acumulan (uno por hogar y día como mucho).
 - **El barrido es global y de una sola instancia**: usa una única zona horaria para todos los hogares y no
   tiene bloqueo entre instancias. Con varias instancias se ejecutaría en todas; es inofensivo, pero cada una
   enviaría su aviso en tiempo real.
@@ -454,14 +499,11 @@
   dispositivo; no se ha comprobado qué ocurre al pasar la app a segundo plano o cambiar de red.
 - **Conexiones en memoria**: con más de una instancia del backend, un cambio solo llegaría a los miembros
   conectados a la misma instancia.
-- **Un token caducado sigue escuchando** hasta que la conexión termina (30 minutos como máximo); los eventos
-  no contienen datos.
 - **Selector de fecha del móvil sin probar**: ni los tests ni la prueba manual abren el calendario; solo se
   ha comprobado que el formulario guarda sin fecha y que conserva la fecha existente al editar.
 - **Ediciones simultáneas**: si dos miembros editan el mismo alimento uno tras otro, gana el último. Si dos
   peticiones se solapan de verdad sobre el mismo alimento, la segunda debería recibir 409
-  `CONCURRENT_MODIFICATION` (columna `version`); ese caso **no tiene test** y la web lo muestra con el
-  mensaje de error genérico.
+  `CONCURRENT_MODIFICATION` (columna `version`), que web y móvil explican; ese caso **no tiene test**.
 - **El catálogo no tiene alias ni sinónimos** ("jitomate", abreviaturas de ticket); previsto para la Fase 7.
 - **Los eventos de producto no se borran con la cuenta** (no hay borrado de cuenta todavía).
 
@@ -498,12 +540,11 @@ Tras fusionarlo, `main` también pasa.
 - **El propietario no puede abandonar ni transferir un hogar**; solo eliminarlo.
 - **Las invitaciones son reutilizables hasta que caducan (7 días)** y no se pueden revocar.
 - **Sin tests E2E automatizados**; las pruebas de extremo a extremo han sido manuales.
-- **Swagger UI y `/v3/api-docs` son públicos**; desactivarlos o protegerlos en producción.
 - **Detener el backend local**: si el proceso se mata en vez de cerrarse con Ctrl+C, PostgreSQL embebido puede quedar vivo en el puerto 54329.
 
 ## Next
 
-1. Abrir el pull request de las pantallas del plan y confirmar en CI los 23 tests nuevos del móvil.
+1. Abrir el pull request del lote 1 de problemas conocidos y confirmar en CI los 5 tests nuevos del móvil.
 2. Fase 6 — Shopping: lista de la compra a partir de lo que falta en el plan.
 3. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
    con una fuente autorizada antes de abrir a usuarios reales.

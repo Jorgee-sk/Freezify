@@ -226,6 +226,57 @@ class MealPlanApiTests extends ApiTestSupport {
     }
 
     @Test
+    void aMealSaysWhetherTheHouseholdCookedIt() throws Exception {
+        choose(jorge, TODAY, "LUNCH", recipeId(PASTA)).andExpect(status().isNoContent());
+        choose(jorge, TODAY, "DINNER", recipeId(CHICKEN)).andExpect(status().isNoContent());
+        week(jorge, TODAY).andExpect(jsonPath("$.meals[*].cooked", contains(false, false)));
+
+        mvc.perform(as(jorge, post("/api/v1/households/" + householdId + "/recipes/" + recipeId(PASTA) + "/cooked")))
+                .andExpect(status().isNoContent());
+
+        week(jorge, TODAY)
+                .andExpect(jsonPath("$.meals[0].recipe.name").value(PASTA))
+                .andExpect(jsonPath("$.meals[0].cooked").value(true))
+                .andExpect(jsonPath("$.meals[1].cooked").value(false));
+        // Cooking it today says nothing about the same recipe planned for another day.
+        choose(jorge, NEXT_MONDAY, "LUNCH", recipeId(PASTA)).andExpect(status().isNoContent());
+        week(jorge, NEXT_MONDAY).andExpect(jsonPath("$.meals[0].cooked").value(false));
+    }
+
+    @Test
+    void membersChoosingTheSameEmptyMealAtOnceNeverCollide() throws Exception {
+        TestUser partner = register("Lucía");
+        join(partner, invite(jorge, householdId)).andExpect(status().isOk());
+        String pasta = recipeId(PASTA);
+        String chicken = recipeId(CHICKEN);
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(2);
+        try {
+            for (int day = 0; day < 7; day++) {
+                LocalDate date = NEXT_MONDAY.plusDays(day);
+                java.util.concurrent.CyclicBarrier together = new java.util.concurrent.CyclicBarrier(2);
+                java.util.concurrent.Future<Integer> one = pool.submit(() -> {
+                    together.await();
+                    return choose(jorge, date, "LUNCH", pasta).andReturn().getResponse().getStatus();
+                });
+                java.util.concurrent.Future<Integer> other = pool.submit(() -> {
+                    together.await();
+                    return choose(partner, date, "LUNCH", chicken).andReturn().getResponse().getStatus();
+                });
+                assertThat(one.get()).as("first member, day " + day).isEqualTo(204);
+                assertThat(other.get()).as("second member, day " + day).isEqualTo(204);
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+
+        // One meal per day, holding whichever choice came last.
+        week(jorge, NEXT_MONDAY)
+                .andExpect(jsonPath("$.meals", hasSize(7)))
+                .andExpect(jsonPath("$.meals[*].origin", org.hamcrest.Matchers.everyItem(
+                        org.hamcrest.Matchers.is("MANUAL"))));
+    }
+
+    @Test
     void aMealCanBeRemoved() throws Exception {
         choose(jorge, NEXT_MONDAY, "LUNCH", recipeId(PASTA)).andExpect(status().isNoContent());
 
@@ -487,6 +538,10 @@ class MealPlanApiTests extends ApiTestSupport {
         // Nothing left to fill: nothing changed, nothing is announced.
         generate(jorge, NEXT_MONDAY, false).andExpect(jsonPath("$.filled").value(0));
         assertThat(changes(stream)).isEqualTo(4);
+        // The plan says which meals were cooked.
+        mvc.perform(as(jorge, post("/api/v1/households/" + householdId + "/recipes/" + recipeId(PASTA) + "/cooked")))
+                .andExpect(status().isNoContent());
+        assertThat(changes(stream)).isEqualTo(5);
     }
 
     @Test

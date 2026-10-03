@@ -564,15 +564,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$name expired $count days ago',
-      one: '$name expired $count day ago',
+      other: '$name: the expiry date was $count days ago',
+      one: '$name: the expiry date was $count day ago',
     );
     return '$_temp0';
   }
 
   @override
   String notifiedToday(String name) {
-    return '$name expires today';
+    return '$name: the expiry date is today';
   }
 
   @override
@@ -580,8 +580,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$name expires in $count days',
-      one: '$name expires in $count day',
+      other: '$name: $count days left before the expiry date',
+      one: '$name: $count day left before the expiry date',
     );
     return '$_temp0';
   }
@@ -591,15 +591,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$name probably expired $count days ago (estimated date)',
-      one: '$name probably expired $count day ago (estimated date)',
+      other: '$name: the expiry date was probably $count days ago (estimated date)',
+      one: '$name: the expiry date was probably $count day ago (estimated date)',
     );
     return '$_temp0';
   }
 
   @override
   String notifiedTodayEstimated(String name) {
-    return '$name probably expires today (estimated date)';
+    return '$name: the expiry date is probably today (estimated date)';
   }
 
   @override
@@ -607,8 +607,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$name expires in about $count days (estimated date)',
-      one: '$name expires in about $count day (estimated date)',
+      other: '$name: about $count days left before the expiry date (estimated date)',
+      one: '$name: about $count day left before the expiry date (estimated date)',
     );
     return '$_temp0';
   }
@@ -1127,4 +1127,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorWeekInThePast => 'A week that is over cannot be planned.';
+
+  @override
+  String get planCooked => 'Cooked';
+
+  @override
+  String get planAddTitle => 'Add to the plan';
+
+  @override
+  String get planAddDay => 'Day';
+
+  @override
+  String get planAdd => 'Add to the plan';
+
+  @override
+  String planAdded(String place) {
+    return 'Added to the plan: $place.';
+  }
+
+  @override
+  String planAddReplaces(String recipe) {
+    return '“$recipe” is already there: it will be replaced.';
+  }
+
+  @override
+  String get planView => 'See the plan';
 }

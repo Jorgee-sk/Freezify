@@ -27,6 +27,11 @@ interface NotificationRepository extends JpaRepository<NotificationEntity, UUID>
     @Modifying
     @Query("update NotificationEntity n set n.readAt = :now where n.userId = :userId and n.readAt is null")
     void markAllRead(@Param("userId") UUID userId, @Param("now") Instant now);
+
+    /** Their items go with them (the foreign key cascades). */
+    @Modifying
+    @Query(nativeQuery = true, value = "delete from notifications where created_at < :before")
+    int deleteCreatedBefore(@Param("before") Instant before);
 }
 
 interface NotificationPreferencesRepository extends JpaRepository<NotificationPreferencesEntity, UUID> {}

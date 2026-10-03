@@ -32,6 +32,7 @@ public final class MealPlanViews {
     /**
      * @param ingredients what the recipe needs and what the household would have of each on that day, once the
      *                    meals planned before it have taken theirs. Empty for a meal in the past.
+     * @param cooked      whether the household said it cooked that recipe on that day
      */
     public record PlannedMeal(
             UUID id,
@@ -39,7 +40,8 @@ public final class MealPlanViews {
             MealSlot slot,
             MealOrigin origin,
             PlannedRecipe recipe,
-            List<PlannedIngredient> ingredients) {}
+            List<PlannedIngredient> ingredients,
+            boolean cooked) {}
 
     public record PlannedRecipe(
             UUID id, String name, int servings, int totalMinutes, Difficulty difficulty, List<FoodTrait> contains) {}

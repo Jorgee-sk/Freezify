@@ -1,8 +1,9 @@
 import '../../l10n/app_localizations.dart';
 import 'notification_models.dart';
 
-/// "Leche caduca en 2 días". An estimated date is always worded as an estimate: it is the app's guess, not
-/// what the package says.
+/// "Leche: quedan 2 días para su fecha de caducidad". Sentences do not depend on the number of the name
+/// ("Huevos"). An estimated date is always worded as an estimate: it is the app's guess, not what the package
+/// says.
 String itemSentence(AppLocalizations l10n, NotifiedItem item) {
   final days = item.daysUntilExpiration;
   if (days < 0) {

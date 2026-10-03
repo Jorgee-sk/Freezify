@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
@@ -177,6 +178,14 @@ public class RecipeService implements RecipeCatalog {
                 .collect(Collectors.toMap(
                         CookedRecipeRepository.LastCooked::getRecipeId,
                         CookedRecipeRepository.LastCooked::getLastCooked));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<Cooked> cookedBetween(UUID householdId, LocalDate from, LocalDate to) {
+        return cooked.cookedBetween(householdId, from, to).stream()
+                .map(day -> new Cooked(day.getRecipeId(), day.getCookedOn()))
+                .collect(Collectors.toSet());
     }
 
     /** What the household does not eat. Any member can see it. */

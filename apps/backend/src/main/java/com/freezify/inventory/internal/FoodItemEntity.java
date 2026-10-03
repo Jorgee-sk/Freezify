@@ -193,6 +193,10 @@ class FoodItemEntity {
         return id;
     }
 
+    @Nullable LocalDate expirationDate() {
+        return expirationDate;
+    }
+
     UUID householdId() {
         return householdId;
     }

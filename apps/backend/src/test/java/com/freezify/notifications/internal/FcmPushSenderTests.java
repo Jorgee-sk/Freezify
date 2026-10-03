@@ -36,7 +36,7 @@ import tools.jackson.databind.json.JsonMapper;
 class FcmPushSenderTests {
 
     private static final PushMessage MESSAGE =
-            new PushMessage("Casa", "Leche caduca en 1 día", Map.of("householdId", "h1"));
+            new PushMessage("Casa", "Leche: queda 1 día para su fecha de caducidad", Map.of("householdId", "h1"));
 
     private record Received(String path, String authorization, String body) {}
 
@@ -85,7 +85,7 @@ class FcmPushSenderTests {
         JsonNode message = jsonMapper.readTree(send.body()).path("message");
         assertThat(message.path("token").asString()).isEqualTo("device-1");
         assertThat(message.path("notification").path("title").asString()).isEqualTo("Casa");
-        assertThat(message.path("notification").path("body").asString()).isEqualTo("Leche caduca en 1 día");
+        assertThat(message.path("notification").path("body").asString()).isEqualTo("Leche: queda 1 día para su fecha de caducidad");
         assertThat(message.path("data").path("householdId").asString()).isEqualTo("h1");
         assertThat(jsonMapper.readTree(send.body()).has("validate_only")).isFalse();
     }

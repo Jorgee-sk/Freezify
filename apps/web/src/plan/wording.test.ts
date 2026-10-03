@@ -25,6 +25,7 @@ function meal(ingredients: PlannedIngredient[]): PlannedMeal {
     origin: 'GENERATED',
     recipe: { id: 'r1', name: 'Pasta', servings: 2, totalMinutes: 25, difficulty: 'EASY', contains: [] },
     ingredients,
+    cooked: false,
   }
 }
 

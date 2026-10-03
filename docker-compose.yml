@@ -27,6 +27,14 @@ services:
       FREEZIFY_DB_PASSWORD: ${FREEZIFY_DB_PASSWORD:?Set FREEZIFY_DB_PASSWORD in .env}
       FREEZIFY_JWT_SECRET: ${FREEZIFY_JWT_SECRET:?Set FREEZIFY_JWT_SECRET in .env}
       FREEZIFY_CORS_ALLOWED_ORIGINS: ${FREEZIFY_CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      # Push notifications: the path of the Firebase key inside the container, under /run/secrets/freezify.
+      # Empty, no push is sent.
+      FREEZIFY_FCM_CREDENTIALS_FILE: ${FREEZIFY_FCM_CREDENTIALS_FILE_IN_CONTAINER:-}
+      # The description of the API (Swagger UI) is off unless asked for.
+      FREEZIFY_API_DOCS: ${FREEZIFY_API_DOCS:-false}
+    volumes:
+      # A folder outside the repository with the secrets that are files, mounted read-only.
+      - ${FREEZIFY_SECRETS_DIR:-./.secrets}:/run/secrets/freezify:ro
     depends_on:
       postgres:
         condition: service_healthy

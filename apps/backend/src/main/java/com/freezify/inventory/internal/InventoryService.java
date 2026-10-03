@@ -25,9 +25,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
@@ -54,6 +56,8 @@ interface FoodItemRepository extends JpaRepository<FoodItemEntity, UUID>, JpaSpe
     List<FoodItemEntity> findByHouseholdIdAndStatusIn(UUID householdId, Collection<ItemStatus> statuses);
 
     List<FoodItemEntity> findByStatusInAndExpirationDateLessThanEqual(Collection<ItemStatus> statuses, LocalDate until);
+
+    List<FoodItemEntity> findByStatusInAndExpirationDateIsNull(Collection<ItemStatus> statuses);
 
     @Query("select distinct i.householdId from FoodItemEntity i"
             + " where i.status in :statuses and i.expirationDate < :today")
@@ -274,6 +278,28 @@ public class InventoryService implements ExpiringFood, HouseholdStock {
      *
      * @return how many items changed
      */
+    /**
+     * Gives an estimated date to food in the house that has none although a rule could estimate one: items added
+     * before the rules existed, or before a rule for them was written. Items without a rule keep no date: a date is
+     * never made up.
+     *
+     * @return how many items got a date
+     */
+    @Transactional
+    public int estimateMissingDates() {
+        Set<UUID> households = new HashSet<>();
+        int estimated = 0;
+        for (FoodItemEntity item :
+                items.findByStatusInAndExpirationDateIsNull(EnumSet.of(ItemStatus.AVAILABLE, ItemStatus.OPENED))) {
+            if (withExpiration(item).expirationDate() != null) {
+                estimated++;
+                households.add(item.householdId());
+            }
+        }
+        households.forEach(householdId -> events.publishEvent(new InventoryChanged(householdId, null)));
+        return estimated;
+    }
+
     @Transactional
     public int markExpired() {
         LocalDate day = today.date();

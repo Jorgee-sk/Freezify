@@ -17,6 +17,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /** A recipe a household plans to eat at one meal of one day. */
 @Entity
@@ -60,16 +63,6 @@ class MealPlanEntryEntity {
 
     protected MealPlanEntryEntity() {}
 
-    MealPlanEntryEntity(
-            UUID householdId, LocalDate plannedOn, MealSlot slot, UUID recipeId, MealOrigin origin, UUID createdBy) {
-        this.householdId = householdId;
-        this.plannedOn = plannedOn;
-        this.slot = slot;
-        this.recipeId = recipeId;
-        this.origin = origin;
-        this.createdBy = createdBy;
-    }
-
     UUID id() {
         return id;
     }
@@ -109,4 +102,47 @@ interface MealPlanEntryRepository extends JpaRepository<MealPlanEntryEntity, UUI
             UUID householdId, LocalDate plannedOn, MealSlot slot);
 
     boolean existsByHouseholdIdAndPlannedOnBetween(UUID householdId, LocalDate from, LocalDate to);
+
+    /**
+     * Puts a recipe chosen by a member in a meal, in place of whatever was there. A single statement: two members
+     * choosing the same empty meal at once never collide, the last one wins.
+     */
+    @Modifying
+    @Query(
+            nativeQuery = true,
+            value = "insert into meal_plan_entries"
+                    + " (id, household_id, planned_on, slot, recipe_id, origin, created_by, created_at, updated_at, version)"
+                    + " values (:id, :householdId, :plannedOn, :slot, :recipeId, 'MANUAL', :userId, :now, :now, 0)"
+                    + " on conflict (household_id, planned_on, slot) do update set recipe_id = excluded.recipe_id,"
+                    + " origin = 'MANUAL', updated_at = excluded.updated_at, version = meal_plan_entries.version + 1")
+    void chooseManually(
+            @Param("id") UUID id,
+            @Param("householdId") UUID householdId,
+            @Param("plannedOn") LocalDate plannedOn,
+            @Param("slot") String slot,
+            @Param("recipeId") UUID recipeId,
+            @Param("userId") UUID userId,
+            @Param("now") Instant now);
+
+    /**
+     * Puts a recipe chosen by the generator in a meal, unless something got there first: what a member chose in
+     * the meantime is never replaced.
+     *
+     * @return 1 when the meal was filled, 0 when it was already taken
+     */
+    @Modifying
+    @Query(
+            nativeQuery = true,
+            value = "insert into meal_plan_entries"
+                    + " (id, household_id, planned_on, slot, recipe_id, origin, created_by, created_at, updated_at, version)"
+                    + " values (:id, :householdId, :plannedOn, :slot, :recipeId, 'GENERATED', :userId, :now, :now, 0)"
+                    + " on conflict (household_id, planned_on, slot) do nothing")
+    int fillIfEmpty(
+            @Param("id") UUID id,
+            @Param("householdId") UUID householdId,
+            @Param("plannedOn") LocalDate plannedOn,
+            @Param("slot") String slot,
+            @Param("recipeId") UUID recipeId,
+            @Param("userId") UUID userId,
+            @Param("now") Instant now);
 }

@@ -569,15 +569,15 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$name caducó hace $count días',
-      one: '$name caducó hace $count día',
+      other: '$name: su fecha de caducidad pasó hace $count días',
+      one: '$name: su fecha de caducidad pasó hace $count día',
     );
     return '$_temp0';
   }
 
   @override
   String notifiedToday(String name) {
-    return '$name caduca hoy';
+    return '$name: su fecha de caducidad es hoy';
   }
 
   @override
@@ -585,8 +585,8 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$name caduca en $count días',
-      one: '$name caduca en $count día',
+      other: '$name: quedan $count días para su fecha de caducidad',
+      one: '$name: queda $count día para su fecha de caducidad',
     );
     return '$_temp0';
   }
@@ -596,15 +596,15 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$name probablemente caducó hace $count días (fecha estimada)',
-      one: '$name probablemente caducó hace $count día (fecha estimada)',
+      other: '$name: su fecha de caducidad probablemente pasó hace $count días (fecha estimada)',
+      one: '$name: su fecha de caducidad probablemente pasó hace $count día (fecha estimada)',
     );
     return '$_temp0';
   }
 
   @override
   String notifiedTodayEstimated(String name) {
-    return '$name probablemente caduca hoy (fecha estimada)';
+    return '$name: su fecha de caducidad es probablemente hoy (fecha estimada)';
   }
 
   @override
@@ -612,8 +612,8 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$name caduca en aproximadamente $count días (fecha estimada)',
-      one: '$name caduca en aproximadamente $count día (fecha estimada)',
+      other: '$name: quedan aproximadamente $count días para su fecha de caducidad (fecha estimada)',
+      one: '$name: queda aproximadamente $count día para su fecha de caducidad (fecha estimada)',
     );
     return '$_temp0';
   }
@@ -1132,4 +1132,29 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorWeekInThePast => 'No se puede planificar una semana que ya ha pasado.';
+
+  @override
+  String get planCooked => 'Cocinada';
+
+  @override
+  String get planAddTitle => 'Añadir al plan';
+
+  @override
+  String get planAddDay => 'Día';
+
+  @override
+  String get planAdd => 'Añadir al plan';
+
+  @override
+  String planAdded(String place) {
+    return 'Añadida al plan: $place.';
+  }
+
+  @override
+  String planAddReplaces(String recipe) {
+    return 'Ahí ya está «$recipe»: se sustituirá.';
+  }
+
+  @override
+  String get planView => 'Ver el plan';
 }

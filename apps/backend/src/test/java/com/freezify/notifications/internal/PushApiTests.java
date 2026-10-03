@@ -105,7 +105,7 @@ class PushApiTests extends ApiTestSupport {
         assertThat(sender.to(phone)).hasSize(1);
         PushMessage message = sender.to(phone).get(0).message();
         assertThat(message.title()).isEqualTo("Casa");
-        assertThat(message.body()).isEqualTo("Leche caduca en 1 día");
+        assertThat(message.body()).isEqualTo("Leche: queda 1 día para su fecha de caducidad");
         assertThat(message.data())
                 .containsEntry("type", "EXPIRATION")
                 .containsEntry("householdId", householdId)

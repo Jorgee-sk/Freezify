@@ -38,6 +38,8 @@ export interface PlannedMeal {
   }
   /** Empty for a meal in the past. */
   ingredients: PlannedIngredient[]
+  /** Whether the household said it cooked that recipe on that day. */
+  cooked: boolean
 }
 
 /** Food at home that expires before the week is over and that the plan does not use, or does not use up. */

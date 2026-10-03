@@ -34,7 +34,11 @@ management:
         enabled: true
 
 springdoc:
+  # The description of the API is not published by a deployed instance unless FREEZIFY_API_DOCS=true.
+  api-docs:
+    enabled: ${FREEZIFY_API_DOCS:false}
   swagger-ui:
+    enabled: ${FREEZIFY_API_DOCS:false}
     path: /swagger-ui.html
 
 freezify:
@@ -62,6 +66,9 @@ freezify:
   notifications:
     # Every hour on the hour in freezify.time-zone: each user is told at the hour they chose.
     check-cron: "0 0 * * * *"
+    # Notifications older than this are deleted every night.
+    retention: 90d
+    cleanup-cron: "0 45 3 * * *"
   recipes:
     # How much each factor counts in the score of a recommended recipe. Only their proportions matter.
     weights:

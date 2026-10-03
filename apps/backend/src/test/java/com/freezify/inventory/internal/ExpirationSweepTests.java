@@ -23,6 +23,9 @@ class ExpirationSweepTests extends ApiTestSupport {
     @Autowired
     private ExpirationSweep sweep;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
+
     private TestUser jorge;
     private String householdId;
 
@@ -55,6 +58,27 @@ class ExpirationSweepTests extends ApiTestSupport {
         assertThat(statusOf(rice)).isEqualTo("AVAILABLE");
         // What already left the house keeps its own outcome.
         assertThat(statusOf(eaten)).isEqualTo("CONSUMED");
+    }
+
+    @Test
+    void foodWithoutADateGetsAnEstimateIfARuleCanGiveIt() throws Exception {
+        String chicken = addInCategory("Pollo", "MEAT");
+        String mystery = addInCategory("Cosa rara", "OTHER");
+        // As food added before the rules existed: no date at all.
+        jdbc.update(
+                "update food_items set expiration_date = null, expiration_source = null where id in (?::uuid, ?::uuid)",
+                chicken,
+                mystery);
+
+        sweep.run();
+
+        mvc.perform(as(jorge, get(item(chicken))))
+                .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"))
+                .andExpect(jsonPath("$.expirationDate").isNotEmpty());
+        // Without a rule nothing is made up.
+        mvc.perform(as(jorge, get(item(mystery))))
+                .andExpect(jsonPath("$.expirationDate").isEmpty())
+                .andExpect(jsonPath("$.expirationSource").isEmpty());
     }
 
     @Test
@@ -113,6 +137,18 @@ class ExpirationSweepTests extends ApiTestSupport {
                 .andExpect(jsonPath("$.status").value("AVAILABLE"));
         mvc.perform(as(jorge, json(put(item(openedHam)), body("Jamón", inDays(4), inDays(-3)))))
                 .andExpect(jsonPath("$.status").value("OPENED"));
+    }
+
+    private String addInCategory(String name, String category) throws Exception {
+        String response = mvc.perform(as(jorge, json(post(inventory()), """
+                        {"name": "%s", "category": "%s", "quantity": {"amount": 1, "unit": "UNIT"},
+                         "storageLocation": "REFRIGERATOR"}
+                        """.formatted(name, category))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return JsonPath.read(response, "$.id");
     }
 
     private String addItem(String name, String expirationDate, String openedDate) throws Exception {

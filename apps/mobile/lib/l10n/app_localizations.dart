@@ -1079,37 +1079,37 @@ abstract class AppLocalizations {
   /// No description provided for @notifiedExpired.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{{name} expired {count} day ago} other{{name} expired {count} days ago}}'**
+  /// **'{count, plural, =1{{name}: the expiry date was {count} day ago} other{{name}: the expiry date was {count} days ago}}'**
   String notifiedExpired(String name, int count);
 
   /// No description provided for @notifiedToday.
   ///
   /// In en, this message translates to:
-  /// **'{name} expires today'**
+  /// **'{name}: the expiry date is today'**
   String notifiedToday(String name);
 
   /// No description provided for @notifiedLeft.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{{name} expires in {count} day} other{{name} expires in {count} days}}'**
+  /// **'{count, plural, =1{{name}: {count} day left before the expiry date} other{{name}: {count} days left before the expiry date}}'**
   String notifiedLeft(String name, int count);
 
   /// No description provided for @notifiedExpiredEstimated.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{{name} probably expired {count} day ago (estimated date)} other{{name} probably expired {count} days ago (estimated date)}}'**
+  /// **'{count, plural, =1{{name}: the expiry date was probably {count} day ago (estimated date)} other{{name}: the expiry date was probably {count} days ago (estimated date)}}'**
   String notifiedExpiredEstimated(String name, int count);
 
   /// No description provided for @notifiedTodayEstimated.
   ///
   /// In en, this message translates to:
-  /// **'{name} probably expires today (estimated date)'**
+  /// **'{name}: the expiry date is probably today (estimated date)'**
   String notifiedTodayEstimated(String name);
 
   /// No description provided for @notifiedLeftEstimated.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{{name} expires in about {count} day (estimated date)} other{{name} expires in about {count} days (estimated date)}}'**
+  /// **'{count, plural, =1{{name}: about {count} day left before the expiry date (estimated date)} other{{name}: about {count} days left before the expiry date (estimated date)}}'**
   String notifiedLeftEstimated(String name, int count);
 
   /// No description provided for @prefEnabled.
@@ -1879,6 +1879,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A week that is over cannot be planned.'**
   String get errorWeekInThePast;
+
+  /// No description provided for @planCooked.
+  ///
+  /// In en, this message translates to:
+  /// **'Cooked'**
+  String get planCooked;
+
+  /// No description provided for @planAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to the plan'**
+  String get planAddTitle;
+
+  /// No description provided for @planAddDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get planAddDay;
+
+  /// No description provided for @planAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to the plan'**
+  String get planAdd;
+
+  /// No description provided for @planAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to the plan: {place}.'**
+  String planAdded(String place);
+
+  /// No description provided for @planAddReplaces.
+  ///
+  /// In en, this message translates to:
+  /// **'“{recipe}” is already there: it will be replaced.'**
+  String planAddReplaces(String recipe);
+
+  /// No description provided for @planView.
+  ///
+  /// In en, this message translates to:
+  /// **'See the plan'**
+  String get planView;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

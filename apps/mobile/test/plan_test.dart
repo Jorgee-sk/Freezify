@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:freezify/features/inventory/inventory_format.dart';
 import 'package:freezify/features/plan/plan_models.dart';
 import 'package:freezify/features/plan/plan_wording.dart';
 import 'package:freezify/l10n/app_localizations.dart';
@@ -60,6 +61,8 @@ Map<String, Object?> _meal(
   String recipeName, {
   String origin = 'MANUAL',
   List<Map<String, Object?>> ingredients = const [],
+  List<String> contains = const [],
+  bool cooked = false,
 }) => {
   'id': 'meal-$date-$slot',
   'date': date,
@@ -71,9 +74,10 @@ Map<String, Object?> _meal(
     'servings': 2,
     'totalMinutes': 25,
     'difficulty': 'EASY',
-    'contains': <String>[],
+    'contains': contains,
   },
   'ingredients': ingredients,
+  'cooked': cooked,
 };
 
 /// Monday's lunch, chosen by a member: the zucchini is at home with an estimated date, the mozzarella is not.
@@ -90,7 +94,7 @@ final _pasta = _meal(
 );
 
 /// Tuesday's dinner, chosen by the generator.
-final _chicken = _meal('2026-10-06', 'DINNER', 'r2', _chickenName, origin: 'GENERATED');
+final _chicken = _meal('2026-10-06', 'DINNER', 'r2', _chickenName, origin: 'GENERATED', contains: ['MEAT']);
 
 Map<String, Object?> _week({
   String weekStart = '2026-10-05',
@@ -120,6 +124,7 @@ void main() {
     'GET /households/h1/inventory': (_) => const FakeResponse.ok(_emptyInventory),
     'GET /households/h1/inventory/consume-first': (_) => const FakeResponse.ok(_nothingToConsumeFirst),
     _plan: (_) => FakeResponse.ok(_week()),
+    'GET /households/h1/diet': (_) => const FakeResponse.ok({'type': 'NONE', 'avoided': <String>[]}),
     _catalog: (_) => FakeResponse.ok({
       'items': [_recipe('r1', _pastaName), _recipe('r3', 'Tortilla de patatas')],
       'page': 0,
@@ -431,10 +436,122 @@ void main() {
       expect(find.text('No se puede planificar una semana que ya ha pasado.'), findsOneWidget);
     });
 
+    testWidgets('warns when a meal contains what the household does not eat', (tester) async {
+      await openPlan(
+        tester,
+        backendWith({
+          _plan: (_) => FakeResponse.ok(_week(meals: [_pasta, _chicken])),
+          'GET /households/h1/diet': (_) => const FakeResponse.ok({'type': 'VEGETARIAN', 'avoided': <String>[]}),
+        }),
+      );
+
+      expect(
+        inMeal('2026-10-06', 'DINNER', find.text('Esta receta contiene algo que en este hogar no se come: carne.')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('en este hogar no se come'), findsOneWidget);
+    });
+
+    testWidgets('says the household cooked a meal of today, and lets it say so', (tester) async {
+      var cooked = false;
+      final backend = backendWith({
+        _plan: (_) => FakeResponse.ok(
+          _week(
+            meals: [
+              _meal('2026-10-05', 'LUNCH', 'r1', _pastaName, cooked: cooked),
+              _chicken,
+            ],
+          ),
+        ),
+        'POST /households/h1/recipes/r1/cooked': (_) {
+          cooked = true;
+          return const FakeResponse(204);
+        },
+      });
+      await openPlan(tester, backend);
+
+      // Only today's meals can be said to be cooked: the server records it as cooked today.
+      expect(inMeal('2026-10-06', 'DINNER', find.text('La he cocinado')), findsNothing);
+      expect(inMeal('2026-10-05', 'LUNCH', find.text('Cocinada')), findsNothing);
+      await tapInWeek(tester, inMeal('2026-10-05', 'LUNCH', find.text('La he cocinado')));
+
+      expect(backend.count('POST /households/h1/recipes/r1/cooked'), 1);
+      expect(inMeal('2026-10-05', 'LUNCH', find.text('Cocinada')), findsOneWidget);
+      expect(inMeal('2026-10-05', 'LUNCH', find.text('La he cocinado')), findsNothing);
+    });
+
     testWidgets('says so when the plan cannot be loaded', (tester) async {
       await openPlan(tester, backendWith({_plan: (_) => FakeResponse.problem(404, 'HOUSEHOLD_NOT_FOUND')}));
 
       expect(find.text('Este hogar no existe o ya no perteneces a él.'), findsOneWidget);
+    });
+  });
+
+  group('adding a recipe to the plan', () {
+    final today = toIsoDay(DateTime.now());
+
+    FakeBackend backendForRecipe([Map<String, FakeHandler> extra = const {}]) => backendWith({
+      'GET /households/h1/recipes/recommendations': (_) => const FakeResponse.ok(<Object>[]),
+      'GET /recipes/r1': (_) => FakeResponse.ok({
+        'recipe': _recipe('r1', _pastaName),
+        'ingredients': <Object>[],
+        'steps': ['Cuece la pasta.'],
+      }),
+      _plan: (call) => FakeResponse.ok(
+        _week(
+          weekStart: today,
+          weekEnd: addDays(today, 6),
+          meals: [_meal(today, 'DINNER', 'r3', 'Tortilla de patatas')],
+        ),
+      ),
+      ...extra,
+    });
+
+    Future<void> openRecipe(WidgetTester tester, FakeBackend backend) async {
+      await pumpFreezify(tester, backend, storage);
+      await tester.tap(find.text('Casa'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Recetas'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_pastaName));
+      await tester.pumpAndSettle();
+      final add = find.widgetWithText(OutlinedButton, 'Añadir al plan');
+      await tester.ensureVisible(add);
+      await tester.pumpAndSettle();
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('says what it would replace, adds it and leads to that week of the plan', (tester) async {
+      final backend = backendForRecipe({'PUT /households/h1/meal-plan/$today/DINNER': (_) => const FakeResponse(204)});
+      await openRecipe(tester, backend);
+
+      expect(backend.last(_plan).query['week'], today);
+      expect(find.text('Ahí ya está «Tortilla de patatas»: se sustituirá.'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'Añadir al plan'));
+      await tester.pumpAndSettle();
+
+      expect(backend.last('PUT /households/h1/meal-plan/$today/DINNER').body, {'recipeId': 'r1'});
+      final es = lookupAppLocalizations(const Locale('es'));
+      expect(find.text('Añadida al plan: ${weekdayAndDay(es, today)} · Cena.'), findsOneWidget);
+
+      await tester.tap(find.text('Ver el plan'));
+      await tester.pumpAndSettle();
+      expect(find.text('Plan de la semana'), findsOneWidget);
+      expect(backend.last(_plan).query['week'], today);
+    });
+
+    testWidgets('adds it to lunch, where nothing is planned', (tester) async {
+      final backend = backendForRecipe({'PUT /households/h1/meal-plan/$today/LUNCH': (_) => const FakeResponse(204)});
+      await openRecipe(tester, backend);
+
+      await tester.tap(find.text('Comida'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('se sustituirá'), findsNothing);
+      await tester.tap(find.widgetWithText(FilledButton, 'Añadir al plan'));
+      await tester.pumpAndSettle();
+
+      expect(backend.count('PUT /households/h1/meal-plan/$today/LUNCH'), 1);
     });
   });
 

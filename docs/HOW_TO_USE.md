@@ -277,6 +277,20 @@ openssl rand -base64 48
 
 `.env` no se sube al repositorio (está en `.gitignore`).
 
+4. Opcional, para enviar notificaciones push: deja la clave de Firebase en una carpeta **fuera del
+   repositorio** y añade a `.env`:
+
+```bash
+FREEZIFY_SECRETS_DIR=/ruta/a/la/carpeta/con/la/clave
+FREEZIFY_FCM_CREDENTIALS_FILE_IN_CONTAINER=/run/secrets/freezify/firebase-service-account.json
+```
+
+   La carpeta se monta en el contenedor del backend en `/run/secrets/freezify`, solo lectura. Sin esas
+   variables no se envían push y todo lo demás funciona. Con Docker no se ha probado nunca.
+
+5. Opcional: `FREEZIFY_API_DOCS=true` publica la descripción de la API (Swagger UI). Por defecto está
+   desactivada; en local sin Docker (`spring-boot:test-run`) siempre está activa.
+
 ### 4.2 Arrancar
 
 ```bash

@@ -1,4 +1,5 @@
 import '../inventory/inventory_models.dart';
+import '../recipes/diet_models.dart';
 import '../recipes/recipe_models.dart';
 
 enum MealSlot implements WireEnum {
@@ -67,7 +68,9 @@ class PlannedMeal {
     required this.recipeName,
     required this.totalMinutes,
     required this.difficulty,
+    required this.contains,
     required this.ingredients,
+    required this.cooked,
   });
 
   factory PlannedMeal.fromJson(Map<String, dynamic> json) {
@@ -80,6 +83,8 @@ class PlannedMeal {
       recipeName: recipe['name'] as String,
       totalMinutes: recipe['totalMinutes'] as int,
       difficulty: Difficulty.parse(recipe['difficulty'] as String),
+      contains: [for (final trait in recipe['contains'] as List<dynamic>) FoodTrait.parse(trait as String)],
+      cooked: json['cooked'] as bool,
       ingredients: [
         for (final item in json['ingredients'] as List<dynamic>)
           PlannedIngredient.fromJson(item as Map<String, dynamic>),
@@ -95,8 +100,14 @@ class PlannedMeal {
   final int totalMinutes;
   final Difficulty difficulty;
 
+  /// What the recipe contains that someone may not eat.
+  final List<FoodTrait> contains;
+
   /// Empty for a meal in the past.
   final List<PlannedIngredient> ingredients;
+
+  /// Whether the household said it cooked that recipe on that day.
+  final bool cooked;
 
   MealPlace get place => (date: date, slot: slot);
 }
