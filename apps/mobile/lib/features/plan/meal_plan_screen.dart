@@ -13,6 +13,7 @@ import '../recipes/diet_models.dart';
 import '../recipes/recipe_models.dart';
 import '../recipes/recipe_repository.dart';
 import '../recipes/recipe_wording.dart';
+import '../shopping/shopping_repository.dart';
 import 'plan_models.dart';
 import 'plan_repository.dart';
 import 'plan_wording.dart';
@@ -106,6 +107,27 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
     await _change(() => _repository.move(_householdId, from, to));
   }
 
+  Future<void> _toShoppingList(MealPlan plan) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    await _change(() async {
+      final lines = await ref.read(shoppingRepositoryProvider).fillFromPlan(_householdId, plan.weekStart);
+      ref.invalidate(shoppingListProvider);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(lines == 0 ? l10n.shoppingNothingLacking : l10n.shoppingFilled(lines)),
+            action: SnackBarAction(
+              label: l10n.shoppingView,
+              onPressed: () => router.push('/households/$_householdId/shopping'),
+            ),
+          ),
+        );
+    });
+  }
+
   Future<void> _generate(MealPlan plan, {required bool replace}) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -163,6 +185,7 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
                     busy: _busy,
                     onGenerate: () => _generate(plan, replace: false),
                     onRegenerate: () => _generate(plan, replace: true),
+                    onShoppingList: () => _toShoppingList(plan),
                   ),
                 if (plan.unusedExpiring.isNotEmpty) ...[const SizedBox(height: 12), _UnusedCard(plan: plan)],
                 for (final date in weekDays(plan.weekStart)) ...[
@@ -227,12 +250,19 @@ class _WeekBar extends StatelessWidget {
 }
 
 class _GenerateCard extends StatelessWidget {
-  const _GenerateCard({required this.plan, required this.busy, required this.onGenerate, required this.onRegenerate});
+  const _GenerateCard({
+    required this.plan,
+    required this.busy,
+    required this.onGenerate,
+    required this.onRegenerate,
+    required this.onShoppingList,
+  });
 
   final MealPlan plan;
   final bool busy;
   final VoidCallback onGenerate;
   final VoidCallback onRegenerate;
+  final VoidCallback onShoppingList;
 
   @override
   Widget build(BuildContext context) {
@@ -255,6 +285,8 @@ class _GenerateCard extends StatelessWidget {
               const SizedBox(height: 8),
               OutlinedButton(onPressed: busy ? null : onRegenerate, child: Text(l10n.planRegenerate)),
             ],
+            const SizedBox(height: 8),
+            OutlinedButton(onPressed: busy ? null : onShoppingList, child: Text(l10n.shoppingToList)),
           ],
         ),
       ),

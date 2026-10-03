@@ -11,7 +11,9 @@ export function useMealPlanEvents(householdId: string, enabled: boolean) {
   const queryClient = useQueryClient()
   useEffect(() => {
     if (!enabled) return
-    return subscribeToHousehold(householdId, () => {
+    return subscribeToHousehold(householdId, (event) => {
+      // The shopping list says nothing about the plan.
+      if (event === 'shopping-list-changed') return
       void queryClient.invalidateQueries({ queryKey: queryKeys.mealPlan(householdId) })
     })
   }, [householdId, enabled, queryClient])

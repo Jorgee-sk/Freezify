@@ -11,6 +11,7 @@ import com.freezify.inventory.HouseholdStock;
 import com.freezify.inventory.HouseholdStock.StockItem;
 import com.freezify.mealplanning.MealPlanEvents.MealPlanChanged;
 import com.freezify.mealplanning.MealPlanEvents.MealPlanCreated;
+import com.freezify.mealplanning.PlanNeeds;
 import com.freezify.mealplanning.internal.MealPlanViews.Generated;
 import com.freezify.mealplanning.internal.MealPlanViews.MealPlanView;
 import com.freezify.mealplanning.internal.MealPlanViews.PlannedIngredient;
@@ -48,7 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
 record MealPlanningProperties(PlanGenerator.Weights weights) {}
 
 @Service
-public class MealPlanService {
+public class MealPlanService implements PlanNeeds {
 
     /** Meals can be planned this far from today, in either direction. */
     static final int MAX_DAYS_AWAY = 366;
@@ -147,6 +148,38 @@ public class MealPlanService {
         }
         return new MealPlanView(
                 weekStart, weekEnd, now, meals, unusedExpiring(items, uncountedUse, pantry, now, weekEnd));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Need> needs(UUID householdId, LocalDate from, LocalDate to) {
+        LocalDate now = today.date();
+        // The meals between today and `from` are cooked too: they take what they need first.
+        List<MealPlanEntryEntity> planned =
+                new ArrayList<>(entries.findByHouseholdIdAndPlannedOnBetween(householdId, now, to));
+        planned.sort(IN_ORDER);
+        Pantry pantry = pantryOf(stock.of(householdId), now);
+        Map<UUID, Map<Unit, Quantity>> amounts = new HashMap<>();
+        Map<UUID, LocalDate> firstNeeded = new HashMap<>();
+        for (MealPlanEntryEntity entry : planned) {
+            Recipe recipe = recipes.find(entry.recipeId()).orElse(null);
+            if (recipe == null) {
+                continue;
+            }
+            Map<UUID, Quantity> lacking = pantry.cook(recipe, entry.plannedOn());
+            if (entry.plannedOn().isBefore(from)) {
+                continue;
+            }
+            lacking.forEach((foodId, quantity) -> {
+                amounts.computeIfAbsent(foodId, id -> new HashMap<>()).merge(quantity.unit(), quantity, Quantity::plus);
+                firstNeeded.putIfAbsent(foodId, entry.plannedOn());
+            });
+        }
+        List<Need> needs = new ArrayList<>();
+        amounts.forEach((foodId, byUnit) -> byUnit.values()
+                .forEach(quantity -> needs.add(new Need(foodId, quantity, firstNeeded.get(foodId)))));
+        needs.sort(Comparator.comparing(Need::firstNeededOn).thenComparing(need -> need.foodId().toString()));
+        return needs;
     }
 
     /** Puts a recipe in a meal, in place of whatever was there. */

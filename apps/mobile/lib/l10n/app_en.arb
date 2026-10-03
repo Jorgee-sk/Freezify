@@ -782,5 +782,60 @@
       }
     }
   },
-  "planView": "See the plan"
+  "planView": "See the plan",
+  "shoppingTitle": "Shopping list",
+  "shoppingActions": "List options",
+  "shoppingFromPlanThisWeek": "Add what this week’s plan lacks",
+  "shoppingFromPlanNextWeek": "Add what next week’s plan lacks",
+  "shoppingToList": "Send what is missing to the list",
+  "shoppingFilled": "{count, plural, =1{There is {count} thing on the list for that week’s plan.} other{There are {count} things on the list for that week’s plan.}}",
+  "@shoppingFilled": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shoppingNothingLacking": "That week’s plan lacks nothing.",
+  "shoppingView": "See the list",
+  "shoppingEmpty": "The list is empty. Add what you need, or what the plan lacks.",
+  "shoppingAddTitle": "Add to the list",
+  "shoppingWhat": "What",
+  "shoppingAmountOptional": "Amount (optional)",
+  "shoppingAdd": "Add",
+  "shoppingForPlan": "For the plan · {day}",
+  "@shoppingForPlan": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingChange": "Change",
+  "shoppingChangeTitle": "How much {name}",
+  "@shoppingChangeTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingLineActions": "Line options",
+  "shoppingRemoveChecked": "Remove what was bought ({count})",
+  "@shoppingRemoveChecked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shoppingRemoveCheckedConfirm": "{count, plural, =1{{count} bought thing will leave the list.} other{{count} bought things will leave the list.}}",
+  "@shoppingRemoveCheckedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorShoppingItemNotFound": "That is no longer on the list."
 }

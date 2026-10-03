@@ -19,6 +19,8 @@ export const queryKeys = {
   mealPlan: (householdId: string) => ['meal-plan', householdId] as const,
   mealPlanWeek: (householdId: string, week: string | null, lang: string) =>
     ['meal-plan', householdId, lang, week] as const,
+  shopping: (householdId: string) => ['shopping', householdId] as const,
+  shoppingList: (householdId: string, lang: string) => ['shopping', householdId, lang] as const,
   notifications: ['notifications'] as const,
   notificationList: (page: number) => ['notifications', 'list', page] as const,
   unreadNotifications: ['notifications', 'unread'] as const,

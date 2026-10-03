@@ -1,7 +1,7 @@
 import { ApiError, openStream } from '../api/client'
 
 /** `reconnected` is not sent by the server: it says that anything may have been missed while disconnected. */
-export type HouseholdEvent = 'inventory-changed' | 'meal-plan-changed' | 'reconnected'
+export type HouseholdEvent = 'inventory-changed' | 'meal-plan-changed' | 'shopping-list-changed' | 'reconnected'
 
 interface Options {
   /** First wait before reconnecting; doubles after every failed attempt. */
@@ -38,7 +38,9 @@ export function subscribeToHousehold(
         connectedBefore = true
         delay = retryDelayMs
         await readEvents(response, signal, idleTimeoutMs, (name) => {
-          if (name === 'inventory-changed' || name === 'meal-plan-changed') onEvent(name)
+          if (name === 'inventory-changed' || name === 'meal-plan-changed' || name === 'shopping-list-changed') {
+            onEvent(name)
+          }
         })
       } catch (error) {
         // No longer a member, or the household is gone: asking again will not change the answer.

@@ -346,6 +346,22 @@ void main() {
       expect(backend.count(_plan), greaterThan(requestsBefore));
     });
 
+    testWidgets('sends what the week lacks to the shopping list', (tester) async {
+      final backend = backendWith({
+        'POST /households/h1/shopping-list/from-plan': (_) => const FakeResponse.ok({'lines': 5}),
+        'GET /households/h1/shopping-list': (_) => const FakeResponse.ok({'items': <Object>[]}),
+      });
+      await openPlan(tester, backend);
+
+      await tapInWeek(tester, find.widgetWithText(OutlinedButton, 'Llevar a la lista lo que falta'));
+
+      expect(backend.last('POST /households/h1/shopping-list/from-plan').body, {'week': '2026-10-05'});
+      expect(find.text('Hay 5 cosas en la lista para el plan de esa semana.'), findsOneWidget);
+      await tester.tap(find.text('Ver la lista'));
+      await tester.pumpAndSettle();
+      expect(find.text('Lista de la compra'), findsOneWidget);
+    });
+
     testWidgets('asks before replacing what was suggested', (tester) async {
       final backend = backendWith({
         _plan: (_) => FakeResponse.ok(_week(meals: [_pasta, _chicken])),

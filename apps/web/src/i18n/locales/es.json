@@ -84,7 +84,8 @@
     "RECIPE_NOT_FOUND": "Esta receta no existe.",
     "MEAL_NOT_FOUND": "Esa comida ya no está en el plan.",
     "WEEK_IN_THE_PAST": "No se puede planificar una semana que ya ha pasado.",
-    "CONCURRENT_MODIFICATION": "Otra persona ha cambiado esto a la vez. Vuelve a cargar y repite el cambio."
+    "CONCURRENT_MODIFICATION": "Otra persona ha cambiado esto a la vez. Vuelve a cargar y repite el cambio.",
+    "SHOPPING_ITEM_NOT_FOUND": "Eso ya no está en la lista."
   },
   "inventory": {
     "title": "Inventario",
@@ -430,5 +431,31 @@
     "added": "Añadida al plan: {{place}}.",
     "addReplaces": "Ahí ya está «{{recipe}}»: se sustituirá.",
     "view": "Ver el plan"
+  },
+  "shopping": {
+    "title": "Lista de la compra",
+    "week": "Semana",
+    "fromPlan": "Añadir lo que falta para el plan",
+    "fromPlanShort": "Llevar a la lista lo que falta",
+    "fromPlanHelp": "Añade lo que les falta a las comidas planificadas, descontando lo que hay en casa y lo que ya está en la lista. Si el plan cambia, vuelve a pulsarlo: la lista se ajusta.",
+    "filled_one": "Hay {{count}} cosa en la lista para el plan de esa semana.",
+    "filled_other": "Hay {{count}} cosas en la lista para el plan de esa semana.",
+    "nothingLacking": "Al plan de esa semana no le falta nada.",
+    "view": "Ver la lista",
+    "empty": "La lista está vacía. Añade lo que necesites o lo que le falta al plan.",
+    "addTitle": "Añadir a la lista",
+    "what": "Qué",
+    "whatPlaceholder": "Leche, pan, pilas…",
+    "amount": "Cantidad",
+    "amountPlaceholder": "Opcional",
+    "add": "Añadir",
+    "forPlan": "Para el plan · {{day}}",
+    "change": "Cambiar",
+    "changeTitle": "Cambiar la cantidad de {{name}}",
+    "removeLine": "Quitar {{name}}",
+    "removeChecked_one": "Quitar lo comprado ({{count}})",
+    "removeChecked_other": "Quitar lo comprado ({{count}})",
+    "removeCheckedConfirm_one": "Se quitará de la lista {{count}} cosa comprada. ¿Continuar?",
+    "removeCheckedConfirm_other": "Se quitarán de la lista {{count}} cosas compradas. ¿Continuar?"
   }
 }
