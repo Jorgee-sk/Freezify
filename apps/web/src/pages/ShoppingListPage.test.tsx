@@ -196,6 +196,22 @@ describe('shopping list', () => {
     await waitFor(() => expect(api.count('DELETE /households/h1/shopping-list/items/checked')).toBe(1))
   })
 
+  it('puts what was bought in the inventory, and says what stays on the list', async () => {
+    const api = server({
+      [LIST]: () => ({ body: { items: [{ ...ZUCCHINI, checked: true }, { ...BATTERIES, checked: true }] } }),
+      'POST /households/h1/shopping-list/items/checked/to-inventory': () => ({ body: { stocked: 1, left: ['Pilas'] } }),
+    })
+    const user = userEvent.setup()
+    await openList()
+
+    await user.click(await screen.findByRole('button', { name: 'Pasar lo comprado al inventario (2)' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Se ha añadido 1 alimento al inventario. Siguen en la lista porque no dicen cuánto se compró: Pilas.',
+    )
+    expect(api.last('POST /households/h1/shopping-list/items/checked/to-inventory')?.query.get('lang')).toBe('es')
+  })
+
   it('fills the list with what the plan of this week or the next lacks', async () => {
     let lines = 3
     const api = server({ [FROM_PLAN]: () => ({ body: { lines } }) })

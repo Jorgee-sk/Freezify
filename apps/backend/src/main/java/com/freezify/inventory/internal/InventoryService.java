@@ -12,6 +12,7 @@ import com.freezify.food.StorageLocation;
 import com.freezify.households.HouseholdAccess;
 import com.freezify.inventory.ExpiringFood;
 import com.freezify.inventory.HouseholdStock;
+import com.freezify.inventory.InventoryIntake;
 import com.freezify.inventory.InventoryEvents.FoodItemAdded;
 import com.freezify.inventory.InventoryEvents.FoodItemConsumed;
 import com.freezify.inventory.InventoryEvents.FoodItemDiscarded;
@@ -83,7 +84,7 @@ interface FoodItemRepository extends JpaRepository<FoodItemEntity, UUID>, JpaSpe
 interface FoodOutcomeRepository extends JpaRepository<FoodOutcomeEntity, UUID> {}
 
 @Service
-public class InventoryService implements ExpiringFood, HouseholdStock {
+public class InventoryService implements ExpiringFood, HouseholdStock, InventoryIntake {
 
     private static final int RECENT_LIMIT = 10;
     private static final int CONSUME_FIRST_LIMIT = 20;
@@ -220,6 +221,28 @@ public class InventoryService implements ExpiringFood, HouseholdStock {
         events.publishEvent(new FoodItemAdded(householdId, userId, item.id()));
         events.publishEvent(new InventoryChanged(householdId, userId));
         return item.toView(today.date());
+    }
+
+    @Override
+    @Transactional
+    public UUID stock(UUID householdId, UUID userId, NewItem item) {
+        return create(
+                        householdId,
+                        userId,
+                        new ItemData(
+                                item.foodId(),
+                                item.name(),
+                                item.category(),
+                                item.quantity(),
+                                item.storageLocation(),
+                                today.date(),
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null))
+                .id();
     }
 
     @Transactional

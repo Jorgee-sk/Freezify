@@ -164,6 +164,74 @@ class ShoppingListApiTests extends ApiTestSupport {
     }
 
     @Test
+    void whatWasBoughtGoesIntoTheInventory() throws Exception {
+        String milk = id(add(jorge, foodLine("Leche", "{\"amount\": 1, \"unit\": \"LITER\"}")));
+        String paper = id(add(jorge, """
+                {"name": "Papel de cocina", "quantity": {"amount": 2, "unit": "UNIT"}}
+                """));
+        String batteries = id(add(jorge, """
+                {"name": "Pilas"}
+                """));
+        add(jorge, foodLine("Tomate", null));
+        check(jorge, milk, true);
+        check(jorge, paper, true);
+        check(jorge, batteries, true);
+
+        mvc.perform(as(jorge, post(shoppingList() + "/items/checked/to-inventory")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stocked").value(2))
+                // Nobody said how many batteries: the inventory needs an amount, and it is not made up.
+                .andExpect(jsonPath("$.left", contains("Pilas")));
+
+        list(jorge)
+                .andExpect(jsonPath("$.items[*].name", contains("Tomate", "Pilas")))
+                .andExpect(jsonPath("$.items[1].checked").value(true));
+        String inventory = mvc.perform(as(jorge, get("/api/v1/households/" + householdId + "/inventory")))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        List<Map<String, Object>> stockedMilk = JsonPath.read(inventory, "$.items[?(@.name == 'Leche')]");
+        assertThat(stockedMilk).hasSize(1);
+        assertThat(stockedMilk.get(0))
+                .containsEntry("foodId", foodId("Leche"))
+                .containsEntry("category", "DAIRY")
+                .containsEntry("storageLocation", "REFRIGERATOR")
+                .containsEntry("purchaseDate", TODAY.toString());
+        assertQuantity(stockedMilk.get(0), 1, "LITER");
+        List<Map<String, Object>> stockedPaper = JsonPath.read(inventory, "$.items[?(@.name == 'Papel de cocina')]");
+        assertThat(stockedPaper).hasSize(1);
+        assertThat(stockedPaper.get(0)).containsEntry("category", "OTHER").containsEntry("storageLocation", "OTHER");
+        assertThat(productEvents("food_added")).isEqualTo(2);
+    }
+
+    @Test
+    void nothingBoughtNothingStocked() throws Exception {
+        add(jorge, foodLine("Leche", "{\"amount\": 1, \"unit\": \"LITER\"}"));
+
+        mvc.perform(as(jorge, post(shoppingList() + "/items/checked/to-inventory")))
+                .andExpect(jsonPath("$.stocked").value(0))
+                .andExpect(jsonPath("$.left", hasSize(0)));
+        list(jorge).andExpect(jsonPath("$.items", hasSize(1)));
+    }
+
+    @Test
+    void aNameWrittenByHandThatIsInTheCatalogIsThatFood() throws Exception {
+        add(jorge, """
+                        {"name": "leche", "quantity": {"amount": 1, "unit": "LITER"}}
+                        """)
+                .andExpect(jsonPath("$.foodId").value(foodId("Leche")))
+                .andExpect(jsonPath("$.name").value("Leche"))
+                .andExpect(jsonPath("$.category").value("DAIRY"));
+        // So it adds up with the same food picked from the catalog.
+        add(jorge, foodLine("Leche", "{\"amount\": 500, \"unit\": \"MILLILITER\"}"));
+
+        list(jorge)
+                .andExpect(jsonPath("$.items", hasSize(1)))
+                .andExpect(jsonPath("$.items[0].quantity.amount").value(1.5))
+                .andExpect(jsonPath("$.items[0].quantity.unit").value("LITER"));
+    }
+
+    @Test
     void theListIsFilledWithWhatThePlannedMealsLack() throws Exception {
         // The example of the specification, with the recipes of the catalog: two chicken dishes and some chicken
         // at home.
@@ -332,6 +400,9 @@ class ShoppingListApiTests extends ApiTestSupport {
         check(stranger, milk, true).andExpect(status().isNotFound());
         mvc.perform(as(stranger, delete(item(milk)))).andExpect(status().isNotFound());
         fill(stranger, NEXT_MONDAY).andExpect(status().isNotFound());
+        mvc.perform(as(stranger, post(shoppingList() + "/items/checked/to-inventory")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("HOUSEHOLD_NOT_FOUND"));
         // Nor through a household of their own: the line belongs to another one.
         mvc.perform(as(stranger, json(
                         put("/api/v1/households/" + otherHousehold + "/shopping-list/items/" + milk + "/checked"),

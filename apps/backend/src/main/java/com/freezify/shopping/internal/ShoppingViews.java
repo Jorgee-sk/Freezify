@@ -40,4 +40,10 @@ public final class ShoppingViews {
      * @param lines how many lines of the list are there now for the meals of that week; 0 when nothing is lacking
      */
     public record FilledFromPlan(int lines) {}
+
+    /**
+     * @param stocked how many bought lines went into the inventory and left the list
+     * @param left    the bought lines that stay on the list because nobody said how much was bought
+     */
+    public record Stocked(int stocked, List<String> left) {}
 }

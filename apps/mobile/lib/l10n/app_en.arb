@@ -837,5 +837,30 @@
       }
     }
   },
-  "errorShoppingItemNotFound": "That is no longer on the list."
+  "errorShoppingItemNotFound": "That is no longer on the list.",
+  "shoppingToInventory": "Put what was bought in the inventory ({count})",
+  "@shoppingToInventory": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shoppingStocked": "{count, plural, =1{{count} food has been added to the inventory.} other{{count} foods have been added to the inventory.}}",
+  "@shoppingStocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shoppingStockedNone": "Nothing has been added to the inventory.",
+  "shoppingLeftWithoutAmount": "Still on the list because they do not say how much was bought: {names}. Give the amount and try again.",
+  "@shoppingLeftWithoutAmount": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -6,8 +6,10 @@ import com.freezify.food.Food;
 import com.freezify.food.FoodCatalog;
 import com.freezify.food.FoodCategory;
 import com.freezify.food.Quantity;
+import com.freezify.food.StorageLocation;
 import com.freezify.food.Unit;
 import com.freezify.households.HouseholdAccess;
+import com.freezify.inventory.InventoryIntake;
 import com.freezify.mealplanning.PlanNeeds;
 import com.freezify.mealplanning.PlanNeeds.Need;
 import com.freezify.shopping.ShoppingEvents.ShoppingListChanged;
@@ -16,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -63,6 +66,7 @@ public class ShoppingListService {
     private final HouseholdAccess access;
     private final FoodCatalog catalog;
     private final PlanNeeds plan;
+    private final InventoryIntake inventory;
     private final ApplicationEventPublisher events;
     private final Today today;
     private final JdbcTemplate jdbc;
@@ -72,6 +76,7 @@ public class ShoppingListService {
             HouseholdAccess access,
             FoodCatalog catalog,
             PlanNeeds plan,
+            InventoryIntake inventory,
             ApplicationEventPublisher events,
             Today today,
             JdbcTemplate jdbc) {
@@ -79,6 +84,7 @@ public class ShoppingListService {
         this.access = access;
         this.catalog = catalog;
         this.plan = plan;
+        this.inventory = inventory;
         this.events = events;
         this.today = today;
         this.jdbc = jdbc;
@@ -155,6 +161,42 @@ public class ShoppingListService {
         access.requireMember(householdId, userId);
         items.delete(require(householdId, itemId));
         changed(householdId, userId);
+    }
+
+    /**
+     * Puts what was bought in the inventory and takes it off the list. A line without a quantity stays on the
+     * list: the inventory needs to know how much there is, and that is not made up.
+     */
+    @Transactional
+    public ShoppingViews.Stocked stockBought(UUID householdId, UUID userId, String language) {
+        access.requireMember(householdId, userId);
+        int stocked = 0;
+        List<String> left = new ArrayList<>();
+        for (ShoppingItemEntity item : items.findByHouseholdIdAndChecked(householdId, true)) {
+            ShoppingViews.Item line = view(item, language);
+            Quantity quantity = item.quantity();
+            if (quantity == null) {
+                left.add(line.name());
+                continue;
+            }
+            Food food = item.foodId() == null ? null : catalog.findById(item.foodId()).orElse(null);
+            inventory.stock(
+                    householdId,
+                    userId,
+                    new InventoryIntake.NewItem(
+                            item.foodId(),
+                            line.name(),
+                            item.category(),
+                            quantity,
+                            food == null ? StorageLocation.OTHER : food.defaultStorage()));
+            items.delete(item);
+            stocked++;
+        }
+        if (stocked > 0) {
+            changed(householdId, userId);
+        }
+        left.sort(Comparator.comparing(FoodCatalog::normalize));
+        return new ShoppingViews.Stocked(stocked, left);
     }
 
     /** Takes off the list everything already bought. */
@@ -287,6 +329,11 @@ public class ShoppingListService {
         String name = input.name() == null ? "" : input.name().strip();
         if (name.isEmpty()) {
             throw ApiException.badRequest("VALIDATION_ERROR", "Say what to buy: a catalog food or a name.");
+        }
+        // "leche" written by hand is the catalog's milk: it adds up with what the plan asks for.
+        Food named = catalog.findByName(name).orElse(null);
+        if (named != null) {
+            return new Resolved(named.id(), null, named.category(), input.quantity());
         }
         return new Resolved(
                 null, name, input.category() == null ? FoodCategory.OTHER : input.category(), input.quantity());

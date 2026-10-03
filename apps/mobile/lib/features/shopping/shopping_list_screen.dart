@@ -15,7 +15,7 @@ import '../realtime/household_event_stream.dart';
 import 'shopping_models.dart';
 import 'shopping_repository.dart';
 
-enum _ListAction { thisWeek, nextWeek, removeChecked }
+enum _ListAction { thisWeek, nextWeek, toInventory, removeChecked }
 
 enum _LineAction { change, remove }
 
@@ -84,6 +84,22 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     });
   }
 
+  Future<void> _stockBought() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    await _change(() async {
+      final result = await _repository.stockBought(_householdId, l10n.localeName);
+      ref.invalidate(inventoryListProvider);
+      final message = [
+        result.stocked == 0 ? l10n.shoppingStockedNone : l10n.shoppingStocked(result.stocked),
+        if (result.left.isNotEmpty) l10n.shoppingLeftWithoutAmount(result.left.join(', ')),
+      ].join(' ');
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    });
+  }
+
   Future<void> _removeChecked(int bought) async {
     final l10n = AppLocalizations.of(context);
     // They leave the list for good: never without asking.
@@ -148,13 +164,16 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             onSelected: (action) => switch (action) {
               _ListAction.thisWeek => _fill(today),
               _ListAction.nextWeek => _fill(addDays(today, 7)),
+              _ListAction.toInventory => _stockBought(),
               _ListAction.removeChecked => _removeChecked(bought),
             },
             itemBuilder: (_) => [
               PopupMenuItem(value: _ListAction.thisWeek, child: Text(l10n.shoppingFromPlanThisWeek)),
               PopupMenuItem(value: _ListAction.nextWeek, child: Text(l10n.shoppingFromPlanNextWeek)),
-              if (bought > 0)
+              if (bought > 0) ...[
+                PopupMenuItem(value: _ListAction.toInventory, child: Text(l10n.shoppingToInventory(bought))),
                 PopupMenuItem(value: _ListAction.removeChecked, child: Text(l10n.shoppingRemoveChecked(bought))),
+              ],
             ],
           ),
         ],

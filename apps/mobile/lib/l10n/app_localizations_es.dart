@@ -1239,4 +1239,28 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get errorShoppingItemNotFound => 'Eso ya no está en la lista.';
+
+  @override
+  String shoppingToInventory(int count) {
+    return 'Pasar lo comprado al inventario ($count)';
+  }
+
+  @override
+  String shoppingStocked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Se han añadido $count alimentos al inventario.',
+      one: 'Se ha añadido $count alimento al inventario.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shoppingStockedNone => 'No se ha añadido nada al inventario.';
+
+  @override
+  String shoppingLeftWithoutAmount(String names) {
+    return 'Siguen en la lista porque no dicen cuánto se compró: $names. Indica la cantidad y vuelve a pasarlos.';
+  }
 }
