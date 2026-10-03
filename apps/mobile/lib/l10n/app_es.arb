@@ -54,7 +54,7 @@
   "errorRateLimited": "Demasiados intentos. Espera un momento.",
   "errorHouseholdNotFound": "Este hogar no existe o ya no perteneces a él.",
   "errorNotOwner": "Solo el propietario del hogar puede hacer esto.",
-  "errorOwnerCannotLeave": "El propietario no puede abandonar el hogar. Elimínalo si ya no lo necesitas.",
+  "errorOwnerCannotLeave": "El propietario no puede abandonar el hogar. Haz propietario antes a otro miembro, o elimínalo.",
   "errorAlreadyMember": "Ya perteneces a este hogar.",
   "errorInvitationNotFound": "El código no es válido o ha caducado.",
   "errorMemberNotFound": "Esa persona ya no pertenece al hogar.",
@@ -328,5 +328,14 @@
   "shoppingToInventory": "Pasar lo comprado al inventario ({count})",
   "shoppingStocked": "{count, plural, =1{Se ha añadido {count} alimento al inventario.} other{Se han añadido {count} alimentos al inventario.}}",
   "shoppingStockedNone": "No se ha añadido nada al inventario.",
-  "shoppingLeftWithoutAmount": "Siguen en la lista porque no dicen cuánto se compró: {names}. Indica la cantidad y vuelve a pasarlos."
+  "shoppingLeftWithoutAmount": "Siguen en la lista porque no dicen cuánto se compró: {names}. Indica la cantidad y vuelve a pasarlos.",
+  "transferOwnership": "Hacer propietario",
+  "transferTo": "Hacer propietario a {name}",
+  "confirmTransfer": "{name} pasará a ser el propietario del hogar y tú seguirás como miembro. Solo {name} podrá devolvértelo.",
+  "ownerLeavesHint": "Para abandonar el hogar sin eliminarlo, haz propietario antes a otro miembro.",
+  "activeCodes": "Códigos activos",
+  "activeCodesHelp": "Cualquiera que tenga uno de estos códigos puede unirse mientras sea válido. Revócalo si ya no quieres que sirva.",
+  "revoke": "Revocar",
+  "revokeCode": "Revocar el código {code}",
+  "confirmRevoke": "El código {code} dejará de servir para unirse. Quien ya se unió con él se queda."
 }

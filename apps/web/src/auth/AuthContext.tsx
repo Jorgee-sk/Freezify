@@ -10,9 +10,9 @@ import type { AuthState } from './useAuth'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
-  // Without a stored refresh token there is nothing to restore, so the user is known to be anonymous.
+  // Without a session to resume there is nothing to restore, so the user is known to be anonymous.
   const [state, setState] = useState<AuthState>(() =>
-    session.refreshToken() ? { status: 'loading', user: null } : { status: 'anonymous', user: null },
+    session.mayResume() ? { status: 'loading', user: null } : { status: 'anonymous', user: null },
   )
 
   const signedOut = useCallback(() => {
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [signedOut])
 
   useEffect(() => {
-    if (!session.refreshToken()) return
+    if (!session.mayResume()) return
     let cancelled = false
     usersApi
       .me()
@@ -54,10 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register: async (email: string, password: string, displayName: string) =>
         start(await authApi.register({ email, password, displayName, locale: currentLocale() })),
       logout: async () => {
-        const refreshToken = session.refreshToken()
         signedOut()
-        // Best effort: the local session is gone either way.
-        if (refreshToken) await authApi.logout(refreshToken).catch(() => undefined)
+        // Best effort: the local session is gone either way. The cookie goes with the request.
+        await authApi.logout().catch(() => undefined)
       },
       changeLocale: async (locale: Locale) => {
         setLocale(locale)

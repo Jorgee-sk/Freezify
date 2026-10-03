@@ -54,6 +54,10 @@ class HouseholdMemberEntity {
         return role;
     }
 
+    void becomes(HouseholdRole role) {
+        this.role = role;
+    }
+
     Instant joinedAt() {
         return joinedAt;
     }

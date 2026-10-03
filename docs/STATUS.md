@@ -10,7 +10,7 @@
 | 3 — Expiration Engine | 🟡 Código completo; **falta comprobar en un móvil Android que el push llega**, y hasta entonces no se da por cerrada |
 | 4 — Recipes | 🟡 Funcionalidad completa (CI en verde en el pull request #12). Antes de usuarios reales hay que revisar los datos de alérgenos |
 | 5 — Smart Planning | 🟡 Funcionalidad completa (CI en verde en el pull request #14). Faltan las preferencias del usuario como factor |
-| 6 — Shopping | 🟡 Funcionalidad completa (CI en verde en el pull request #16), con los tests nuevos de "pasar al inventario" pendientes de CI |
+| 6 — Shopping | ✅ Completada (CI en verde en los pull requests #16 y #17) |
 
 ## Fase 6 — Shopping 🟡
 
@@ -59,7 +59,7 @@
 | Web contra el backend real | ✅ con el plan generado de un hogar de prueba, la lista se llenó con 5 cosas agrupadas por pasillo (400 g de pasta sumando dos comidas); se marcó la pasta como comprada, se añadió "Pilas" como texto libre y, al volver a llenarla, la pasta comprada no se pidió de nuevo |
 | Código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ llenó la lista desde el plan de la semana (9 cosas, con "Patata · 1 kg" de 1000 g) y marcó una línea como comprada, sin errores en consola. No se probó añadir ni cambiar cantidades en esta versión |
 | Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
-| Mobile `flutter test` | ✅ 163 en CI (pull request #16), con los 12 nuevos; 🟡 el nuevo de "pasar al inventario" **no se ha ejecutado** (164 en total) |
+| Mobile `flutter test` | ✅ 164 en CI (pull request #17), con los 12 de la lista y el de "pasar al inventario" |
 | Pasar lo comprado al inventario: backend `./mvnw verify` | ✅ 292 tests (3 nuevos) |
 | Pasar lo comprado al inventario: web | ✅ 161 tests (1 nuevo); contra el backend real, con leche (escrita a mano como "leche"), pasta y pilas sin cantidad marcadas como compradas: la leche (1 l, nevera) y la pasta (400 g, despensa) pasaron al inventario sin fecha inventada y las pilas siguieron en la lista con el aviso |
 
@@ -77,6 +77,47 @@
 - **El texto libre solo se reconoce si coincide con el nombre del catálogo** (sin mayúsculas ni acentos);
   "leche entera" o "jitomate" siguen siendo texto libre. No hay sinónimos (previsto para la Fase 7).
 - **El orden de los pasillos es fijo**, no el de una tienda concreta.
+
+## Problemas conocidos resueltos — lote 2 (2026-10-03)
+
+### Completed
+
+- **El refresh token de la web ya no está en `localStorage`** (riesgo R8): el backend lo pone en una cookie
+  `HttpOnly` (`Secure`, `SameSite=Strict`, solo para `/api/v1/auth`) que ningún script puede leer, así que un
+  XSS no puede robarlo. La web solo guarda una marca de que hay sesión, sin secretos.
+  - La web lo pide con la cabecera `X-Freezify-Session: cookie`; sin ella el backend no usa la cookie, de modo
+    que un formulario o un enlace de otro sitio no pueden renovar ni cerrar la sesión.
+  - Renovar rota la cookie como rotaba el token; una cookie usada dos veces cierra la sesión entera y el
+    navegador recibe la orden de olvidarla. Cerrar sesión la revoca y la borra.
+  - Quien tenía el token guardado por la versión anterior lo entrega una vez al recargar y pasa a la cookie,
+    sin tener que volver a iniciar sesión.
+  - La app móvil no cambia: sigue guardando su token en el almacenamiento seguro del teléfono.
+  - En local sin HTTPS la cookie no lleva `Secure` (`FREEZIFY_REFRESH_COOKIE_SECURE=false`, ya puesto en el
+    perfil local); en cualquier despliegue debe quedarse en `true`.
+- **Invitaciones revocables**: el hogar muestra sus códigos activos y quien generó un código, o el
+  propietario, puede revocarlo (con confirmación). Quien ya se unió se queda.
+- **Transferir el hogar**: el propietario puede hacer propietario a otro miembro (con confirmación) y pasa a
+  ser miembro; después puede abandonar el hogar. Siempre hay exactamente un propietario.
+
+### Tests
+
+| Qué | Resultado |
+|---|---|
+| Backend `./mvnw verify` | ✅ 307 tests (15 nuevos: 9 de la sesión del navegador y 6 de invitaciones y transferencia); 1 omitido, el que habla con Firebase real |
+| Web lint / test / build | ✅ sin avisos / 169 tests (6 nuevos de ajustes del hogar y 2 de sesión; los de sesión existentes, adaptados a la cookie) / correcto |
+| Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
+| Mobile `flutter test` | 🟡 los **4 nuevos no se han ejecutado** (168 en total): correrán en la CI del próximo pull request |
+| Web contra el backend real | ✅ al iniciar sesión `localStorage` solo tenía `freezify.locale` y `freezify.session`, y `document.cookie` estaba vacío (la cookie no es visible para scripts); al recargar la página la sesión siguió; se revocó un código ajeno siendo propietario, se transfirió el hogar (los papeles se intercambiaron y apareció "Abandonar hogar"); al cerrar sesión la cookie dejó de renovar (401); y un token guardado en `localStorage` por la versión anterior pasó a la cookie al recargar y desapareció del almacenamiento |
+| App móvil en el navegador | ⏳ no probado: la app móvil no cambia de sesión, y las pantallas nuevas de códigos y transferencia solo tienen sus tests de widget |
+
+### Known issues
+
+- **Una sesión de la web no se puede compartir con otra web en otro dominio**: la cookie es `SameSite=Strict`
+  y solo vale para el mismo sitio; hoy la web y la API van siempre juntas detrás del mismo proxy.
+- **La marca `freezify.session` puede quedar desfasada** (por ejemplo, si la cookie caduca): la web lo
+  descubre al primer intento de renovar y vuelve a la pantalla de inicio de sesión.
+- **Los códigos siguen siendo reutilizables** mientras son válidos (varias personas pueden unirse con el
+  mismo); ahora se pueden revocar.
 
 ## Problemas conocidos resueltos — lote 1 (2026-10-03)
 
@@ -132,9 +173,9 @@ fuente de datos oficial, un servicio de correo) o una decisión de producto:
 - Probar el push en un móvil Android; push en iOS.
 - Revisar los datos de vida útil y de alérgenos con una fuente autorizada.
 - Verificación de correo, recuperación de contraseña y borrado de cuenta (necesitan enviar correos).
-- Refresh token de la web en una cookie `HttpOnly` (riesgo R8): cambia cómo se inicia sesión; irá en su propio
-  lote.
-- Transferir un hogar, revocar invitaciones, preferencias personales y otras funciones nuevas.
+- Preferencias personales y otras funciones nuevas.
+- (Resueltos en el lote 2: refresh token de la web en cookie `HttpOnly`, revocar invitaciones y transferir un
+  hogar.)
 
 ## Fase 5 — Smart Planning 🟡
 
@@ -600,20 +641,16 @@ Tras fusionarlo, `main` también pasa.
 
 ### Known issues
 
-- **Refresh token de la web en `localStorage`** (riesgo R8): expuesto a XSS. Migrar a cookie `HttpOnly` antes de abrir al público.
 - **Rate limiting por IP y cabeceras `X-Forwarded-*`**: el backend confía en esas cabeceras, así que debe ser accesible solo a través del proxy. El contador vive en memoria (una sola instancia).
 - **El registro revela si un correo ya existe** (409). Mitigado por el rate limiting.
 - **No hay verificación de correo, recuperación de contraseña ni eliminación de cuenta.**
-- **El propietario no puede abandonar ni transferir un hogar**; solo eliminarlo.
-- **Las invitaciones son reutilizables hasta que caducan (7 días)** y no se pueden revocar.
+- **Las invitaciones son reutilizables hasta que caducan (7 días)**; desde el lote 2 se pueden revocar.
 - **Sin tests E2E automatizados**; las pruebas de extremo a extremo han sido manuales.
 - **Detener el backend local**: si el proceso se mata en vez de cerrarse con Ctrl+C, PostgreSQL embebido puede quedar vivo en el puerto 54329.
 
 ## Next
 
-1. Abrir el pull request de "pasar lo comprado al inventario" y confirmar en CI el test nuevo del móvil.
+1. Abrir el pull request del lote 2 de problemas conocidos y confirmar en CI los 4 tests nuevos del móvil.
 2. Fase 7 — AI / OCR, cuando se decida el proveedor (ver ROADMAP).
-3. Lote 2 de problemas conocidos: refresh token de la web en cookie `HttpOnly` (R8), revocar invitaciones,
-   transferir un hogar.
-4. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
+3. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
    con una fuente autorizada antes de abrir a usuarios reales.

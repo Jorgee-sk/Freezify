@@ -54,13 +54,19 @@ class Member {
 }
 
 class Invitation {
-  const Invitation({required this.code, required this.expiresAt});
+  const Invitation({required this.code, required this.expiresAt, this.createdBy});
 
-  factory Invitation.fromJson(Map<String, dynamic> json) =>
-      Invitation(code: json['code'] as String, expiresAt: DateTime.parse(json['expiresAt'] as String));
+  factory Invitation.fromJson(Map<String, dynamic> json) => Invitation(
+    code: json['code'] as String,
+    expiresAt: DateTime.parse(json['expiresAt'] as String),
+    createdBy: json['createdBy'] as String?,
+  );
 
   final String code;
   final DateTime expiresAt;
+
+  /// Who generated it: they and the owner can revoke it.
+  final String? createdBy;
 }
 
 class HouseholdsRepository {
@@ -77,8 +83,7 @@ class HouseholdsRepository {
 
   Future<Household> create(String name) async => _household(await _api.post('/households', body: {'name': name}));
 
-  Future<Household> join(String code) async =>
-      _household(await _api.post('/households/join', body: {'code': code}));
+  Future<Household> join(String code) async => _household(await _api.post('/households/join', body: {'code': code}));
 
   Future<Household> rename(String id, String name) async =>
       _household(await _api.patch('/households/$id', body: {'name': name}));
@@ -94,6 +99,18 @@ class HouseholdsRepository {
 
   Future<Invitation> invite(String id) async =>
       Invitation.fromJson(await _api.post('/households/$id/invitations') as Map<String, dynamic>);
+
+  /// The codes that still let someone join.
+  Future<List<Invitation>> invitations(String id) async {
+    final json = await _api.get('/households/$id/invitations') as List<dynamic>;
+    return [for (final item in json) Invitation.fromJson(item as Map<String, dynamic>)];
+  }
+
+  Future<void> revokeInvitation(String id, String code) => _api.delete('/households/$id/invitations/$code');
+
+  /// The owner hands the household over to another member and stays as a member.
+  Future<void> transferOwnership(String id, String userId) =>
+      _api.post('/households/$id/owner', body: {'userId': userId});
 
   Household _household(dynamic json) => Household.fromJson(json as Map<String, dynamic>);
 }
@@ -116,4 +133,9 @@ final householdProvider = FutureProvider.autoDispose.family<Household, String>((
 final membersProvider = FutureProvider.autoDispose.family<List<Member>, String>((ref, id) {
   ref.watch(authControllerProvider.select((auth) => auth.value?.id));
   return ref.watch(householdsRepositoryProvider).members(id);
+});
+
+final invitationsProvider = FutureProvider.autoDispose.family<List<Invitation>, String>((ref, id) {
+  ref.watch(authControllerProvider.select((auth) => auth.value?.id));
+  return ref.watch(householdsRepositoryProvider).invitations(id);
 });

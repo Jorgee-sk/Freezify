@@ -186,7 +186,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get errorNotOwner => 'Solo el propietario del hogar puede hacer esto.';
 
   @override
-  String get errorOwnerCannotLeave => 'El propietario no puede abandonar el hogar. Elimínalo si ya no lo necesitas.';
+  String get errorOwnerCannotLeave =>
+      'El propietario no puede abandonar el hogar. Haz propietario antes a otro miembro, o elimínalo.';
 
   @override
   String get errorAlreadyMember => 'Ya perteneces a este hogar.';
@@ -1262,5 +1263,41 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String shoppingLeftWithoutAmount(String names) {
     return 'Siguen en la lista porque no dicen cuánto se compró: $names. Indica la cantidad y vuelve a pasarlos.';
+  }
+
+  @override
+  String get transferOwnership => 'Hacer propietario';
+
+  @override
+  String transferTo(String name) {
+    return 'Hacer propietario a $name';
+  }
+
+  @override
+  String confirmTransfer(String name) {
+    return '$name pasará a ser el propietario del hogar y tú seguirás como miembro. Solo $name podrá devolvértelo.';
+  }
+
+  @override
+  String get ownerLeavesHint => 'Para abandonar el hogar sin eliminarlo, haz propietario antes a otro miembro.';
+
+  @override
+  String get activeCodes => 'Códigos activos';
+
+  @override
+  String get activeCodesHelp =>
+      'Cualquiera que tenga uno de estos códigos puede unirse mientras sea válido. Revócalo si ya no quieres que sirva.';
+
+  @override
+  String get revoke => 'Revocar';
+
+  @override
+  String revokeCode(String code) {
+    return 'Revocar el código $code';
+  }
+
+  @override
+  String confirmRevoke(String code) {
+    return 'El código $code dejará de servir para unirse. Quien ya se unió con él se queda.';
   }
 }

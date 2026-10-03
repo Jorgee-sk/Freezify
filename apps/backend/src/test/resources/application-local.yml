@@ -2,6 +2,8 @@
 freezify:
   auth:
     jwt-secret: ${FREEZIFY_JWT_SECRET:local-development-only-secret-do-not-deploy}
+    # http://localhost: a Secure cookie would never be sent back.
+    refresh-cookie-secure: false
   cors:
     allowed-origins: http://localhost:5173
 

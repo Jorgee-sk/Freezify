@@ -1,5 +1,6 @@
 package com.freezify.households.internal;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -36,4 +37,8 @@ interface HouseholdInvitationRepository extends JpaRepository<HouseholdInvitatio
     Optional<HouseholdInvitationEntity> findByCode(String code);
 
     boolean existsByCode(String code);
+
+    List<HouseholdInvitationEntity> findByHouseholdIdAndExpiresAtAfterOrderByExpiresAtAscIdAsc(UUID householdId, Instant now);
+
+    Optional<HouseholdInvitationEntity> findByHouseholdIdAndCode(UUID householdId, String code);
 }

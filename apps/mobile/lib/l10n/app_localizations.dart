@@ -419,7 +419,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorOwnerCannotLeave.
   ///
   /// In en, this message translates to:
-  /// **'The owner cannot leave the household. Delete it if you no longer need it.'**
+  /// **'The owner cannot leave the household. First make another member the owner, or delete it.'**
   String get errorOwnerCannotLeave;
 
   /// No description provided for @errorAlreadyMember.
@@ -2065,6 +2065,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Still on the list because they do not say how much was bought: {names}. Give the amount and try again.'**
   String shoppingLeftWithoutAmount(String names);
+
+  /// No description provided for @transferOwnership.
+  ///
+  /// In en, this message translates to:
+  /// **'Make owner'**
+  String get transferOwnership;
+
+  /// No description provided for @transferTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Make {name} the owner'**
+  String transferTo(String name);
+
+  /// No description provided for @confirmTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will become the owner of the household and you will stay as a member. Only {name} can give it back.'**
+  String confirmTransfer(String name);
+
+  /// No description provided for @ownerLeavesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'To leave the household without deleting it, first make another member the owner.'**
+  String get ownerLeavesHint;
+
+  /// No description provided for @activeCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Active codes'**
+  String get activeCodes;
+
+  /// No description provided for @activeCodesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with one of these codes can join while it is valid. Revoke it if it should no longer work.'**
+  String get activeCodesHelp;
+
+  /// No description provided for @revoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get revoke;
+
+  /// No description provided for @revokeCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke code {code}'**
+  String revokeCode(String code);
+
+  /// No description provided for @confirmRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Code {code} will no longer let anyone join. Whoever already joined with it stays.'**
+  String confirmRevoke(String code);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

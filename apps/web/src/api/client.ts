@@ -1,5 +1,14 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
-const REFRESH_TOKEN_KEY = 'freezify.refreshToken'
+/** Says there may be a session to resume after a reload. Only a hint: it holds no secret. */
+const SESSION_HINT_KEY = 'freezify.session'
+/** Where earlier versions kept the refresh token. It is handed over to the cookie once and removed. */
+const LEGACY_REFRESH_TOKEN_KEY = 'freezify.refreshToken'
+/**
+ * Asks the backend to keep the refresh token in an HttpOnly cookie, out of reach of any script, instead of
+ * returning it. The backend also refuses to use that cookie without this header, which a page on another site
+ * cannot send.
+ */
+const SESSION_HEADER = { 'X-Freezify-Session': 'cookie' }
 
 export interface FieldError {
   field: string
@@ -21,27 +30,29 @@ export class ApiError extends Error {
   }
 }
 
-interface TokenPair {
+interface Tokens {
   accessToken: string
-  refreshToken: string
 }
 
-// The access token lives only in memory; the refresh token survives reloads.
+// The access token lives only in memory; the refresh token lives in a cookie this code cannot read.
 let accessToken: string | null = null
 let refreshInFlight: Promise<boolean> | null = null
 let onSessionExpired: (() => void) | null = null
 
 export const session = {
-  store(tokens: TokenPair) {
+  store(tokens: Tokens) {
     accessToken = tokens.accessToken
-    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken)
+    localStorage.setItem(SESSION_HINT_KEY, '1')
+    localStorage.removeItem(LEGACY_REFRESH_TOKEN_KEY)
   },
   clear() {
     accessToken = null
-    localStorage.removeItem(REFRESH_TOKEN_KEY)
+    localStorage.removeItem(SESSION_HINT_KEY)
+    localStorage.removeItem(LEGACY_REFRESH_TOKEN_KEY)
   },
-  refreshToken(): string | null {
-    return localStorage.getItem(REFRESH_TOKEN_KEY)
+  /** Whether a session may be waiting to be resumed: the cookie itself cannot be read to know for sure. */
+  mayResume(): boolean {
+    return localStorage.getItem(SESSION_HINT_KEY) !== null || localStorage.getItem(LEGACY_REFRESH_TOKEN_KEY) !== null
   },
   /** Called when the session can no longer be renewed and the user must sign in again. */
   onExpired(handler: (() => void) | null) {
@@ -60,7 +71,7 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   const { method = 'GET', body, authenticated = true } = options
 
   const send = () => {
-    const headers: Record<string, string> = { Accept: 'application/json' }
+    const headers: Record<string, string> = { Accept: 'application/json', ...SESSION_HEADER }
     if (body !== undefined) headers['Content-Type'] = 'application/json'
     if (authenticated && accessToken) headers.Authorization = `Bearer ${accessToken}`
     return fetch(`${API_BASE}${path}`, {
@@ -70,8 +81,8 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
     })
   }
 
-  // After a page reload only the refresh token is left: renew first instead of provoking a 401.
-  if (authenticated && !accessToken && session.refreshToken()) {
+  // After a page reload only the cookie is left: renew first instead of provoking a 401.
+  if (authenticated && !accessToken && session.mayResume()) {
     await renewSession()
   }
 
@@ -102,7 +113,7 @@ export async function openStream(path: string, signal: AbortSignal): Promise<Res
     return fetch(`${API_BASE}${path}`, { headers, signal })
   }
 
-  if (!accessToken && session.refreshToken()) {
+  if (!accessToken && session.mayResume()) {
     await renewSession()
   }
   let response = await send()
@@ -125,16 +136,22 @@ function renewSession(): Promise<boolean> {
 }
 
 async function refresh(): Promise<boolean> {
-  // Read inside the lock: another tab may have rotated the token while this one waited.
-  const refreshToken = session.refreshToken()
-  if (!refreshToken) return false
+  if (!session.mayResume()) return false
+  // A token kept by an earlier version is handed over once; the answer puts it in the cookie.
+  const legacy = localStorage.getItem(LEGACY_REFRESH_TOKEN_KEY)
   const response = await fetch(`${API_BASE}/auth/refresh`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ refreshToken }),
+    headers: {
+      Accept: 'application/json',
+      ...SESSION_HEADER,
+      ...(legacy ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: legacy ? JSON.stringify({ refreshToken: legacy }) : undefined,
+    // The cookie goes with the request; other tabs see the rotated one at once.
+    credentials: 'same-origin',
   })
   if (!response.ok) return false
-  session.store((await response.json()) as TokenPair)
+  session.store((await response.json()) as Tokens)
   return true
 }
 

@@ -53,6 +53,10 @@ class HouseholdInvitationEntity {
         return expiresAt;
     }
 
+    UUID createdBy() {
+        return createdBy;
+    }
+
     boolean isExpired(Instant now) {
         return !expiresAt.isAfter(now);
     }

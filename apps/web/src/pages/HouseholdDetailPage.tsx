@@ -28,6 +28,12 @@ export function HouseholdDetailPage() {
     enabled: household.isSuccess,
   })
 
+  const invitations = useQuery({
+    queryKey: queryKeys.invitations(householdId),
+    queryFn: () => householdsApi.invitations(householdId),
+    enabled: household.isSuccess,
+  })
+
   const refreshAll = () => queryClient.invalidateQueries({ queryKey: queryKeys.households })
   const leaveToList = async () => {
     await navigate('/')
@@ -42,7 +48,21 @@ export function HouseholdDetailPage() {
       await refreshAll()
     },
   })
-  const invite = useMutation({ mutationFn: () => householdsApi.invite(householdId) })
+  const invite = useMutation({
+    mutationFn: () => householdsApi.invite(householdId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invitations(householdId) }),
+  })
+  const revoke = useMutation({
+    mutationFn: (code: string) => householdsApi.revokeInvitation(householdId, code),
+    onSuccess: () => {
+      invite.reset()
+      return queryClient.invalidateQueries({ queryKey: queryKeys.invitations(householdId) })
+    },
+  })
+  const transfer = useMutation({
+    mutationFn: (userId: string) => householdsApi.transferOwnership(householdId, userId),
+    onSuccess: refreshAll,
+  })
   const removeMember = useMutation({
     mutationFn: (userId: string) => householdsApi.removeMember(householdId, userId),
     onSuccess: (_, userId) => (userId === user?.id ? leaveToList() : refreshAll()),
@@ -75,6 +95,14 @@ export function HouseholdDetailPage() {
     if (window.confirm(t('households.confirmRemove', { name: member.displayName }))) {
       removeMember.mutate(member.userId)
     }
+  }
+  function confirmTransfer(member: Member) {
+    if (window.confirm(t('households.confirmTransfer', { name: member.displayName }))) {
+      transfer.mutate(member.userId)
+    }
+  }
+  function confirmRevoke(code: string) {
+    if (window.confirm(t('households.confirmRevoke', { code }))) revoke.mutate(code)
   }
   function confirmLeave() {
     if (user && window.confirm(t('households.confirmLeave', { name }))) removeMember.mutate(user.id)
@@ -137,19 +165,30 @@ export function HouseholdDetailPage() {
                   </div>
                 </div>
                 {isOwner && member.userId !== user?.id && (
-                  <button
-                    type="button"
-                    className="button ghost danger"
-                    disabled={removeMember.isPending}
-                    onClick={() => confirmRemove(member)}
-                  >
-                    {t('households.remove')}
-                  </button>
+                  <span className="button-row">
+                    <button
+                      type="button"
+                      className="button ghost"
+                      aria-label={t('households.transferTo', { name: member.displayName })}
+                      disabled={transfer.isPending}
+                      onClick={() => confirmTransfer(member)}
+                    >
+                      {t('households.transfer')}
+                    </button>
+                    <button
+                      type="button"
+                      className="button ghost danger"
+                      disabled={removeMember.isPending}
+                      onClick={() => confirmRemove(member)}
+                    >
+                      {t('households.remove')}
+                    </button>
+                  </span>
                 )}
               </li>
             ))}
           </ul>
-          <ErrorMessage error={removeMember.error} />
+          <ErrorMessage error={removeMember.error ?? transfer.error} />
         </section>
 
         <section className="card" aria-labelledby="invite-title">
@@ -168,15 +207,48 @@ export function HouseholdDetailPage() {
           <button type="button" className="button" disabled={invite.isPending} onClick={() => invite.mutate()}>
             {t('households.inviteGenerate')}
           </button>
+          {(invitations.data?.length ?? 0) > 0 && (
+            <>
+              <h3 id="active-codes-title">{t('households.activeCodes')}</h3>
+              <p className="muted small">{t('households.activeCodesHelp')}</p>
+              <ul className="member-list" aria-labelledby="active-codes-title">
+                {invitations.data?.map((invitation) => (
+                  <li key={invitation.code}>
+                    <div>
+                      <strong>{invitation.code}</strong>
+                      <div className="muted small">
+                        {t('households.inviteExpires', { date: formatDate(invitation.expiresAt) })}
+                      </div>
+                    </div>
+                    {(isOwner || invitation.createdBy === user?.id) && (
+                      <button
+                        type="button"
+                        className="button ghost danger"
+                        aria-label={t('households.revokeCode', { code: invitation.code })}
+                        disabled={revoke.isPending}
+                        onClick={() => confirmRevoke(invitation.code)}
+                      >
+                        {t('households.revoke')}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          <ErrorMessage error={invitations.error ?? revoke.error} />
         </section>
       </div>
 
       <div className="danger-zone">
         <ErrorMessage error={remove.error} />
         {isOwner ? (
-          <button type="button" className="button danger" disabled={remove.isPending} onClick={confirmDelete}>
-            {t('households.delete')}
-          </button>
+          <>
+            <button type="button" className="button danger" disabled={remove.isPending} onClick={confirmDelete}>
+              {t('households.delete')}
+            </button>
+            {household.data.memberCount > 1 && <p className="muted small">{t('households.ownerLeaves')}</p>}
+          </>
         ) : (
           <button type="button" className="button danger" disabled={removeMember.isPending} onClick={confirmLeave}>
             {t('households.leave')}

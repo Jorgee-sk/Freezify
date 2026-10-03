@@ -13,7 +13,8 @@ export interface User {
 
 export interface Session {
   accessToken: string
-  refreshToken: string
+  /** Always null on the web: the refresh token is in an HttpOnly cookie. */
+  refreshToken: string | null
   expiresIn: number
   user: User
 }
@@ -37,6 +38,8 @@ export interface Member {
 export interface Invitation {
   code: string
   expiresAt: string
+  /** Who generated it: they and the owner can revoke it. */
+  createdBy: string
 }
 
 export const authApi = {
@@ -44,8 +47,8 @@ export const authApi = {
     api<Session>('/auth/register', { method: 'POST', body: input, authenticated: false }),
   login: (input: { email: string; password: string }) =>
     api<Session>('/auth/login', { method: 'POST', body: input, authenticated: false }),
-  logout: (refreshToken: string) =>
-    api<void>('/auth/logout', { method: 'POST', body: { refreshToken }, authenticated: false }),
+  /** Revokes the refresh token of the cookie and tells the browser to forget it. */
+  logout: () => api<void>('/auth/logout', { method: 'POST', authenticated: false }),
 }
 
 export const usersApi = {
@@ -64,5 +67,12 @@ export const householdsApi = {
   removeMember: (id: string, userId: string) =>
     api<void>(`/households/${id}/members/${userId}`, { method: 'DELETE' }),
   invite: (id: string) => api<Invitation>(`/households/${id}/invitations`, { method: 'POST' }),
+  /** The codes that still let someone join. */
+  invitations: (id: string) => api<Invitation[]>(`/households/${id}/invitations`),
+  revokeInvitation: (id: string, code: string) =>
+    api<void>(`/households/${id}/invitations/${code}`, { method: 'DELETE' }),
+  /** The owner hands the household over to another member and stays as a member. */
+  transferOwnership: (id: string, userId: string) =>
+    api<void>(`/households/${id}/owner`, { method: 'POST', body: { userId } }),
   join: (code: string) => api<Household>('/households/join', { method: 'POST', body: { code } }),
 }

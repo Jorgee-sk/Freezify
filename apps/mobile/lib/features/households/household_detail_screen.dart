@@ -47,6 +47,7 @@ class _HouseholdDetailScreenState extends ConsumerState<HouseholdDetailScreen> {
   void _refresh() {
     ref.invalidate(householdProvider(_id));
     ref.invalidate(membersProvider(_id));
+    ref.invalidate(invitationsProvider(_id));
     ref.invalidate(householdsProvider);
   }
 
@@ -72,7 +73,33 @@ class _HouseholdDetailScreenState extends ConsumerState<HouseholdDetailScreen> {
     await _run(() async {
       final invitation = await _repository.invite(_id);
       if (mounted) setState(() => _invitation = invitation);
+      ref.invalidate(invitationsProvider(_id));
     });
+  }
+
+  Future<void> _revoke(Invitation invitation) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await confirmDestructive(
+      context,
+      message: l10n.confirmRevoke(invitation.code),
+      confirmLabel: l10n.revoke,
+    );
+    if (!confirmed || !mounted) return;
+    if (await _run(() => _repository.revokeInvitation(_id, invitation.code))) {
+      if (mounted && _invitation?.code == invitation.code) setState(() => _invitation = null);
+      ref.invalidate(invitationsProvider(_id));
+    }
+  }
+
+  Future<void> _transfer(Member member) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await confirmDestructive(
+      context,
+      message: l10n.confirmTransfer(member.displayName),
+      confirmLabel: l10n.transferOwnership,
+    );
+    if (!confirmed || !mounted) return;
+    if (await _run(() => _repository.transferOwnership(_id, member.userId))) _refresh();
   }
 
   Future<void> _removeMember(Member member) async {
@@ -115,6 +142,8 @@ class _HouseholdDetailScreenState extends ConsumerState<HouseholdDetailScreen> {
     final user = ref.watch(authControllerProvider).value;
     final household = ref.watch(householdProvider(_id));
     final members = ref.watch(membersProvider(_id));
+    // The list of codes is a help: without it, codes can still be generated and shared.
+    final invitations = ref.watch(invitationsProvider(_id)).value ?? const <Invitation>[];
     final current = household.value;
 
     return Scaffold(
@@ -167,10 +196,20 @@ class _HouseholdDetailScreenState extends ConsumerState<HouseholdDetailScreen> {
                               ' · ${l10n.joinedOn(_formatDate(member.joinedAt))}',
                             ),
                             trailing: household.isOwner && member.userId != user?.id
-                                ? IconButton(
-                                    tooltip: l10n.remove,
-                                    icon: const Icon(Icons.person_remove_outlined),
-                                    onPressed: _busy ? null : () => _removeMember(member),
+                                ? Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        tooltip: l10n.transferTo(member.displayName),
+                                        icon: const Icon(Icons.workspace_premium_outlined),
+                                        onPressed: _busy ? null : () => _transfer(member),
+                                      ),
+                                      IconButton(
+                                        tooltip: l10n.remove,
+                                        icon: const Icon(Icons.person_remove_outlined),
+                                        onPressed: _busy ? null : () => _removeMember(member),
+                                      ),
+                                    ],
                                   )
                                 : null,
                           ),
@@ -215,6 +254,27 @@ class _HouseholdDetailScreenState extends ConsumerState<HouseholdDetailScreen> {
                     ],
                     const SizedBox(height: 16),
                     OutlinedButton(onPressed: _busy ? null : _invite, child: Text(l10n.inviteGenerate)),
+                    if (invitations.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(l10n.activeCodes, style: theme.textTheme.titleSmall),
+                      Text(
+                        l10n.activeCodesHelp,
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                      for (final invitation in invitations)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(invitation.code, style: const TextStyle(letterSpacing: 2)),
+                          subtitle: Text(l10n.inviteExpires(_formatDate(invitation.expiresAt))),
+                          trailing: household.isOwner || invitation.createdBy == user?.id
+                              ? IconButton(
+                                  tooltip: l10n.revokeCode(invitation.code),
+                                  icon: const Icon(Icons.link_off),
+                                  onPressed: _busy ? null : () => _revoke(invitation),
+                                )
+                              : null,
+                        ),
+                    ],
                   ],
                 ),
               ),
@@ -230,6 +290,11 @@ class _HouseholdDetailScreenState extends ConsumerState<HouseholdDetailScreen> {
                 child: Text(household.isOwner ? l10n.deleteHousehold : l10n.leaveHousehold),
               ),
             ),
+            if (household.isOwner && household.memberCount > 1)
+              Text(
+                l10n.ownerLeavesHint,
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
           ],
         ),
       ),

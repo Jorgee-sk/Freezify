@@ -87,6 +87,29 @@ class HouseholdController {
         return householdService.invite(householdId, CurrentUser.id(jwt));
     }
 
+    /** The codes that still let someone join. */
+    @GetMapping("/{householdId}/invitations")
+    List<InvitationView> invitations(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID householdId) {
+        return householdService.invitations(householdId, CurrentUser.id(jwt));
+    }
+
+    /** Stops a code from letting anyone else join. */
+    @DeleteMapping("/{householdId}/invitations/{code}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void revokeInvitation(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID householdId, @PathVariable String code) {
+        householdService.revokeInvitation(householdId, CurrentUser.id(jwt), code);
+    }
+
+    /** The owner hands the household over to another member. */
+    @PostMapping("/{householdId}/owner")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void transferOwnership(
+            @AuthenticationPrincipal Jwt jwt, @PathVariable UUID householdId, @Valid @RequestBody NewOwnerRequest request) {
+        householdService.transferOwnership(householdId, CurrentUser.id(jwt), request.userId());
+    }
+
+    record NewOwnerRequest(@jakarta.validation.constraints.NotNull UUID userId) {}
+
     record HouseholdNameRequest(@NotBlank @Size(max = 80) String name) {}
 
     record JoinRequest(@NotBlank @Size(max = 32) String code) {}
