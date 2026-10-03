@@ -44,14 +44,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   String get _householdId => widget.householdId;
   InventoryRepository get _repository => ref.read(inventoryRepositoryProvider);
 
-  InventoryQuery get _query => (
-    householdId: _householdId,
-    state: _state,
-    location: _location,
-    category: _category,
-    text: _text,
-    page: _page,
-  );
+  InventoryQuery get _query =>
+      (householdId: _householdId, state: _state, location: _location, category: _category, text: _text, page: _page);
 
   bool get _filtered => _state != ItemState.active || _location != null || _category != null || _text.isNotEmpty;
 
@@ -171,6 +165,11 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
             onPressed: () => context.push('/households/$_householdId/plan'),
           ),
           IconButton(
+            tooltip: l10n.shoppingTitle,
+            icon: const Icon(Icons.shopping_cart_outlined),
+            onPressed: () => context.push('/households/$_householdId/shopping'),
+          ),
+          IconButton(
             tooltip: l10n.settings,
             icon: const Icon(Icons.group_outlined),
             onPressed: () => context.push('/households/$_householdId/settings'),
@@ -238,7 +237,10 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   ...items.when(
                     skipLoadingOnReload: true,
                     loading: () => const [
-                      Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator())),
+                      Padding(
+                        padding: EdgeInsets.all(32),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
                     ],
                     error: (error, _) => [
                       Text(errorMessage(l10n, error), style: TextStyle(color: theme.colorScheme.error)),

@@ -47,7 +47,7 @@ export function RecipesPage() {
   useEffect(() => {
     if (!listening) return
     return subscribeToHousehold(householdId, (event) => {
-      if (event === 'meal-plan-changed') return
+      if (event === 'meal-plan-changed' || event === 'shopping-list-changed') return
       void queryClient.invalidateQueries({ queryKey: queryKeys.recommendations(householdId, lang) })
     })
   }, [householdId, lang, listening, queryClient])

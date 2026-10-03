@@ -328,6 +328,18 @@ describe('meal plan', () => {
     expect(screen.queryByRole('button', { name: 'Rehacer la propuesta' })).not.toBeInTheDocument()
   })
 
+  it('sends what the week lacks to the shopping list', async () => {
+    const api = server({ 'POST /households/h1/shopping-list/from-plan': () => ({ body: { lines: 5 } }) })
+    const user = userEvent.setup()
+    await openPlan()
+
+    await user.click(screen.getByRole('button', { name: 'Llevar a la lista lo que falta' }))
+
+    const status = await screen.findByText(/Hay 5 cosas en la lista/)
+    expect(within(status).getByRole('link', { name: 'Ver la lista' })).toHaveAttribute('href', '/households/h1/shopping')
+    expect(api.last('POST /households/h1/shopping-list/from-plan')?.body).toEqual({ week: '2026-10-05' })
+  })
+
   it('asks before replacing what was suggested', async () => {
     const api = server({
       [PLAN]: () => ({ body: week({ meals: [PASTA, CHICKEN] }) }),

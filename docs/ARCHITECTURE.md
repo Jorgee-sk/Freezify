@@ -70,11 +70,11 @@ tipos internos de otro.
 | `notifications` | Avisos de caducidad dentro de la app, preferencias, dispositivos y envío push por FCM | households, inventory, expiration, food, users | 3 ✔ |
 | `recipes` | Catálogo de recetas, recomendador y registro de lo cocinado | food, inventory, expiration, households | 4 ✔ |
 | `mealplanning` | Plan semanal, simulación de la despensa y generador | recipes, inventory, food, expiration, households | 5 ✔ |
-| `shopping` | Listas de la compra | mealplanning, inventory, food | 6 |
+| `shopping` | Lista de la compra del hogar, llenada a partir del plan | mealplanning, food, households | 6 ✔ |
 | `ai` | `AIProvider`, `AiService`, casos de uso de IA | common | 7 |
 | `integrations` | `ProductCatalogProvider` y fuentes externas | food | 7+ |
-| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory`, `notifications`, `recipes` y `mealplanning` | 2 ✔ / 8 |
-| `realtime` | Flujos de eventos (SSE) por hogar | households; escucha eventos de `inventory`, `mealplanning` y `households` | 2 ✔ |
+| `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory`, `notifications`, `recipes`, `mealplanning` y `shopping` | 2 ✔ / 8 |
+| `realtime` | Flujos de eventos (SSE) por hogar | households; escucha eventos de `inventory`, `mealplanning`, `recipes`, `shopping` y `households` | 2 ✔ |
 
 Los módulos marcados con ✔, además de los cuatro de la Fase 1, existen en el código. Los de fases futuras **no existen todavía**: se crean cuando tienen contenido real.
 
@@ -155,6 +155,10 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D54 | Los avisos se redactan como **"Nombre: frase sobre su fecha"** | Los nombres del catálogo pueden ser plurales; ninguna frase hace concordar un verbo con ellos |
 | D55 | Un flujo de tiempo real **dura como mucho lo que su token** | Quien ya no podría pedir los datos no debe seguir oyendo que cambian |
 | D56 | La descripción de la API (Swagger) **no se publica por defecto** | Una instancia desplegada no debe describir su API a cualquiera; se activa por variable de entorno |
+| D57 | **Una lista de la compra por hogar**, sin tabla `shopping_lists`: solo se guardan sus líneas | Como el plan (D46): la lista no tiene datos propios y se comparte entre los miembros |
+| D58 | Lo que falta se calcula en el módulo del plan (`PlanNeeds`) con la misma despensa simulada | Una sola forma de saber qué hay cada día: la lista y el plan nunca se contradicen |
+| D59 | Las líneas del plan se **recalculan** al volver a llenar la lista; las que toca una persona pasan a ser suyas | La lista sigue al plan sin duplicar, y nada de lo que alguien escribió se pierde |
+| D60 | Llenar la lista toma un **bloqueo de PostgreSQL por hogar** (`pg_advisory_xact_lock`) | Dos miembros a la vez no duplican líneas, sin una tabla más que bloquear |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -178,7 +182,8 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 ## 4. Modelo de datos
 
 Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`, `V4__notifications.sql`,
-`V5__device_tokens.sql`, `V6__recipes.sql`, `V7__dietary_restrictions.sql`, `V8__meal_plan.sql`):
+`V5__device_tokens.sql`, `V6__recipes.sql`, `V7__dietary_restrictions.sql`, `V8__meal_plan.sql`,
+`V9__shopping_list.sql`):
 
 ```text
 users ──< refresh_tokens
@@ -196,6 +201,7 @@ recipes ──< cooked_recipes >── households
 foods ──< food_traits
 households ── household_diets
 households ──< meal_plan_entries >── recipes
+households ──< shopping_list_items >── foods (opcional)
 ```
 
 Entidades previstas por fase:
@@ -206,7 +212,7 @@ Entidades previstas por fase:
 | 3 ✔ | `ShelfLifeRule`, `Notification`, `NotificationPreference`, `DeviceToken` |
 | 4 ✔ | `Recipe`, `RecipeIngredient`, `CookedRecipe`, `FoodTrait`, `HouseholdDiet`; `UserPreference` (gustos personales) pendiente |
 | 5 | `MealPlanEntry` (hecha); `MealPlan` es la semana de un hogar, sin tabla (D46) |
-| 6 | `ShoppingList`, `ShoppingListItem` |
+| 6 ✔ | `ShoppingListItem`; la lista es la del hogar, sin tabla (D57) |
 | 7 | `Scan`, `ScanResult`, `Product` |
 
 `Food` (alimento canónico, p. ej. "tomate") es la pieza que une todo: `FoodItem`, `RecipeIngredient` y
@@ -245,7 +251,7 @@ Fase 2 (todo bajo `/households/{id}/inventory` salvo el catálogo):
 | POST | `/inventory/{itemId}/consume` | Consumir todo o una cantidad |
 | POST | `/inventory/{itemId}/discard` | Tirar todo o una cantidad, con motivo |
 | GET | `/inventory/consume-first` | Cuántos alimentos hay en cada nivel de prioridad y cuáles comer primero |
-| GET | `/households/{id}/events` | Flujo SSE: `inventory-changed` cuando cambia el inventario y `meal-plan-changed` cuando cambia el plan (sin datos) |
+| GET | `/households/{id}/events` | Flujo SSE: `inventory-changed`, `meal-plan-changed` y `shopping-list-changed` cuando cambian el inventario, el plan o la lista (sin datos) |
 
 Fase 3 (avisos del usuario que hace la petición):
 
@@ -272,6 +278,12 @@ Fase 4:
 | PUT / DELETE | `/households/{id}/meal-plan/{date}/{slot}` | Elegir o sustituir / quitar la receta de una comida (`LUNCH`, `DINNER`) |
 | POST | `/households/{id}/meal-plan/{date}/{slot}/move` | Mover la comida a otro día o comida; si está ocupada, se intercambian |
 | POST | `/households/{id}/meal-plan/generate` | Rellenar las comidas vacías de una semana, de hoy en adelante |
+| GET | `/households/{id}/shopping-list?lang=` | La lista del hogar, por pasillos |
+| POST | `/households/{id}/shopping-list/items` | Añadir un alimento del catálogo o texto libre, con o sin cantidad |
+| PUT / DELETE | `/households/{id}/shopping-list/items/{itemId}` | Cambiar / quitar una línea |
+| PUT | `/households/{id}/shopping-list/items/{itemId}/checked` | Marcar como comprado o desmarcar |
+| DELETE | `/households/{id}/shopping-list/items/checked` | Quitar todo lo comprado |
+| POST | `/households/{id}/shopping-list/from-plan` | Añadir lo que les falta a las comidas de una semana, de hoy en adelante |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).

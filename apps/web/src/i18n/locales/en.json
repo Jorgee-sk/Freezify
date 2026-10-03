@@ -84,7 +84,8 @@
     "RECIPE_NOT_FOUND": "This recipe does not exist.",
     "MEAL_NOT_FOUND": "That meal is no longer in the plan.",
     "WEEK_IN_THE_PAST": "A week that is over cannot be planned.",
-    "CONCURRENT_MODIFICATION": "Someone else changed this at the same time. Reload and make the change again."
+    "CONCURRENT_MODIFICATION": "Someone else changed this at the same time. Reload and make the change again.",
+    "SHOPPING_ITEM_NOT_FOUND": "That is no longer on the list."
   },
   "inventory": {
     "title": "Inventory",
@@ -430,5 +431,31 @@
     "added": "Added to the plan: {{place}}.",
     "addReplaces": "“{{recipe}}” is already there: it will be replaced.",
     "view": "See the plan"
+  },
+  "shopping": {
+    "title": "Shopping list",
+    "week": "Week",
+    "fromPlan": "Add what the plan lacks",
+    "fromPlanShort": "Send what is missing to the list",
+    "fromPlanHelp": "Adds what the planned meals lack, leaving out what is at home and what is already on the list. If the plan changes, press it again: the list follows.",
+    "filled_one": "There is {{count}} thing on the list for that week’s plan.",
+    "filled_other": "There are {{count}} things on the list for that week’s plan.",
+    "nothingLacking": "That week’s plan lacks nothing.",
+    "view": "See the list",
+    "empty": "The list is empty. Add what you need, or what the plan lacks.",
+    "addTitle": "Add to the list",
+    "what": "What",
+    "whatPlaceholder": "Milk, bread, batteries…",
+    "amount": "Amount",
+    "amountPlaceholder": "Optional",
+    "add": "Add",
+    "forPlan": "For the plan · {{day}}",
+    "change": "Change",
+    "changeTitle": "Change how much {{name}}",
+    "removeLine": "Remove {{name}}",
+    "removeChecked_one": "Remove what was bought ({{count}})",
+    "removeChecked_other": "Remove what was bought ({{count}})",
+    "removeCheckedConfirm_one": "{{count}} bought thing will leave the list. Continue?",
+    "removeCheckedConfirm_other": "{{count}} bought things will leave the list. Continue?"
   }
 }

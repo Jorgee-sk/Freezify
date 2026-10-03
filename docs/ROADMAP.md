@@ -11,7 +11,7 @@ El estado detallado de cada entrega está en [STATUS.md](STATUS.md).
 | 3 | Expiration Engine | 🟡 Código completo; falta probar el push en un móvil Android |
 | 4 | Recipes | 🟡 Funcionalidad completa; pendiente revisar los datos de alérgenos antes de usuarios reales |
 | 5 | Smart Planning | 🟡 Funcionalidad completa; faltan las preferencias del usuario como factor |
-| 6 | Shopping | ⏳ Pendiente |
+| 6 | Shopping | 🟡 Funcionalidad completa; falta pasar lo comprado al inventario |
 | 7 | AI / OCR | ⏳ Pendiente |
 | 8 | Analytics | ⏳ Pendiente |
 | 9 | Product Polish | ⏳ Pendiente |

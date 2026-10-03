@@ -1,5 +1,6 @@
 package com.freezify.mealplanning.internal;
 
+import com.freezify.food.Quantity;
 import com.freezify.food.Unit;
 import com.freezify.recipes.Recipe;
 import com.freezify.recipes.Recipe.Ingredient;
@@ -99,15 +100,28 @@ final class Pantry {
      * Takes what the recipe needs out of the pantry, the food that expires first going first. Food measured in a
      * way that cannot be compared with the recipe (pieces against grams) is left as it is: how much of it a
      * recipe uses is not known, and guessing would make the plan claim something false.
+     *
+     * @return what the pantry could not give, by food, in the base unit of the recipe's measure. Food at home
+     *     measured in a way that cannot be compared is not in it: whether more is needed is not known.
      */
-    void cook(Recipe recipe, LocalDate day) {
+    Map<UUID, Quantity> cook(Recipe recipe, LocalDate day) {
+        Map<UUID, Quantity> lacking = new HashMap<>();
         for (Ingredient ingredient : recipe.ingredients()) {
-            List<Lot> lots = lotsByFood.get(ingredient.foodId());
-            if (ingredient.staple() || lots == null) {
+            if (ingredient.staple()) {
                 continue;
             }
             Unit base = ingredient.quantity().unit().baseUnit();
             BigDecimal needed = ingredient.quantity().convertTo(base).amount();
+            List<Lot> lots = lotsByFood.getOrDefault(ingredient.foodId(), List.of());
+            boolean comparable = lots.stream()
+                    .anyMatch(lot -> lot.usableOn(day) && lot.dimension() == base.dimension());
+            boolean somethingElse = lots.stream().anyMatch(lot -> lot.usableOn(day));
+            if (!comparable) {
+                if (!somethingElse) {
+                    lacking.put(ingredient.foodId(), new Quantity(needed, base));
+                }
+                continue;
+            }
             for (int i = 0; i < lots.size() && needed.signum() > 0; i++) {
                 Lot lot = lots.get(i);
                 if (!lot.usableOn(day) || lot.dimension() != base.dimension()) {
@@ -124,6 +138,10 @@ final class Pantry {
                                 lot.estimated()));
                 needed = needed.subtract(taken);
             }
+            if (needed.signum() > 0) {
+                lacking.put(ingredient.foodId(), new Quantity(needed, base));
+            }
         }
+        return lacking;
     }
 }

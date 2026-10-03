@@ -1157,4 +1157,86 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get planView => 'Ver el plan';
+
+  @override
+  String get shoppingTitle => 'Lista de la compra';
+
+  @override
+  String get shoppingActions => 'Opciones de la lista';
+
+  @override
+  String get shoppingFromPlanThisWeek => 'Añadir lo que falta para el plan de esta semana';
+
+  @override
+  String get shoppingFromPlanNextWeek => 'Añadir lo que falta para el plan de la semana que viene';
+
+  @override
+  String get shoppingToList => 'Llevar a la lista lo que falta';
+
+  @override
+  String shoppingFilled(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hay $count cosas en la lista para el plan de esa semana.',
+      one: 'Hay $count cosa en la lista para el plan de esa semana.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shoppingNothingLacking => 'Al plan de esa semana no le falta nada.';
+
+  @override
+  String get shoppingView => 'Ver la lista';
+
+  @override
+  String get shoppingEmpty => 'La lista está vacía. Añade lo que necesites o lo que le falta al plan.';
+
+  @override
+  String get shoppingAddTitle => 'Añadir a la lista';
+
+  @override
+  String get shoppingWhat => 'Qué';
+
+  @override
+  String get shoppingAmountOptional => 'Cantidad (opcional)';
+
+  @override
+  String get shoppingAdd => 'Añadir';
+
+  @override
+  String shoppingForPlan(String day) {
+    return 'Para el plan · $day';
+  }
+
+  @override
+  String get shoppingChange => 'Cambiar';
+
+  @override
+  String shoppingChangeTitle(String name) {
+    return 'Cantidad de $name';
+  }
+
+  @override
+  String get shoppingLineActions => 'Opciones';
+
+  @override
+  String shoppingRemoveChecked(int count) {
+    return 'Quitar lo comprado ($count)';
+  }
+
+  @override
+  String shoppingRemoveCheckedConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Se quitarán de la lista $count cosas compradas.',
+      one: 'Se quitará de la lista $count cosa comprada.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get errorShoppingItemNotFound => 'Eso ya no está en la lista.';
 }

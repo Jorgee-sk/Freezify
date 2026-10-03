@@ -1152,4 +1152,86 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planView => 'See the plan';
+
+  @override
+  String get shoppingTitle => 'Shopping list';
+
+  @override
+  String get shoppingActions => 'List options';
+
+  @override
+  String get shoppingFromPlanThisWeek => 'Add what this week’s plan lacks';
+
+  @override
+  String get shoppingFromPlanNextWeek => 'Add what next week’s plan lacks';
+
+  @override
+  String get shoppingToList => 'Send what is missing to the list';
+
+  @override
+  String shoppingFilled(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'There are $count things on the list for that week’s plan.',
+      one: 'There is $count thing on the list for that week’s plan.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get shoppingNothingLacking => 'That week’s plan lacks nothing.';
+
+  @override
+  String get shoppingView => 'See the list';
+
+  @override
+  String get shoppingEmpty => 'The list is empty. Add what you need, or what the plan lacks.';
+
+  @override
+  String get shoppingAddTitle => 'Add to the list';
+
+  @override
+  String get shoppingWhat => 'What';
+
+  @override
+  String get shoppingAmountOptional => 'Amount (optional)';
+
+  @override
+  String get shoppingAdd => 'Add';
+
+  @override
+  String shoppingForPlan(String day) {
+    return 'For the plan · $day';
+  }
+
+  @override
+  String get shoppingChange => 'Change';
+
+  @override
+  String shoppingChangeTitle(String name) {
+    return 'How much $name';
+  }
+
+  @override
+  String get shoppingLineActions => 'Line options';
+
+  @override
+  String shoppingRemoveChecked(int count) {
+    return 'Remove what was bought ($count)';
+  }
+
+  @override
+  String shoppingRemoveCheckedConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bought things will leave the list.',
+      one: '$count bought thing will leave the list.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get errorShoppingItemNotFound => 'That is no longer on the list.';
 }

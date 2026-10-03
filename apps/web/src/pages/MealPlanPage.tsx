@@ -6,6 +6,7 @@ import { MEAL_SLOTS, mealPlanApi } from '../api/mealPlan'
 import type { Generated, MealPlan, MealSlot, PlannedMeal } from '../api/mealPlan'
 import { queryKeys } from '../api/queryKeys'
 import { ALL_RECIPES, dietApi, recipesApi } from '../api/recipes'
+import { shoppingApi } from '../api/shopping'
 import type { Diet } from '../api/recipes'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { currentLocale } from '../i18n'
@@ -73,6 +74,10 @@ export function MealPlanPage() {
       await queryClient.invalidateQueries({ queryKey: queryKeys.recipes })
     },
   })
+  const toShoppingList = useMutation({
+    mutationFn: (weekStart: string) => shoppingApi.fillFromPlan(householdId, weekStart),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.shopping(householdId) }),
+  })
   const generate = useMutation({
     mutationFn: ({ weekStart, replace }: { weekStart: string; replace: boolean }) =>
       mealPlanApi.generate(householdId, weekStart, replace),
@@ -87,6 +92,7 @@ export function MealPlanPage() {
     setPicking(null)
     setMoving(null)
     setGenerated(null)
+    toShoppingList.reset()
   }
 
   function regenerate(weekStart: string) {
@@ -145,7 +151,25 @@ export function MealPlanPage() {
                   </button>
                 )}
               </div>
-              <ErrorMessage error={generate.error} />
+              <div className="button-row">
+                <button
+                  type="button"
+                  className="button"
+                  disabled={toShoppingList.isPending}
+                  onClick={() => toShoppingList.mutate(plan.data.weekStart)}
+                >
+                  {t('shopping.fromPlanShort')}
+                </button>
+                {toShoppingList.data && (
+                  <span role="status" className="muted">
+                    {toShoppingList.data.lines === 0
+                      ? t('shopping.nothingLacking')
+                      : t('shopping.filled', { count: toShoppingList.data.lines })}{' '}
+                    <Link to={`/households/${householdId}/shopping`}>{t('shopping.view')}</Link>
+                  </span>
+                )}
+              </div>
+              <ErrorMessage error={generate.error ?? toShoppingList.error} />
               {generated && (
                 <p role="status">
                   {generated.filled === 0 ? t('plan.nothingFilled') : t('plan.filled', { count: generated.filled })}

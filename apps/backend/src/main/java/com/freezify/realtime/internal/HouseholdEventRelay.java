@@ -5,6 +5,7 @@ import com.freezify.households.HouseholdEvents.MemberRemoved;
 import com.freezify.inventory.InventoryEvents.InventoryChanged;
 import com.freezify.mealplanning.MealPlanEvents.MealPlanChanged;
 import com.freezify.recipes.RecipeEvents.RecipeCooked;
+import com.freezify.shopping.ShoppingEvents.ShoppingListChanged;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -14,6 +15,7 @@ class HouseholdEventRelay {
 
     static final String INVENTORY_CHANGED = "inventory-changed";
     static final String MEAL_PLAN_CHANGED = "meal-plan-changed";
+    static final String SHOPPING_LIST_CHANGED = "shopping-list-changed";
 
     private final HouseholdEventStreams streams;
 
@@ -29,6 +31,12 @@ class HouseholdEventRelay {
     @TransactionalEventListener
     void on(MealPlanChanged event) {
         streams.publish(event.householdId(), MEAL_PLAN_CHANGED);
+    }
+
+    /** Someone ticking things off in the shop is seen by the others at once. */
+    @TransactionalEventListener
+    void on(ShoppingListChanged event) {
+        streams.publish(event.householdId(), SHOPPING_LIST_CHANGED);
     }
 
     /** The plan says which meals were cooked. */

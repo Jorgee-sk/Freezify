@@ -16,6 +16,7 @@ import 'features/plan/meal_plan_screen.dart';
 import 'features/recipes/diet_screen.dart';
 import 'features/recipes/recipe_detail_screen.dart';
 import 'features/recipes/recipes_screen.dart';
+import 'features/shopping/shopping_list_screen.dart';
 import 'l10n/app_localizations.dart';
 
 const _seedColor = Color(0xFF1F9D63);
@@ -65,6 +66,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   householdId: state.pathParameters['id']!,
                   initialWeek: state.uri.queryParameters['week'],
                 ),
+              ),
+              GoRoute(
+                path: 'shopping',
+                builder: (_, state) => ShoppingListScreen(householdId: state.pathParameters['id']!),
               ),
               GoRoute(
                 path: 'diet',

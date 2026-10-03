@@ -15,6 +15,7 @@ class HouseholdEventStream {
     this._householdId, {
     required this.onInventoryChanged,
     this.onMealPlanChanged,
+    this.onShoppingListChanged,
     this.retryDelay = const Duration(seconds: 1),
     this.maxRetryDelay = const Duration(seconds: 30),
     this.idleTimeout = const Duration(seconds: 60),
@@ -22,6 +23,7 @@ class HouseholdEventStream {
 
   static const _inventoryChanged = 'inventory-changed';
   static const _mealPlanChanged = 'meal-plan-changed';
+  static const _shoppingListChanged = 'shopping-list-changed';
 
   final ApiClient _api;
   final String _householdId;
@@ -29,6 +31,9 @@ class HouseholdEventStream {
 
   /// Only whoever shows the meal plan cares about it.
   final void Function()? onMealPlanChanged;
+
+  /// Only whoever shows the shopping list cares about it.
+  final void Function()? onShoppingListChanged;
 
   /// First wait before reconnecting; doubles after every failed attempt up to [maxRetryDelay].
   final Duration retryDelay;
@@ -94,6 +99,7 @@ class HouseholdEventStream {
             final event = line.substring(6).trim();
             if (event == _inventoryChanged) onInventoryChanged();
             if (event == _mealPlanChanged) onMealPlanChanged?.call();
+            if (event == _shoppingListChanged) onShoppingListChanged?.call();
           },
           onError: (Object _) => _closeConnection(),
           onDone: _closeConnection,

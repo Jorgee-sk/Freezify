@@ -17,6 +17,7 @@ import { NotificationsPage } from './pages/NotificationsPage'
 import { RecipeDetailPage } from './pages/RecipeDetailPage'
 import { RecipesPage } from './pages/RecipesPage'
 import { RegisterPage } from './pages/RegisterPage'
+import { ShoppingListPage } from './pages/ShoppingListPage'
 
 function createQueryClient() {
   return new QueryClient({
@@ -59,6 +60,7 @@ export function AppRoutes() {
           <Route path="/households/:householdId/recipes" element={<RecipesPage />} />
           <Route path="/households/:householdId/diet" element={<DietPage />} />
           <Route path="/households/:householdId/plan" element={<MealPlanPage />} />
+          <Route path="/households/:householdId/shopping" element={<ShoppingListPage />} />
           <Route path="/households/:householdId/recipes/:recipeId" element={<RecipeDetailPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/notifications/preferences" element={<NotificationPreferencesPage />} />

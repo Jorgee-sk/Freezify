@@ -674,6 +674,46 @@ summary {
   gap: 0.75rem;
 }
 
+/* Shopping list */
+.shopping-add {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.shopping-aisle {
+  margin-bottom: 0.75rem;
+}
+
+.shopping-aisle h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.shopping-aisle ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.shopping-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shopping-line.checked > .check span {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.shopping-line > .plan-picker {
+  flex-basis: 100%;
+}
+
 /* Notifications */
 .bell {
   position: relative;

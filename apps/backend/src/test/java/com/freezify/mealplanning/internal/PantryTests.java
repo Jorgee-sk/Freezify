@@ -119,6 +119,41 @@ class PantryTests {
     }
 
     @Test
+    void cookingSaysWhatThePantryCouldNotGive() {
+        Pantry pantry = new Pantry(Map.of(CHICKEN, List.of(grams("200", null, false))));
+        Recipe recipe = recipe(
+                new Ingredient(CHICKEN, Quantity.of("0.5", Unit.KILOGRAM), false),
+                new Ingredient(TOMATO, Quantity.of("2", Unit.UNIT), false),
+                new Ingredient(SALT, Quantity.of("5", Unit.GRAM), true));
+
+        Map<UUID, Quantity> lacking = pantry.cook(recipe, TODAY);
+
+        // In the base unit of the recipe's measure; staples are never lacking.
+        assertThat(lacking)
+                .containsOnlyKeys(CHICKEN, TOMATO)
+                .containsEntry(CHICKEN, Quantity.of("300", Unit.GRAM))
+                .containsEntry(TOMATO, Quantity.of("2", Unit.UNIT));
+        // Once the chicken is gone, a second meal lacks all of it.
+        assertThat(pantry.cook(recipe, TODAY)).containsEntry(CHICKEN, Quantity.of("500", Unit.GRAM));
+    }
+
+    @Test
+    void foodPastItsDateIsLackingAsIfItWereNotThere() {
+        Pantry pantry = new Pantry(Map.of(CHICKEN, List.of(grams("500", TODAY.plusDays(1), false))));
+
+        assertThat(pantry.cook(recipe(new Ingredient(CHICKEN, Quantity.of("300", Unit.GRAM), false)), TODAY.plusDays(2)))
+                .containsEntry(CHICKEN, Quantity.of("300", Unit.GRAM));
+    }
+
+    @Test
+    void foodMeasuredInAWayThatCannotBeComparedIsNeverSaidToBeLacking() {
+        Pantry pantry = new Pantry(Map.of(TOMATO, List.of(grams("500", null, false))));
+
+        // Two tomatoes against half a kilo: whether it is enough is not known, so nothing is asked for.
+        assertThat(pantry.cook(recipe(new Ingredient(TOMATO, Quantity.of("2", Unit.UNIT), false)), TODAY)).isEmpty();
+    }
+
+    @Test
     void aCopyIsCookedFromWithoutTouchingTheOriginal() {
         Pantry pantry = new Pantry(Map.of(CHICKEN, List.of(grams("300", null, false))));
 

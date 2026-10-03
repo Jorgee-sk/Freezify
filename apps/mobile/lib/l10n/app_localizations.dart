@@ -1921,6 +1921,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'See the plan'**
   String get planView;
+
+  /// No description provided for @shoppingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping list'**
+  String get shoppingTitle;
+
+  /// No description provided for @shoppingActions.
+  ///
+  /// In en, this message translates to:
+  /// **'List options'**
+  String get shoppingActions;
+
+  /// No description provided for @shoppingFromPlanThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Add what this week’s plan lacks'**
+  String get shoppingFromPlanThisWeek;
+
+  /// No description provided for @shoppingFromPlanNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Add what next week’s plan lacks'**
+  String get shoppingFromPlanNextWeek;
+
+  /// No description provided for @shoppingToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Send what is missing to the list'**
+  String get shoppingToList;
+
+  /// No description provided for @shoppingFilled.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{There is {count} thing on the list for that week’s plan.} other{There are {count} things on the list for that week’s plan.}}'**
+  String shoppingFilled(int count);
+
+  /// No description provided for @shoppingNothingLacking.
+  ///
+  /// In en, this message translates to:
+  /// **'That week’s plan lacks nothing.'**
+  String get shoppingNothingLacking;
+
+  /// No description provided for @shoppingView.
+  ///
+  /// In en, this message translates to:
+  /// **'See the list'**
+  String get shoppingView;
+
+  /// No description provided for @shoppingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The list is empty. Add what you need, or what the plan lacks.'**
+  String get shoppingEmpty;
+
+  /// No description provided for @shoppingAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to the list'**
+  String get shoppingAddTitle;
+
+  /// No description provided for @shoppingWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'What'**
+  String get shoppingWhat;
+
+  /// No description provided for @shoppingAmountOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (optional)'**
+  String get shoppingAmountOptional;
+
+  /// No description provided for @shoppingAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get shoppingAdd;
+
+  /// No description provided for @shoppingForPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'For the plan · {day}'**
+  String shoppingForPlan(String day);
+
+  /// No description provided for @shoppingChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get shoppingChange;
+
+  /// No description provided for @shoppingChangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How much {name}'**
+  String shoppingChangeTitle(String name);
+
+  /// No description provided for @shoppingLineActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Line options'**
+  String get shoppingLineActions;
+
+  /// No description provided for @shoppingRemoveChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove what was bought ({count})'**
+  String shoppingRemoveChecked(int count);
+
+  /// No description provided for @shoppingRemoveCheckedConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} bought thing will leave the list.} other{{count} bought things will leave the list.}}'**
+  String shoppingRemoveCheckedConfirm(int count);
+
+  /// No description provided for @errorShoppingItemNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That is no longer on the list.'**
+  String get errorShoppingItemNotFound;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

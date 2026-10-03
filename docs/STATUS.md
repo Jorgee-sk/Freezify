@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Última actualización: 2026-10-02
+Última actualización: 2026-10-03
 
 | Fase | Estado |
 |---|---|
@@ -10,6 +10,68 @@
 | 3 — Expiration Engine | 🟡 Código completo; **falta comprobar en un móvil Android que el push llega**, y hasta entonces no se da por cerrada |
 | 4 — Recipes | 🟡 Funcionalidad completa (CI en verde en el pull request #12). Antes de usuarios reales hay que revisar los datos de alérgenos |
 | 5 — Smart Planning | 🟡 Funcionalidad completa (CI en verde en el pull request #14). Faltan las preferencias del usuario como factor |
+| 6 — Shopping | 🟡 Funcionalidad completa, con los tests nuevos del móvil pendientes de CI |
+
+## Fase 6 — Shopping 🟡
+
+### Completed
+
+- **Lista de la compra compartida por hogar** (`/households/{id}/shopping-list`): cualquier miembro la ve y
+  la cambia, y lo que hace uno lo ven los demás al momento (`shopping-list-changed` en tiempo real).
+- **Lista automática a partir del plan** (`POST …/from-plan` con una semana): añade lo que les falta a las
+  comidas planificadas de esa semana, de hoy en adelante.
+  - Calcula lo que falta como el plan: las comidas se cocinan en orden, lo que caduca antes se usa antes y lo
+    pasado de fecha no cuenta. Con el ejemplo de la especificación (300 g + 300 g de pollo y 200 g en casa)
+    pide 400 g.
+  - Suma lo que piden varias comidas (200 g + 200 g de pasta = 400 g) y escribe 1500 g como 1,5 kg.
+  - No pide lo que ya hay en casa, ni lo que alguien ya puso en la lista, ni lo que ya se compró para esa
+    semana. Los básicos de cocina (sal, aceite) nunca se piden.
+  - Volver a pulsarlo recalcula las líneas del plan de esa semana: si el plan o el inventario cambian, la
+    lista se ajusta sin duplicar nada. Las líneas de otras semanas no se tocan. Dos miembros que lo pulsan a
+    la vez se ordenan en la base de datos y no duplican líneas.
+  - Cada línea del plan dice para qué día hace falta ("Para el plan · lunes 5 oct").
+- **Añadir a mano**: un alimento del catálogo (su nombre sale del catálogo en el idioma de cada miembro) o
+  texto libre, con o sin cantidad. Si el mismo alimento ya está en la lista sin comprar, se suma a esa línea.
+- **Cambiar la cantidad** de una línea: desde entonces es de las personas y el plan ya no la cambia.
+- **Marcar como comprado** (y desmarcar), **quitar** una línea y **quitar lo comprado** de una vez, con
+  confirmación.
+- **Agrupada por pasillos** en el orden de la especificación: verduras, frutas, lácteos, carne, pescado,
+  huevos, panadería, despensa, congelados, bebidas, preparados y otros.
+- **Web y móvil**: pantalla "Lista de la compra" con acceso desde el inventario, y botón "Llevar a la lista lo
+  que falta" en el plan semanal.
+- Evento de producto `shopping_list_created` la primera vez que el plan llena una lista vacía.
+
+### Tests
+
+| Qué | Resultado |
+|---|---|
+| Backend `./mvnw verify` | ✅ 289 tests (20 nuevos: 16 de la API de la lista, 3 de la despensa simulada y 1 de unidades); 1 omitido, el que habla con Firebase real |
+| Comprobación del test de aislamiento de la lista | ✅ al quitar a propósito la comprobación de pertenencia al hogar, el test falla (200 en lugar de 404) |
+| Límites entre módulos (`ModularityTests`) | ✅ la lista solo usa las interfaces públicas del plan (`PlanNeeds`), alimentos y hogares |
+| Migración `V9` sobre la base local con datos | ✅ aplicada al arrancar |
+| Web lint / test / build | ✅ sin avisos / 160 tests (13 nuevos) / correcto |
+| Web contra el backend real | ✅ con el plan generado de un hogar de prueba, la lista se llenó con 5 cosas agrupadas por pasillo (400 g de pasta sumando dos comidas); se marcó la pasta como comprada, se añadió "Pilas" como texto libre y, al volver a llenarla, la pasta comprada no se pidió de nuevo |
+| Código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ llenó la lista desde el plan de la semana (9 cosas, con "Patata · 1 kg" de 1000 g) y marcó una línea como comprada, sin errores en consola. No se probó añadir ni cambiar cantidades en esta versión |
+| Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
+| Mobile `flutter test` | 🟡 los **12 nuevos no se han ejecutado** (163 en total): correrán en la CI del próximo pull request |
+
+### Pendiente en esta fase
+
+- **Pasar lo comprado al inventario**: hoy, lo marcado como comprado hay que darlo de alta en el inventario a
+  mano.
+
+### Known issues
+
+- **Lo comprado cuenta como ya comprado hasta que se quita de la lista**: si se compra algo para una semana y
+  no se quita de la lista ni se pasa al inventario, al llenar esa misma semana no se pide de nuevo.
+- **Cantidades no comparables** (la receta pide "2 tomates" y en casa hay "500 g"): no se piden, porque no se
+  sabe si hacen falta; es el riesgo R4.
+- **Las cantidades son las de las recetas**: no se ajustan a las raciones ni al formato en que se vende
+  (no dice "1 paquete").
+- **No hay precios** ni coste estimado de la compra.
+- **El texto libre no se reconoce como alimento del catálogo**: "leche" escrita sin elegir la sugerencia no se
+  suma a la "Leche" que pida el plan.
+- **El orden de los pasillos es fijo**, no el de una tienda concreta.
 
 ## Problemas conocidos resueltos — lote 1 (2026-10-03)
 
@@ -52,7 +114,7 @@ Problemas de la lista de "Known issues" de fases anteriores que se podían arreg
 | Test de elección simultánea | ✅ con el código anterior falla 3 de 3 veces (una de las dos peticiones recibe un error); con el nuevo pasa |
 | Web lint / test / build | ✅ sin avisos / 147 tests (8 nuevos) / correcto |
 | Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
-| Mobile `flutter test` | 🟡 los **5 nuevos no se han ejecutado** (151 en total): correrán en la CI del próximo pull request |
+| Mobile `flutter test` | ✅ 151 en CI (pull request #15), con los 5 nuevos |
 | Contra el backend y la base locales reales | ✅ al arrancar, el barrido estimó la fecha de 1 alimento antiguo sin fecha; con la API en modo local, `/v3/api-docs` y Swagger UI responden; el aviso real de un hogar de prueba se lee "Champiñones: quedan aproximadamente 4 días para su fecha de caducidad (fecha estimada)"; en la web, el plan avisó de la carne y el pescado de dos comidas en un hogar vegetariano, "La he cocinado" dejó la comida como "Cocinada", y "Añadir al plan" avisó de la receta que sustituiría, la añadió y llevó a esa semana |
 | Código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ "La he cocinado" en una comida de hoy, y "Añadir al plan" con el aviso de sustitución, el aviso de confirmación y el enlace al plan |
 | `docker compose` con la clave | ⏳ sin probar: no hay Docker aquí; la CI solo valida el fichero |
@@ -544,7 +606,9 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request del lote 1 de problemas conocidos y confirmar en CI los 5 tests nuevos del móvil.
-2. Fase 6 — Shopping: lista de la compra a partir de lo que falta en el plan.
-3. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
+1. Abrir el pull request de la Fase 6 y confirmar en CI los 12 tests nuevos del móvil.
+2. Fase 6: pasar lo comprado al inventario.
+3. Lote 2 de problemas conocidos: refresh token de la web en cookie `HttpOnly` (R8), revocar invitaciones,
+   transferir un hogar.
+4. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
    con una fuente autorizada antes de abrir a usuarios reales.
