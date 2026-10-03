@@ -2041,6 +2041,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That is no longer on the list.'**
   String get errorShoppingItemNotFound;
+
+  /// No description provided for @shoppingToInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Put what was bought in the inventory ({count})'**
+  String shoppingToInventory(int count);
+
+  /// No description provided for @shoppingStocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} food has been added to the inventory.} other{{count} foods have been added to the inventory.}}'**
+  String shoppingStocked(int count);
+
+  /// No description provided for @shoppingStockedNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has been added to the inventory.'**
+  String get shoppingStockedNone;
+
+  /// No description provided for @shoppingLeftWithoutAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Still on the list because they do not say how much was bought: {names}. Give the amount and try again.'**
+  String shoppingLeftWithoutAmount(String names);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

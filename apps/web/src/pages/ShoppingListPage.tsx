@@ -56,6 +56,13 @@ export function ShoppingListPage() {
     mutationFn: () => shoppingApi.removeChecked(householdId),
     onSuccess: refresh,
   })
+  const stockBought = useMutation({
+    mutationFn: () => shoppingApi.stockBought(householdId, lang),
+    onSuccess: async () => {
+      await refresh()
+      await queryClient.invalidateQueries({ queryKey: queryKeys.inventory(householdId) })
+    },
+  })
   const fill = useMutation({
     mutationFn: () => shoppingApi.fillFromPlan(householdId, week === 'this' ? todayIso() : addDays(todayIso(), 7)),
     onSuccess: async (result) => {
@@ -110,7 +117,7 @@ export function ShoppingListPage() {
       <AddLine householdId={householdId} />
 
       {list.isPending && <p className="muted">{t('app.loading')}</p>}
-      <ErrorMessage error={list.error ?? check.error ?? remove.error ?? removeChecked.error} />
+      <ErrorMessage error={list.error ?? check.error ?? remove.error ?? removeChecked.error ?? stockBought.error} />
       {list.data?.items.length === 0 && <p className="card muted">{t('shopping.empty')}</p>}
 
       {aisles.map((aisle) => (
@@ -163,9 +170,28 @@ export function ShoppingListPage() {
       ))}
 
       {bought > 0 && (
-        <button type="button" className="button" disabled={removeChecked.isPending} onClick={takeOffBought}>
-          {t('shopping.removeChecked', { count: bought })}
-        </button>
+        <div className="button-row">
+          <button
+            type="button"
+            className="button primary"
+            disabled={stockBought.isPending}
+            onClick={() => stockBought.mutate()}
+          >
+            {t('shopping.toInventory', { count: bought })}
+          </button>
+          <button type="button" className="button" disabled={removeChecked.isPending} onClick={takeOffBought}>
+            {t('shopping.removeChecked', { count: bought })}
+          </button>
+        </div>
+      )}
+      {stockBought.data && (
+        <p role="status" className="muted">
+          {stockBought.data.stocked === 0
+            ? t('shopping.stockedNone')
+            : t('shopping.stocked', { count: stockBought.data.stocked })}
+          {stockBought.data.left.length > 0 &&
+            ` ${t('shopping.leftWithoutAmount', { names: stockBought.data.left.join(', ') })}`}
+        </p>
       )}
     </>
   )

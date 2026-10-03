@@ -9,6 +9,7 @@ import com.freezify.shopping.internal.ShoppingListService.ItemInput;
 import com.freezify.shopping.internal.ShoppingViews.FilledFromPlan;
 import com.freezify.shopping.internal.ShoppingViews.Item;
 import com.freezify.shopping.internal.ShoppingViews.ShoppingList;
+import com.freezify.shopping.internal.ShoppingViews.Stocked;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
@@ -95,6 +96,15 @@ class ShoppingListController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void remove(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID householdId, @PathVariable UUID itemId) {
         shopping.remove(householdId, CurrentUser.id(jwt), itemId);
+    }
+
+    /** Puts what was bought in the inventory and takes it off the list; lines without a quantity stay. */
+    @PostMapping("/items/checked/to-inventory")
+    Stocked stockBought(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID householdId,
+            @RequestParam(defaultValue = "es") @Pattern(regexp = LANGUAGE, message = LANGUAGE_MESSAGE) String lang) {
+        return shopping.stockBought(householdId, CurrentUser.id(jwt), lang);
     }
 
     /** Takes off the list everything already bought. */

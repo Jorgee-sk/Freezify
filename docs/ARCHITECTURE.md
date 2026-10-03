@@ -70,7 +70,7 @@ tipos internos de otro.
 | `notifications` | Avisos de caducidad dentro de la app, preferencias, dispositivos y envío push por FCM | households, inventory, expiration, food, users | 3 ✔ |
 | `recipes` | Catálogo de recetas, recomendador y registro de lo cocinado | food, inventory, expiration, households | 4 ✔ |
 | `mealplanning` | Plan semanal, simulación de la despensa y generador | recipes, inventory, food, expiration, households | 5 ✔ |
-| `shopping` | Lista de la compra del hogar, llenada a partir del plan | mealplanning, food, households | 6 ✔ |
+| `shopping` | Lista de la compra del hogar, llenada a partir del plan; lo comprado pasa al inventario | mealplanning, inventory, food, households | 6 ✔ |
 | `ai` | `AIProvider`, `AiService`, casos de uso de IA | common | 7 |
 | `integrations` | `ProductCatalogProvider` y fuentes externas | food | 7+ |
 | `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory`, `notifications`, `recipes`, `mealplanning` y `shopping` | 2 ✔ / 8 |
@@ -283,6 +283,7 @@ Fase 4:
 | PUT / DELETE | `/households/{id}/shopping-list/items/{itemId}` | Cambiar / quitar una línea |
 | PUT | `/households/{id}/shopping-list/items/{itemId}/checked` | Marcar como comprado o desmarcar |
 | DELETE | `/households/{id}/shopping-list/items/checked` | Quitar todo lo comprado |
+| POST | `/households/{id}/shopping-list/items/checked/to-inventory?lang=` | Pasar lo comprado al inventario (lo que no tiene cantidad se queda) |
 | POST | `/households/{id}/shopping-list/from-plan` | Añadir lo que les falta a las comidas de una semana, de hoy en adelante |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`

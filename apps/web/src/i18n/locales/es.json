@@ -456,6 +456,12 @@
     "removeChecked_one": "Quitar lo comprado ({{count}})",
     "removeChecked_other": "Quitar lo comprado ({{count}})",
     "removeCheckedConfirm_one": "Se quitará de la lista {{count}} cosa comprada. ¿Continuar?",
-    "removeCheckedConfirm_other": "Se quitarán de la lista {{count}} cosas compradas. ¿Continuar?"
+    "removeCheckedConfirm_other": "Se quitarán de la lista {{count}} cosas compradas. ¿Continuar?",
+    "toInventory_one": "Pasar lo comprado al inventario ({{count}})",
+    "toInventory_other": "Pasar lo comprado al inventario ({{count}})",
+    "stocked_one": "Se ha añadido {{count}} alimento al inventario.",
+    "stocked_other": "Se han añadido {{count}} alimentos al inventario.",
+    "stockedNone": "No se ha añadido nada al inventario.",
+    "leftWithoutAmount": "Siguen en la lista porque no dicen cuánto se compró: {{names}}. Indica la cantidad y vuelve a pasarlos."
   }
 }

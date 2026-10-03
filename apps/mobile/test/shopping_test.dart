@@ -248,6 +248,33 @@ void main() {
       expect(backend.count('DELETE /households/h1/shopping-list/items/checked'), 1);
     });
 
+    testWidgets('puts what was bought in the inventory, and says what stays on the list', (tester) async {
+      final backend = backendWith({
+        _list: (_) => FakeResponse.ok({
+          'items': [
+            _line('i1', 'Calabacín', category: 'VEGETABLES', quantity: {'amount': 2, 'unit': 'UNIT'}, checked: true),
+            _line('i3', 'Pilas', checked: true),
+          ],
+        }),
+        'POST /households/h1/shopping-list/items/checked/to-inventory': (_) => const FakeResponse.ok({
+          'stocked': 1,
+          'left': ['Pilas'],
+        }),
+      });
+      await openList(tester, backend);
+
+      await listAction(tester, 'Pasar lo comprado al inventario (2)');
+
+      expect(backend.count('POST /households/h1/shopping-list/items/checked/to-inventory'), 1);
+      expect(
+        find.text(
+          'Se ha añadido 1 alimento al inventario. '
+          'Siguen en la lista porque no dicen cuánto se compró: Pilas. Indica la cantidad y vuelve a pasarlos.',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('fills the list with what the plan of this week or the next lacks', (tester) async {
       var lines = 3;
       final backend = backendWith({

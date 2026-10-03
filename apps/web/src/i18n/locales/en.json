@@ -456,6 +456,12 @@
     "removeChecked_one": "Remove what was bought ({{count}})",
     "removeChecked_other": "Remove what was bought ({{count}})",
     "removeCheckedConfirm_one": "{{count}} bought thing will leave the list. Continue?",
-    "removeCheckedConfirm_other": "{{count}} bought things will leave the list. Continue?"
+    "removeCheckedConfirm_other": "{{count}} bought things will leave the list. Continue?",
+    "toInventory_one": "Put what was bought in the inventory ({{count}})",
+    "toInventory_other": "Put what was bought in the inventory ({{count}})",
+    "stocked_one": "{{count}} food has been added to the inventory.",
+    "stocked_other": "{{count}} foods have been added to the inventory.",
+    "stockedNone": "Nothing has been added to the inventory.",
+    "leftWithoutAmount": "Still on the list because they do not say how much was bought: {{names}}. Give the amount and try again."
   }
 }

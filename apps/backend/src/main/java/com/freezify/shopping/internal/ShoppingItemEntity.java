@@ -179,4 +179,6 @@ interface ShoppingItemRepository extends JpaRepository<ShoppingItemEntity, UUID>
     @Modifying
     @Query("delete from ShoppingItemEntity i where i.householdId = :householdId and i.checked = true")
     int deleteChecked(@Param("householdId") UUID householdId);
+
+    List<ShoppingItemEntity> findByHouseholdIdAndChecked(UUID householdId, boolean checked);
 }

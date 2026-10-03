@@ -10,7 +10,7 @@
 | 3 — Expiration Engine | 🟡 Código completo; **falta comprobar en un móvil Android que el push llega**, y hasta entonces no se da por cerrada |
 | 4 — Recipes | 🟡 Funcionalidad completa (CI en verde en el pull request #12). Antes de usuarios reales hay que revisar los datos de alérgenos |
 | 5 — Smart Planning | 🟡 Funcionalidad completa (CI en verde en el pull request #14). Faltan las preferencias del usuario como factor |
-| 6 — Shopping | 🟡 Funcionalidad completa, con los tests nuevos del móvil pendientes de CI |
+| 6 — Shopping | 🟡 Funcionalidad completa (CI en verde en el pull request #16), con los tests nuevos de "pasar al inventario" pendientes de CI |
 
 ## Fase 6 — Shopping 🟡
 
@@ -40,6 +40,12 @@
 - **Web y móvil**: pantalla "Lista de la compra" con acceso desde el inventario, y botón "Llevar a la lista lo
   que falta" en el plan semanal.
 - Evento de producto `shopping_list_created` la primera vez que el plan llena una lista vacía.
+- **Pasar lo comprado al inventario** (`POST …/items/checked/to-inventory`, web y móvil): cada línea comprada
+  entra en el inventario con fecha de compra de hoy, la ubicación habitual del alimento (o "otro" si es texto
+  libre) y, si hay regla, una fecha estimada etiquetada como tal; después sale de la lista. Una línea sin
+  cantidad se queda en la lista y se dice cuáles: el inventario necesita saber cuánto hay y no se inventa.
+- **El texto libre que nombra un alimento del catálogo es ese alimento**: "leche" escrita a mano es la Leche
+  del catálogo, se suma a la que pida el plan y sale en el idioma de cada miembro.
 
 ### Tests
 
@@ -53,24 +59,23 @@
 | Web contra el backend real | ✅ con el plan generado de un hogar de prueba, la lista se llenó con 5 cosas agrupadas por pasillo (400 g de pasta sumando dos comidas); se marcó la pasta como comprada, se añadió "Pilas" como texto libre y, al volver a llenarla, la pasta comprada no se pidió de nuevo |
 | Código de la app móvil contra el backend real (compilado para web en modo de depuración) | ✅ llenó la lista desde el plan de la semana (9 cosas, con "Patata · 1 kg" de 1000 g) y marcó una línea como comprada, sin errores en consola. No se probó añadir ni cambiar cantidades en esta versión |
 | Mobile `flutter analyze` y APK debug | ✅ sin avisos / generado |
-| Mobile `flutter test` | 🟡 los **12 nuevos no se han ejecutado** (163 en total): correrán en la CI del próximo pull request |
-
-### Pendiente en esta fase
-
-- **Pasar lo comprado al inventario**: hoy, lo marcado como comprado hay que darlo de alta en el inventario a
-  mano.
+| Mobile `flutter test` | ✅ 163 en CI (pull request #16), con los 12 nuevos; 🟡 el nuevo de "pasar al inventario" **no se ha ejecutado** (164 en total) |
+| Pasar lo comprado al inventario: backend `./mvnw verify` | ✅ 292 tests (3 nuevos) |
+| Pasar lo comprado al inventario: web | ✅ 161 tests (1 nuevo); contra el backend real, con leche (escrita a mano como "leche"), pasta y pilas sin cantidad marcadas como compradas: la leche (1 l, nevera) y la pasta (400 g, despensa) pasaron al inventario sin fecha inventada y las pilas siguieron en la lista con el aviso |
 
 ### Known issues
 
-- **Lo comprado cuenta como ya comprado hasta que se quita de la lista**: si se compra algo para una semana y
-  no se quita de la lista ni se pasa al inventario, al llenar esa misma semana no se pide de nuevo.
+- **Lo comprado cuenta como ya comprado hasta que se pasa al inventario o se quita de la lista**: mientras
+  tanto, al llenar esa misma semana no se pide de nuevo.
+- **Al pasar al inventario no se pide la fecha del envase**: entra con la estimada por las reglas, o sin fecha
+  si no hay regla; se puede editar después.
 - **Cantidades no comparables** (la receta pide "2 tomates" y en casa hay "500 g"): no se piden, porque no se
   sabe si hacen falta; es el riesgo R4.
 - **Las cantidades son las de las recetas**: no se ajustan a las raciones ni al formato en que se vende
   (no dice "1 paquete").
 - **No hay precios** ni coste estimado de la compra.
-- **El texto libre no se reconoce como alimento del catálogo**: "leche" escrita sin elegir la sugerencia no se
-  suma a la "Leche" que pida el plan.
+- **El texto libre solo se reconoce si coincide con el nombre del catálogo** (sin mayúsculas ni acentos);
+  "leche entera" o "jitomate" siguen siendo texto libre. No hay sinónimos (previsto para la Fase 7).
 - **El orden de los pasillos es fijo**, no el de una tienda concreta.
 
 ## Problemas conocidos resueltos — lote 1 (2026-10-03)
@@ -606,8 +611,8 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request de la Fase 6 y confirmar en CI los 12 tests nuevos del móvil.
-2. Fase 6: pasar lo comprado al inventario.
+1. Abrir el pull request de "pasar lo comprado al inventario" y confirmar en CI el test nuevo del móvil.
+2. Fase 7 — AI / OCR, cuando se decida el proveedor (ver ROADMAP).
 3. Lote 2 de problemas conocidos: refresh token de la web en cookie `HttpOnly` (R8), revocar invitaciones,
    transferir un hogar.
 4. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil

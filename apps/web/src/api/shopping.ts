@@ -53,6 +53,12 @@ export const shoppingApi = {
     ),
   remove: (householdId: string, itemId: string) =>
     api<void>(`/households/${householdId}/shopping-list/items/${itemId}`, { method: 'DELETE' }),
+  /** What was bought goes into the inventory and leaves the list; lines without a quantity stay. */
+  stockBought: (householdId: string, lang: Locale) =>
+    api<{ stocked: number; left: string[] }>(
+      `/households/${householdId}/shopping-list/items/checked/to-inventory?${new URLSearchParams({ lang })}`,
+      { method: 'POST' },
+    ),
   removeChecked: (householdId: string) =>
     api<{ removed: number }>(`/households/${householdId}/shopping-list/items/checked`, { method: 'DELETE' }),
   /** Puts on the list what the meals of the week that contains `week` lack, from today on. */

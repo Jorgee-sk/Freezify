@@ -29,6 +29,16 @@ class ShoppingRepository {
   Future<void> remove(String householdId, String itemId) =>
       _api.delete('/households/$householdId/shopping-list/items/$itemId');
 
+  /// What was bought goes into the inventory and leaves the list; lines without a quantity stay.
+  ///
+  /// Returns how many lines went in, and the names of those that stay.
+  Future<({int stocked, List<String> left})> stockBought(String householdId, String language) async {
+    final json =
+        await _api.post('/households/$householdId/shopping-list/items/checked/to-inventory?lang=$language')
+            as Map<String, dynamic>;
+    return (stocked: json['stocked'] as int, left: [for (final name in json['left'] as List<dynamic>) name as String]);
+  }
+
   Future<void> removeChecked(String householdId) => _api.delete('/households/$householdId/shopping-list/items/checked');
 
   /// Puts on the list what the meals of the week that contains [week] lack, from today on.
