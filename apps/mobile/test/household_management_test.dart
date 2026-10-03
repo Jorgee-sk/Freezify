@@ -64,6 +64,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Drags the settings list until [finder] is built and visible; the list builds lazily.
+  Future<void> scrollTo(WidgetTester tester, Finder finder, {required bool down}) async {
+    await tester.dragUntilVisible(finder, find.byType(ListView), Offset(0, down ? -200 : 200));
+    await tester.pumpAndSettle();
+  }
+
   group('household settings', () {
     testWidgets('lists the codes that still let someone join', (tester) async {
       await openSettings(tester, backendWith());
@@ -129,8 +135,11 @@ void main() {
         },
       });
       await openSettings(tester, backend);
+      // The hint sits at the end of the list, beyond the test screen.
+      await scrollTo(tester, find.textContaining('haz propietario antes a otro miembro'), down: true);
       expect(find.textContaining('haz propietario antes a otro miembro'), findsOneWidget);
 
+      await scrollTo(tester, find.byTooltip('Hacer propietario a Lucía'), down: false);
       await tapVisible(tester, find.byTooltip('Hacer propietario a Lucía'));
       expect(
         find.text(
@@ -143,7 +152,9 @@ void main() {
 
       expect(backend.last('POST /households/h1/owner').body, {'userId': 'u2'});
       // Now a member: leaving is offered instead of deleting.
+      await scrollTo(tester, find.text('Abandonar hogar'), down: true);
       expect(find.text('Abandonar hogar'), findsOneWidget);
+      await scrollTo(tester, find.text('Miembros'), down: false);
       expect(find.byTooltip('Hacer propietario a Lucía'), findsNothing);
     });
   });
