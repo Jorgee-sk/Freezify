@@ -3,6 +3,7 @@ package com.freezify.inventory.web;
 import com.freezify.common.CurrentUser;
 import com.freezify.common.PageResponse;
 import com.freezify.common.Today;
+import com.freezify.food.FoodAliases;
 import com.freezify.food.FoodCatalog;
 import com.freezify.food.FoodCategory;
 import com.freezify.food.Quantity;
@@ -52,11 +53,13 @@ class InventoryController {
 
     private final InventoryService inventory;
     private final FoodCatalog catalog;
+    private final FoodAliases aliases;
     private final Today today;
 
-    InventoryController(InventoryService inventory, FoodCatalog catalog, Today today) {
+    InventoryController(InventoryService inventory, FoodCatalog catalog, FoodAliases aliases, Today today) {
         this.inventory = inventory;
         this.catalog = catalog;
+        this.aliases = aliases;
         this.today = today;
     }
 
@@ -90,7 +93,7 @@ class InventoryController {
     @ResponseStatus(HttpStatus.CREATED)
     ItemView create(
             @AuthenticationPrincipal Jwt jwt, @PathVariable UUID householdId, @Valid @RequestBody ItemRequest request) {
-        return inventory.create(householdId, CurrentUser.id(jwt), toData(request));
+        return inventory.create(householdId, CurrentUser.id(jwt), toData(householdId, request));
     }
 
     @GetMapping("/{itemId}")
@@ -104,7 +107,7 @@ class InventoryController {
             @PathVariable UUID householdId,
             @PathVariable UUID itemId,
             @Valid @RequestBody ItemRequest request) {
-        return inventory.update(householdId, CurrentUser.id(jwt), itemId, toData(request));
+        return inventory.update(householdId, CurrentUser.id(jwt), itemId, toData(householdId, request));
     }
 
     @DeleteMapping("/{itemId}")
@@ -139,18 +142,17 @@ class InventoryController {
         return inventory.discard(householdId, CurrentUser.id(jwt), itemId, quantity, reason);
     }
 
-    private ItemData toData(ItemRequest request) {
+    private ItemData toData(UUID householdId, ItemRequest request) {
+        UUID foodId = request.foodId() != null ? request.foodId() : foodNamed(householdId, request.name());
         FoodCategory category = request.category();
         if (category == null) {
             // A catalog food brings its own category; anything else is filed under "other" until edited.
-            category = request.foodId() == null
+            category = foodId == null
                     ? FoodCategory.OTHER
-                    : catalog.findById(request.foodId())
-                            .map(food -> food.category())
-                            .orElse(FoodCategory.OTHER);
+                    : catalog.findById(foodId).map(food -> food.category()).orElse(FoodCategory.OTHER);
         }
         return new ItemData(
-                request.foodId(),
+                foodId,
                 request.name().strip(),
                 category,
                 new Quantity(request.quantity().amount(), request.quantity().unit()),
@@ -162,6 +164,18 @@ class InventoryController {
                 blankToNull(request.brand()),
                 request.estimatedPrice(),
                 blankToNull(request.notes()));
+    }
+
+    /**
+     * The catalog food a name typed by hand stands for, so that it counts for recipes, dates and the shopping list:
+     * a catalog name ("leche"), or a name the household confirmed when reviewing a receipt ("QUESO MOZZ").
+     * Only exact names: anything else stays as written.
+     */
+    private @Nullable UUID foodNamed(UUID householdId, String name) {
+        return catalog.findByName(name)
+                .map(food -> food.id())
+                .or(() -> aliases.foodFor(householdId, name))
+                .orElse(null);
     }
 
     private static @Nullable Quantity toQuantity(@Nullable QuantityRequest request) {

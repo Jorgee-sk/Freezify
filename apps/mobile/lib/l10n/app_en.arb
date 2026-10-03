@@ -1003,5 +1003,29 @@
   },
   "scanDiscardConfirm": "If you leave now, the review of this receipt is lost.",
   "scanDiscard": "Leave",
-  "errorPurchaseDateInFuture": "The purchase date cannot be later than today."
+  "errorPurchaseDateInFuture": "The purchase date cannot be later than today.",
+  "generatedLink": "Create a recipe with what I have",
+  "generatedLinkHelp": "With AI, only with what is at home and following the household’s diet.",
+  "generatedTitle": "A recipe with what you have",
+  "generatedIntro": "An AI writes a recipe using only the food in your inventory that your household eats, and uses first what expires first.",
+  "generatedServings": "Servings",
+  "generatedCreate": "Create recipe",
+  "generatedAgain": "Create another",
+  "generatedWriting": "Writing the recipe…",
+  "generatedNotice": "Recipe written by AI from your inventory. Check amounts and times, and that meat, fish and eggs are fully cooked.",
+  "generatedOptional": "optional",
+  "errorAiNotConfigured": "This installation has no AI configured.",
+  "errorAiLimitReached": "You have used all of today’s AI requests. Try again tomorrow.",
+  "errorAiUnavailable": "The AI did not give a usable recipe. Try again.",
+  "errorNothingToCookWith": "There is nothing in the inventory, within its date, that your household eats.",
+  "generatedAvailable": "What the AI may use",
+  "generatedMustUseHelp": "Pick up to {count} foods the recipe has to use.",
+  "@generatedMustUseHelp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorFoodNotAvailable": "That food is no longer at home, is past its date or is not eaten in your household."
 }

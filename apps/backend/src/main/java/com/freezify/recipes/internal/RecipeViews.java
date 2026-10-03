@@ -83,4 +83,47 @@ public final class RecipeViews {
             Factors factors,
             List<MatchedIngredient> ingredients,
             @Nullable Long daysSinceCooked) {}
+
+    /**
+     * Food a generated recipe may use.
+     *
+     * @param foodId   the catalog food, when it is one: only those can be required
+     * @param daysLeft days until the earliest date of that food at home, when it has one
+     */
+    public record AvailableFood(
+            @Nullable UUID foodId, String name, BigDecimal amount, Unit unit, @Nullable Long daysLeft, boolean estimated) {}
+
+    /**
+     * A recipe a language model wrote with what the household has. Not part of the catalog and not stored.
+     *
+     * @param ingredients the staples last, and among the rest what the recipe needs before what is optional
+     */
+    public record GeneratedRecipe(
+            String title,
+            String summary,
+            int servings,
+            int minutes,
+            Recipe.Difficulty difficulty,
+            List<GeneratedIngredient> ingredients,
+            List<String> steps) {}
+
+    /**
+     * An ingredient of a generated recipe, with the date of what the household has of it: the real reason it was
+     * used, which the model only saw as a number of days.
+     *
+     * @param foodId    the catalog food, when it is one
+     * @param staple    salt, oil or water, assumed in any kitchen
+     * @param daysLeft  days until the earliest date of that food at home, when it has one
+     * @param estimated whether that date is an estimate
+     */
+    public record GeneratedIngredient(
+            @Nullable UUID foodId,
+            String name,
+            BigDecimal amount,
+            Unit unit,
+            boolean optional,
+            boolean staple,
+            @Nullable Long daysLeft,
+            @Nullable ExpirationPriority priority,
+            boolean estimated) {}
 }

@@ -11,9 +11,85 @@
 | 4 — Recipes | 🟡 Funcionalidad completa (CI en verde en el pull request #12). Antes de usuarios reales hay que revisar los datos de alérgenos |
 | 5 — Smart Planning | 🟡 Funcionalidad completa (CI en verde en el pull request #14). Faltan las preferencias del usuario como factor |
 | 6 — Shopping | ✅ Completada (CI en verde en los pull requests #16 y #17) |
-| 7 — AI / OCR | 🟡 En curso: escaneo de tickets hecho (tests nuevos del móvil pendientes de CI). Faltan la foto de un alimento, la receta generada con IA y el asistente |
+| 7 — AI / OCR | 🟡 En curso: escaneo de tickets (CI en verde en el pull request #19) y receta con IA hechos (tests nuevos del móvil pendientes de CI). Faltan la foto de un alimento y el asistente |
 
 ## Fase 7 — AI / OCR 🟡
+
+### Segunda unidad: "Crea una receta con lo que tengo" (2026-10-03)
+
+#### Completed
+
+- **Receta escrita por un modelo de lenguaje con lo que hay en casa** (`POST
+  /households/{id}/recipes/generated`, con 1 a 8 raciones). Solo existe si el servidor tiene un modelo
+  configurado: `GET /ai` lo dice y web y móvil solo ofrecen el botón entonces.
+- **Al modelo solo le llega lo necesario** (regla P5): los alimentos del inventario que no han pasado su fecha y
+  que el hogar come, con su cantidad y los días que les quedan, más sal, aceite de oliva y agua como básicos;
+  las raciones, el idioma y, como recordatorio, lo que el hogar no come.
+  - Lo que choca con la dieta del hogar **no se envía**. Lo que no es del catálogo (contenido desconocido) solo
+    se envía si el hogar no evita nada.
+  - Varios paquetes del mismo alimento van como uno, con la fecha del que caduca antes. Como mucho 40
+    alimentos, los que caducan antes primero.
+- **La respuesta se comprueba entera y se descarta entera si falla**:
+  - en el módulo de IA: el esquema (título, resumen, minutos, dificultad, pasos), que cada ingrediente sea de
+    la lista, sin repetir, **sin usar más de lo que hay** (con conversión g/kg y ml/l) y que use al menos un
+    alimento de casa que no sea opcional;
+  - en el módulo de recetas: que el título, el resumen y los pasos **no nombren ningún alimento del catálogo
+    que la receta no use** ("añade la nata" sin nata la invalida); "tomate" dentro de "tomate triturado" no
+    cuenta.
+- **El porqué sale del inventario, no del modelo**: cada ingrediente lleva los días que le quedan a lo que hay
+  en casa, y web y móvil marcan los que caducan en 5 días o menos ("Caduca en unos 3 días (estimada)").
+- **Aviso visible** en la receta: escrita por IA; revisar cantidades, tiempos y que carne, pescado y huevos
+  queden bien hechos. No se guarda ni entra en el catálogo.
+- Errores con su motivo: sin IA configurada (503 `AI_NOT_CONFIGURED`), límite del día gastado (429
+  `AI_LIMIT_REACHED`), respuesta inservible (502 `AI_UNAVAILABLE`), nada en casa (409 `NOTHING_TO_COOK_WITH`).
+- Evento de producto `recipe_generated`.
+- **Elegir qué usar**: la pantalla enseña lo que la IA puede usar (lo mismo que se le envía, con cantidades y
+  caducidades; `GET …/recipes/generated/ingredients`) y deja marcar hasta 3 alimentos del catálogo que la
+  receta tiene que usar sí o sí. La respuesta que no los use, o los use como opcionales, se descarta. Pedir uno
+  que no está en casa, ha caducado o no se come en el hogar da 409 `FOOD_NOT_AVAILABLE`.
+- **Alimentos fuera del catálogo**: la comprobación de nombres conoce además una lista escrita a mano de
+  alimentos que no están en el catálogo: los alérgenos de declaración obligatoria en la UE (frutos secos,
+  sésamo, soja, moluscos, crustáceos, pescados, mostaza, apio, altramuz, gluten como pan rallado o cuscús) y
+  carnes ("pollo", "cerdo", "ternera"...). Una receta que los nombra sin usarlos se descarta ("espolvorea
+  almendras" sin almendras). Si la receta usa algo cuyo nombre los contiene ("Pechuga de pollo"), sí puede
+  nombrarlos.
+- **Problema conocido resuelto: el límite diario de llamadas se guarda en la base de datos** (`V11__ai_usage.sql`)
+  en lugar de en memoria: reiniciar el backend ya no lo reinicia y varias instancias comparten la cuenta. Se
+  cuenta con una sola sentencia, así que dos llamadas a la vez no se cuelan; solo se guarda la última semana.
+
+#### Tests
+
+| Qué | Resultado |
+|---|---|
+| Backend `./mvnw verify` | ✅ 359 tests (19 nuevos: validación de la receta del modelo, alimentos que tiene que usar, menciones de alimentos y alérgenos, límite diario en la base de datos, API de la receta y nombres escritos a mano en el inventario); 1 omitido, el que habla con Firebase real |
+| Web lint / test / build | ✅ sin avisos / 174 tests (5 nuevos) / correcto |
+| Mobile `flutter analyze` | ✅ sin avisos |
+| Mobile `flutter test` | 🟡 en la primera CI del pull request falló uno de los 3 nuevos: la fila "Sal" quedaba fuera de la pantalla de test, y una lista que se construye al hacer scroll no la había creado. Corregido el test (hace scroll antes de comprobarla); los **4 nuevos no se han vuelto a ejecutar** (177 en total) |
+| Web contra el backend real y un modelo simulado | ✅ un hogar con calabacín (1 día), pollo (3 días), arroz y jamón, que no come cerdo: al modelo le llegaron calabacín, pollo, arroz y los básicos, sin el jamón y con "pork" como aviso; la receta mostró las cantidades usadas, "Caduca en 1 día" y "Caduca en 3 días", y la sal como opcional y básico; una segunda respuesta que añadía "nata para cocinar" se rechazó con "La IA no ha dado una receta válida" |
+| App móvil (versión web) contra el backend real | ✅ el botón aparece en Recetas con IA configurada; la receta, el aviso, los ingredientes con su caducidad y los pasos se ven bien |
+| Lista de lo que la IA puede usar (web, backend real) | ✅ en un hogar que no come cerdo salieron calabacín ("Caduca en 1 día"), pechuga de pollo y arroz, sin el jamón; marcar el calabacín lo dejó pulsado. La selección de pollo para la receta solo se ha probado en los tests (con IA simulada) |
+| Con **Gemini real** u **Ollama real** | ⏳ **no probado** (no hay clave ni Ollama en esta máquina) |
+
+- **Problema conocido resuelto: el inventario reconoce los nombres escritos a mano.** Al añadir o editar un
+  alimento sin elegirlo del catálogo, si el nombre es exactamente el de un alimento del catálogo ("leche"),
+  una abreviatura compartida ("AOVE") o un nombre que el hogar confirmó al revisar un ticket ("Queso mozz.
+  rallado"), queda asociado a ese alimento (con su categoría si no se eligió otra), y cuenta para recetas,
+  fechas estimadas y la lista de la compra. El nombre se guarda tal como se escribió; cualquier otro nombre
+  sigue siendo texto libre. Los alias pasan a ser una API del módulo `food` (`FoodAliases`), que usan el
+  escaneo y el inventario.
+
+#### Known issues
+
+- **La comprobación de nombres reconoce el catálogo y una lista de alérgenos y carnes, no todo**: un alimento
+  que no está en ninguno de los dos ("trufa") no se detecta; por eso el aviso pide revisar la receta. Y en algún
+  caso raro puede rechazar una receta buena ("nuez moscada" cuenta como nuez). La lista está escrita a mano.
+- **Las instrucciones de cocinado las escribe el modelo**: tiempos y temperaturas no se comprueban, porque no
+  hay una regla fiable que lo haga; lo cubre el aviso visible. No se puede resolver en código.
+- **No se puede guardar ni marcar como cocinada** una receta generada. Es a propósito (D70): marcar como
+  cocinada solo sirve para las recetas del catálogo (variedad del plan y recomendaciones), y guardar recetas
+  de calidad desconocida sería una función nueva que el MVP no pide. (Resuelto: elegir qué alimentos usar.)
+
+### Primera unidad: escanear el ticket de la compra
 
 Primera unidad: **escanear el ticket de la compra**. Todo es gratis por defecto: el OCR corre en el móvil y
 el backend lee el ticket con reglas; un modelo de lenguaje es opcional y puede ser gratuito (capa gratuita de
@@ -68,7 +144,7 @@ Gemini u Ollama en local).
 |---|---|
 | Backend `./mvnw verify` | ✅ 340 tests (33 nuevos: lectura por reglas, asociación al catálogo, validación de la respuesta del modelo, cliente HTTP del proveedor, configuración y API de escaneo); 1 omitido, el que habla con Firebase real |
 | Mobile `flutter analyze` y APK debug con ML Kit | ✅ sin avisos / generado |
-| Mobile `flutter test` | 🟡 los **5 nuevos no se han ejecutado** (173 en total): correrán en la CI del pull request |
+| Mobile `flutter test` | ✅ 173 en CI (pull request #19), con los 5 nuevos |
 | Ticket de ejemplo contra el backend real | ✅ un ticket de Mercadona escrito a mano, de 13 productos: los 11 alimentos asociados bien (también "PECH POLLO", "AOVE" y "ESPAGUETI 500G" → pasta 500 g), el tomate y el plátano con su peso, los yogures "2 x 4X125G" como 1000 g, la fecha leída y detergente y bolsa desmarcados |
 | App móvil (versión web) contra el backend real | ✅ texto pegado → revisión → "QUESO MOZZ RALLADO" corregido a mozzarella buscándolo en el catálogo → 5 productos en el inventario con precio y fechas estimadas; un segundo ticket propuso mozzarella "Como la última vez"; el inventario se refrescó al volver; salir a mitad de revisión pidió confirmación y no añadió nada |
 | Camino del modelo de lenguaje de punta a punta | ✅ con un servidor local que imita la API de OpenAI: el backend envió el esquema y la clave, el número de tarjeta llegó tapado, "PCHG PLL" se convirtió en pechuga de pollo 0,5 kg, y una respuesta con un producto inventado se descartó y se usaron las reglas |
@@ -78,7 +154,6 @@ Gemini u Ollama en local).
 ### Pendiente en esta fase
 
 - Foto de un alimento con candidatos y confianza.
-- "Crea una receta con lo que tengo" con salida validada por esquema.
 - Asistente.
 - Escanear desde la web (hoy solo el móvil; la web podría pegar texto).
 
@@ -90,10 +165,10 @@ Gemini u Ollama en local).
   raras pueden salir mal leídos o vacíos. Sin modelo configurado no hay otra lectura.
 - **Capa gratuita de Gemini**: Google puede usar lo que se le envía para mejorar sus productos. Sirve para
   probar; con usuarios reales hace falta la capa de pago u Ollama (ver HOW_TO_USE 2.5).
-- **El límite diario de llamadas vive en memoria**: se reinicia con el backend y no se comparte entre
-  instancias.
+- (Resuelto en la segunda unidad: el límite diario de llamadas se guarda en la base de datos.)
 - **Las abreviaturas son pocas y escritas a mano**; se irán completando con lo que aprenden los hogares.
-- **El formulario manual del inventario no usa los alias** del escaneo.
+- (Resuelto: el alta y la edición a mano del inventario reconocen los nombres del catálogo y los alias; ver
+  la segunda unidad.)
 - **Cada línea confirmada se recuerda**, también las que ya se reconocían por su nombre: la tabla crece con los
   textos distintos que compra cada hogar (son pocos).
 
@@ -698,7 +773,7 @@ fuente de datos oficial, un servicio de correo) o una decisión de producto:
   peticiones se solapan de verdad sobre el mismo alimento, la segunda debería recibir 409
   `CONCURRENT_MODIFICATION` (columna `version`), que web y móvil explican; ese caso **no tiene test**.
 - **El catálogo no tiene sinónimos** ("jitomate"); desde la Fase 7 el escaneo de tickets entiende abreviaturas
-  y aprende de cada hogar, pero el formulario manual no los usa.
+  y aprende de cada hogar, y el alta a mano en el inventario reconoce esos mismos nombres.
 - **Los eventos de producto no se borran con la cuenta** (no hay borrado de cuenta todavía).
 
 ## Fase 1 — Foundation ✅
@@ -736,9 +811,9 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request del escaneo de tickets y confirmar en CI los 5 tests nuevos del móvil.
-2. Probar el escaneo con la cámara en un móvil Android y, si se quiere IA, con una clave gratuita de Gemini
+1. Abrir el pull request de la receta con IA y confirmar en CI los 3 tests nuevos del móvil.
+2. Probar el escaneo con la cámara en un móvil Android y la IA con una clave gratuita de Gemini
    (HOW_TO_USE 2.5).
-3. Fase 7, siguientes unidades: foto de un alimento y "crea una receta con lo que tengo".
+3. Fase 7, siguientes unidades: foto de un alimento, escanear desde la web y el asistente.
 4. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
    con una fuente autorizada antes de abrir a usuarios reales.

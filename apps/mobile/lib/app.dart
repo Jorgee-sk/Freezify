@@ -14,6 +14,7 @@ import 'features/notifications/notifications_screen.dart';
 import 'features/notifications/push_controller.dart';
 import 'features/plan/meal_plan_screen.dart';
 import 'features/recipes/diet_screen.dart';
+import 'features/recipes/generated_recipe_screen.dart';
 import 'features/recipes/recipe_detail_screen.dart';
 import 'features/recipes/recipes_screen.dart';
 import 'features/scanning/scan_receipt_screen.dart';
@@ -84,6 +85,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'recipes',
                 builder: (_, state) => RecipesScreen(householdId: state.pathParameters['id']!),
                 routes: [
+                  GoRoute(
+                    path: 'generate',
+                    builder: (_, state) => GeneratedRecipeScreen(householdId: state.pathParameters['id']!),
+                  ),
                   GoRoute(
                     path: ':recipeId',
                     builder: (_, state) => RecipeDetailScreen(

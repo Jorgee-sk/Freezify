@@ -1,5 +1,6 @@
 package com.freezify.ai;
 
+import com.freezify.food.Quantity;
 import com.freezify.food.Unit;
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,6 +28,13 @@ public interface AiService {
     Optional<List<ReceiptLine>> readReceipt(String text, UUID userId);
 
     /**
+     * Writes a recipe that only uses the given ingredients, in amounts no larger than the ones given.
+     *
+     * @param userId who asked: each person has a daily allowance of calls
+     */
+    Answer<WrittenRecipe> writeRecipe(RecipeRequest request, UUID userId);
+
+    /**
      * A purchased product as the model read it. Every line quotes the text it comes from.
      *
      * @param text   the receipt text of the product, as printed
@@ -36,4 +44,60 @@ public interface AiService {
      */
     record ReceiptLine(
             String text, String name, @Nullable BigDecimal amount, @Nullable Unit unit, @Nullable BigDecimal price) {}
+
+    /** How a call to the model went. Only {@code OK} carries a value. */
+    enum Outcome {
+        OK,
+        /** No model is configured. */
+        NOT_CONFIGURED,
+        /** The person used up today's calls. */
+        LIMIT_REACHED,
+        /** The model could not be reached, or its answer did not pass validation. */
+        FAILED
+    }
+
+    record Answer<T>(Outcome outcome, @Nullable T value) {
+
+        public static <T> Answer<T> ok(T value) {
+            return new Answer<>(Outcome.OK, value);
+        }
+
+        public static <T> Answer<T> not(Outcome outcome) {
+            return new Answer<>(outcome, null);
+        }
+    }
+
+    /**
+     * @param language    {@code es} or {@code en}: the language of the recipe
+     * @param ingredients everything the recipe may use; nothing else
+     * @param avoided     what the household does not eat, in plain words, as a reminder for the model
+     * @param mustUse     keys of the ingredients the recipe has to use, not as optional
+     */
+    record RecipeRequest(
+            String language, int servings, List<Ingredient> ingredients, List<String> avoided, List<String> mustUse) {}
+
+    /**
+     * @param key      how the model refers to it
+     * @param quantity how much there is; the recipe may not use more
+     * @param daysLeft days until its date, when it has one; the fewer, the more it should be used
+     * @param staple   salt, oil, water: assumed to be in any kitchen, in any amount
+     */
+    record Ingredient(String key, String name, Quantity quantity, @Nullable Long daysLeft, boolean staple) {}
+
+    enum Difficulty {
+        EASY,
+        MEDIUM,
+        HARD
+    }
+
+    record WrittenRecipe(
+            String title,
+            String summary,
+            int minutes,
+            Difficulty difficulty,
+            List<UsedIngredient> ingredients,
+            List<String> steps) {}
+
+    /** @param key one of the keys of the request */
+    record UsedIngredient(String key, Quantity quantity, boolean optional) {}
 }

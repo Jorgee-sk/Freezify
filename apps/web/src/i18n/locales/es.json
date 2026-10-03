@@ -94,7 +94,13 @@
     "MEAL_NOT_FOUND": "Esa comida ya no está en el plan.",
     "WEEK_IN_THE_PAST": "No se puede planificar una semana que ya ha pasado.",
     "CONCURRENT_MODIFICATION": "Otra persona ha cambiado esto a la vez. Vuelve a cargar y repite el cambio.",
-    "SHOPPING_ITEM_NOT_FOUND": "Eso ya no está en la lista."
+    "SHOPPING_ITEM_NOT_FOUND": "Eso ya no está en la lista.",
+    "AI_NOT_CONFIGURED": "Esta instalación no tiene IA configurada.",
+    "AI_LIMIT_REACHED": "Has usado todas las peticiones de IA de hoy. Vuelve a intentarlo mañana.",
+    "AI_UNAVAILABLE": "La IA no ha dado una receta válida. Inténtalo de nuevo.",
+    "NOTHING_TO_COOK_WITH": "No hay en el inventario nada sin caducar que se coma en tu hogar.",
+    "PURCHASE_DATE_IN_FUTURE": "La fecha de compra no puede ser posterior a hoy.",
+    "FOOD_NOT_AVAILABLE": "Ese alimento ya no está en casa, ha pasado su fecha o no se come en tu hogar."
   },
   "inventory": {
     "title": "Inventario",
@@ -472,5 +478,19 @@
     "stocked_other": "Se han añadido {{count}} alimentos al inventario.",
     "stockedNone": "No se ha añadido nada al inventario.",
     "leftWithoutAmount": "Siguen en la lista porque no dicen cuánto se compró: {{names}}. Indica la cantidad y vuelve a pasarlos."
+  },
+  "generated": {
+    "link": "Crear una receta con lo que tengo",
+    "linkHelp": "Con IA, solo con lo que hay en casa y respetando la dieta del hogar.",
+    "title": "Receta con lo que tienes",
+    "intro": "Una IA escribe una receta solo con los alimentos de tu inventario que se comen en tu hogar, y usa antes los que caducan antes.",
+    "servings": "Raciones",
+    "create": "Crear receta",
+    "again": "Crear otra",
+    "writing": "Escribiendo la receta…",
+    "notice": "Receta escrita por IA a partir de tu inventario. Revisa cantidades y tiempos, y que la carne, el pescado y los huevos queden bien hechos.",
+    "optional": "opcional",
+    "available": "Lo que la IA puede usar",
+    "mustUseHelp": "Marca hasta {{count}} alimentos que la receta tenga que usar sí o sí."
   }
 }

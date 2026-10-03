@@ -64,14 +64,14 @@ tipos internos de otro.
 | `users` | Cuenta de usuario y perfil | common | 1 |
 | `auth` | Registro, login, tokens, configuración de seguridad | users, common | 1 |
 | `households` | Hogares, miembros, invitaciones, **control de acceso por hogar** | users, common | 1 |
-| `food` | Catálogo canónico de alimentos, categorías, unidades y cantidades | common | 2 ✔ |
+| `food` | Catálogo canónico de alimentos, categorías, unidades y cantidades; alias (abreviaturas y nombres de cada hogar) | common | 2 ✔ |
 | `inventory` | Alimentos del hogar, consumo y descarte | households, food | 2 ✔ |
 | `expiration` | Niveles de prioridad y estimación de fechas por reglas de vida útil | food | 3 ✔ |
 | `notifications` | Avisos de caducidad dentro de la app, preferencias, dispositivos y envío push por FCM | households, inventory, expiration, food, users | 3 ✔ |
-| `recipes` | Catálogo de recetas, recomendador y registro de lo cocinado | food, inventory, expiration, households | 4 ✔ |
+| `recipes` | Catálogo de recetas, recomendador, registro de lo cocinado y receta escrita por IA con lo que hay en casa | food, inventory, expiration, households, ai | 4 ✔ / 7 ✔ |
 | `mealplanning` | Plan semanal, simulación de la despensa y generador | recipes, inventory, food, expiration, households | 5 ✔ |
 | `shopping` | Lista de la compra del hogar, llenada a partir del plan; lo comprado pasa al inventario | mealplanning, inventory, food, households | 6 ✔ |
-| `ai` | `AiService` (casos de uso de IA) y `AiProvider` (sin modelo o API compatible con OpenAI) | food, common | 7 ✔ |
+| `ai` | `AiService` (casos de uso de IA: leer un ticket, escribir una receta), `AiProvider` (sin modelo o API compatible con OpenAI) y límite diario por persona | food, common | 7 ✔ |
 | `scanning` | Escaneo de tickets: lectura por reglas o con IA, asociación al catálogo, alias aprendidos por hogar, confirmación al inventario | ai, food, inventory, households | 7 ✔ |
 | `integrations` | `ProductCatalogProvider` y fuentes externas | food | 7+ |
 | `analytics` | Eventos de producto (hecho) y estadísticas (Fase 8) | escucha eventos de `users`, `inventory`, `notifications`, `recipes`, `mealplanning`, `shopping` y `scanning` | 2 ✔ / 8 |
@@ -168,6 +168,11 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D66 | Las **reglas** leen siempre el ticket; el modelo es opcional y su respuesta se valida y se **descarta entera** si falla | La app funciona sin IA y sin coste; un modelo que se equivoca o inventa no llega a la revisión |
 | D67 | Un único proveedor **compatible con la API de OpenAI** (Gemini, Ollama, OpenAI) sin SDK, elegido por variables de entorno | Cambiar de proveedor, o pasar de la capa gratuita a uno local, es configuración y no código |
 | D68 | **Alias por hogar** aprendidos al confirmar, sobre alias compartidos escritos a mano (`receipt_aliases`) | Cada hogar compra en sus tiendas: lo que corrige una vez se reconoce después (R1) |
+| D69 | La receta con IA **solo recibe lo que hay en casa y el hogar come**, y su respuesta se valida dos veces: contra lo enviado (módulo `ai`) y contra el catálogo (módulo `recipes`) | Lo que el hogar no come nunca llega al modelo; una receta que usa o nombra lo que no hay no llega a nadie (P5) |
+| D70 | La receta generada **no se guarda** y su porqué se calcula con las fechas del inventario | Sin recetas de calidad desconocida en el catálogo; la explicación no la inventa el modelo (P3) |
+| D71 | El **límite diario de IA se cuenta en la base de datos** con un `insert … on conflict … returning` | Sobrevive a reinicios, vale con varias instancias y dos llamadas a la vez no se cuelan |
+| D72 | Los **alias de alimentos son del módulo `food`** (`FoodAliases`), aunque los aprenda el escaneo | El inventario los usa para reconocer nombres escritos a mano sin depender del escaneo (que depende del inventario) |
+| D73 | Las recetas generadas se comprueban también contra una **lista escrita a mano de alérgenos y carnes fuera del catálogo** | Lo que más daño haría que el modelo añadiera por su cuenta es lo que alguien no puede comer |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -192,7 +197,7 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 
 Implementado (`V1__foundation.sql`, `V2__inventory.sql`, `V3__shelf_life.sql`, `V4__notifications.sql`,
 `V5__device_tokens.sql`, `V6__recipes.sql`, `V7__dietary_restrictions.sql`, `V8__meal_plan.sql`,
-`V9__shopping_list.sql`, `V10__receipt_aliases.sql`):
+`V9__shopping_list.sql`, `V10__receipt_aliases.sql`, `V11__ai_usage.sql`):
 
 ```text
 users ──< refresh_tokens
@@ -212,6 +217,7 @@ households ── household_diets
 households ──< meal_plan_entries >── recipes
 households ──< shopping_list_items >── foods (opcional)
 households (opcional) ──< receipt_aliases >── foods
+users ──< ai_usage
 ```
 
 Entidades previstas por fase:
@@ -300,6 +306,9 @@ Fase 4:
 | POST | `/households/{id}/shopping-list/from-plan` | Añadir lo que les falta a las comidas de una semana, de hoy en adelante |
 | POST | `/households/{id}/scans/receipt?lang=` | Leer el texto de un ticket en un borrador para revisar; no guarda nada |
 | POST | `/households/{id}/scans/receipt/confirm` | Poner en el inventario las líneas revisadas y recordar el alimento elegido para cada texto |
+| GET | `/ai` | Si el servidor tiene un modelo de lenguaje |
+| GET | `/households/{id}/recipes/generated/ingredients?lang=` | Lo que una receta generada puede usar: lo que se le daría al modelo, sin los básicos |
+| POST | `/households/{id}/recipes/generated?lang=` | Receta escrita por IA con lo que hay en casa y el hogar come (1–8 raciones; `use`: hasta 3 alimentos que tiene que usar); no se guarda |
 
 Convenciones: DTOs como `record`, Bean Validation, fechas ISO-8601 en UTC, paginación `page`/`size`/`sort`
 en las colecciones que puedan crecer (a partir de Fase 2).
@@ -327,6 +336,10 @@ ScanController → ReceiptScanService ─┬─ ReceiptParser (reglas, siempre)
                                      │                                       └─ OpenAiCompatibleProvider
                                      │                                           (Gemini, Ollama, OpenAI…)
                                      └─ FoodMatcher (catálogo + receipt_aliases)
+
+RecipeController → RecipeGenerator ─┬─ inventario filtrado por la dieta del hogar
+                                    ├─ AiService.writeRecipe → AiProvider (la misma cadena)
+                                    └─ FoodMentions (la receta no nombra alimentos que no usa)
 ```
 
 - Los controladores nunca llaman a un modelo; `AiService` expone casos de uso concretos, nunca un "chat".
@@ -334,7 +347,8 @@ ScanController → ReceiptScanService ─┬─ ReceiptParser (reglas, siempre)
   no está en la entrada, se descarta entera y se usa la vía sin IA. En los tests el proveedor se sustituye.
 - El proveedor se elige por variables de entorno (`FREEZIFY_AI_*`); sin ellas no hay modelo y todo funciona.
 - Al modelo solo le llega lo necesario: el texto del ticket con los números largos tapados.
-- Límite diario de llamadas por persona y tiempo máximo por llamada, para no agotar cuotas gratuitas.
+- Límite diario de llamadas por persona (en la tabla `ai_usage`) y tiempo máximo por llamada, para no agotar
+  cuotas gratuitas.
 - No hay caché por hash: el mismo ticket rara vez se lee dos veces. Se añadirá si los datos de uso lo piden.
 - OCR: ML Kit en el dispositivo; el modelo solo estructura texto (D64).
 

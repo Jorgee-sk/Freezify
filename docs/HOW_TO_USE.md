@@ -179,8 +179,12 @@ Instala Ollama, descarga un modelo que admita salida estructurada (por ejemplo `
 arranca el backend con `FREEZIFY_AI_PROVIDER=openai-compatible`, `FREEZIFY_AI_BASE_URL=http://localhost:11434/v1`
 y `FREEZIFY_AI_MODEL=qwen2.5:7b`, sin clave.
 
-Cada persona puede provocar 30 llamadas al día (`FREEZIFY_AI_DAILY_CALLS_PER_USER`). Si el modelo falla,
-tarda más de 12 s o responde algo que no valida, el ticket se lee con las reglas.
+Con un modelo configurado aparece también **"Crear una receta con lo que tengo"** en Recetas, en la web y en
+el móvil: el modelo solo recibe los alimentos de tu inventario que tu hogar come.
+
+Cada persona puede provocar 30 llamadas al día entre las dos cosas (`FREEZIFY_AI_DAILY_CALLS_PER_USER`; la
+cuenta está en la tabla `ai_usage`). Si el modelo falla, tarda más de 12 s o responde algo que no valida, el
+ticket se lee con las reglas y la receta se puede volver a pedir.
 
 > 🟡 Esto solo se ha probado contra un servidor que imita la API de OpenAI, no contra Gemini ni Ollama reales.
 
@@ -266,6 +270,7 @@ psql -h localhost -p 54329 -U postgres postgres
 | `food_outcomes` | Cada consumo o descarte, con su valor estimado |
 | `product_events` | Eventos de producto para métricas |
 | `receipt_aliases` | Cómo llaman los tickets a cada alimento: abreviaturas compartidas y lo que aprende cada hogar al revisar sus tickets |
+| `ai_usage` | Cuántas llamadas al modelo de lenguaje ha hecho cada persona cada día (última semana) |
 | `flyway_schema_history` | Qué migraciones se han aplicado |
 
 Consultas útiles:

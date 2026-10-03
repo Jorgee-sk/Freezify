@@ -2323,6 +2323,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The purchase date cannot be later than today.'**
   String get errorPurchaseDateInFuture;
+
+  /// No description provided for @generatedLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a recipe with what I have'**
+  String get generatedLink;
+
+  /// No description provided for @generatedLinkHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'With AI, only with what is at home and following the household’s diet.'**
+  String get generatedLinkHelp;
+
+  /// No description provided for @generatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A recipe with what you have'**
+  String get generatedTitle;
+
+  /// No description provided for @generatedIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'An AI writes a recipe using only the food in your inventory that your household eats, and uses first what expires first.'**
+  String get generatedIntro;
+
+  /// No description provided for @generatedServings.
+  ///
+  /// In en, this message translates to:
+  /// **'Servings'**
+  String get generatedServings;
+
+  /// No description provided for @generatedCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create recipe'**
+  String get generatedCreate;
+
+  /// No description provided for @generatedAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Create another'**
+  String get generatedAgain;
+
+  /// No description provided for @generatedWriting.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing the recipe…'**
+  String get generatedWriting;
+
+  /// No description provided for @generatedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe written by AI from your inventory. Check amounts and times, and that meat, fish and eggs are fully cooked.'**
+  String get generatedNotice;
+
+  /// No description provided for @generatedOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'optional'**
+  String get generatedOptional;
+
+  /// No description provided for @errorAiNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'This installation has no AI configured.'**
+  String get errorAiNotConfigured;
+
+  /// No description provided for @errorAiLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You have used all of today’s AI requests. Try again tomorrow.'**
+  String get errorAiLimitReached;
+
+  /// No description provided for @errorAiUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI did not give a usable recipe. Try again.'**
+  String get errorAiUnavailable;
+
+  /// No description provided for @errorNothingToCookWith.
+  ///
+  /// In en, this message translates to:
+  /// **'There is nothing in the inventory, within its date, that your household eats.'**
+  String get errorNothingToCookWith;
+
+  /// No description provided for @generatedAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'What the AI may use'**
+  String get generatedAvailable;
+
+  /// No description provided for @generatedMustUseHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up to {count} foods the recipe has to use.'**
+  String generatedMustUseHelp(int count);
+
+  /// No description provided for @errorFoodNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'That food is no longer at home, is past its date or is not eaten in your household.'**
+  String get errorFoodNotAvailable;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

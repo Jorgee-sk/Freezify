@@ -15,6 +15,7 @@ import { MealPlanPage } from './pages/MealPlanPage'
 import { NotificationPreferencesPage } from './pages/NotificationPreferencesPage'
 import { NotificationsPage } from './pages/NotificationsPage'
 import { RecipeDetailPage } from './pages/RecipeDetailPage'
+import { GeneratedRecipePage } from './pages/GeneratedRecipePage'
 import { RecipesPage } from './pages/RecipesPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { ShoppingListPage } from './pages/ShoppingListPage'
@@ -61,6 +62,7 @@ export function AppRoutes() {
           <Route path="/households/:householdId/diet" element={<DietPage />} />
           <Route path="/households/:householdId/plan" element={<MealPlanPage />} />
           <Route path="/households/:householdId/shopping" element={<ShoppingListPage />} />
+          <Route path="/households/:householdId/recipes/generate" element={<GeneratedRecipePage />} />
           <Route path="/households/:householdId/recipes/:recipeId" element={<RecipeDetailPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/notifications/preferences" element={<NotificationPreferencesPage />} />

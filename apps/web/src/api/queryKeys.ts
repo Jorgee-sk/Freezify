@@ -14,6 +14,9 @@ export const queryKeys = {
   recipes: ['recipes'] as const,
   recipeList: (householdId: string, filter: RecipeFilter, lang: string) =>
     ['recipes', 'list', householdId, lang, filter] as const,
+  ai: ['ai'] as const,
+  generatedIngredients: (householdId: string, lang: string) =>
+    ['recipes', 'generated-ingredients', householdId, lang] as const,
   diet: (householdId: string) => ['diet', householdId] as const,
   recipe: (id: string, lang: string) => ['recipes', 'detail', lang, id] as const,
   recommendations: (householdId: string, lang: string) => ['recipes', 'recommendations', householdId, lang] as const,

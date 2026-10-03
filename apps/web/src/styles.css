@@ -321,6 +321,7 @@ a:focus-visible {
 
 .button-row {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -369,7 +370,12 @@ summary {
   cursor: pointer;
 }
 
-.chip:hover,
+.chip:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.chip:hover:not(:disabled),
 .chip[aria-pressed='true'] {
   background: var(--green-050);
   border-color: var(--green-600);

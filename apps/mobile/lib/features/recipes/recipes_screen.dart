@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/errors.dart';
 import '../../l10n/app_localizations.dart';
 import 'recipe_models.dart';
+import 'generated_recipe_screen.dart';
 import 'recipe_repository.dart';
 import 'recipe_wording.dart';
 
@@ -85,6 +86,18 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
                   ),
                 ],
               ),
+            // Only offered where the server has a language model.
+            if (ref.watch(aiEnabledProvider).value ?? false) ...[
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.auto_awesome_outlined),
+                  title: Text(l10n.generatedLink),
+                  subtitle: Text(l10n.generatedLinkHelp),
+                  onTap: () => context.push('/households/${widget.householdId}/recipes/generate'),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             Text(l10n.recommendedTitle, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             ...recommendations.when(

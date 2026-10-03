@@ -10,4 +10,7 @@ public final class RecipeEvents {
     public record RecipeViewed(UUID userId, UUID recipeId) {}
 
     public record RecipeCooked(UUID userId, UUID householdId, UUID recipeId) {}
+
+    /** A language model wrote a recipe for the household with what it has. */
+    public record RecipeGenerated(UUID userId, UUID householdId) {}
 }
