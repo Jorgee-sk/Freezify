@@ -43,9 +43,10 @@
 | Qué | Resultado |
 |---|---|
 | Backend `./mvnw verify` | ✅ 367 tests (8 nuevos: validación de los candidatos, envío de la imagen al proveedor y API de la foto); 1 omitido, el que habla con Firebase real |
+| Primera CI del pull request (2026-10-04) | ❌ falló `backend`, por un test antiguo del inventario y no por la foto: usaba fechas fijas de la semana en que se escribió (leche "abierta el 30/09/2026") y, pasados unos días, esa leche ya contaba como caducada. Se reprodujo en local. Ahora `InventoryApiTests` desplaza todas sus fechas escritas a mano tantos días como han pasado desde el 2 de octubre, así significan lo mismo cualquier día; el resto de tests de API ya usaban fechas relativas a hoy. `web` y `mobile` pasaron, con los 4 tests nuevos del móvil (181) |
 | Web lint / test / build | ✅ sin avisos / 178 tests (4 nuevos) / correcto |
 | Mobile `flutter analyze` | ✅ sin avisos |
-| Mobile `flutter test` | 🟡 los **4 nuevos no se han ejecutado** (181 en total): correrán en la CI del pull request |
+| Mobile `flutter test` | ✅ 181 en CI, con los 4 nuevos |
 | API contra el backend real y un modelo simulado | ✅ un JPEG de 20 kB devolvió "Tomate 81 % (verduras, nevera)", "Pimiento rojo 12 %" y "Caqui 7 % (no es del catálogo)"; un texto con extensión .jpg dio 415 y un JPEG de 7 MB, 413 (el límite de Spring, que los tests no pueden ejercitar); solo el primero llegó al modelo, como imagen en una data URL |
 | Web contra el backend real | ✅ una foto de 3000×2000 se redujo antes de enviarla, salieron los tres candidatos con su porcentaje y elegir "Tomate" rellenó el alimento y la ubicación |
 | App móvil con la cámara | ⏳ **no probado**: no hay móvil ni emulador; la versión web no se ha probado con una foto |

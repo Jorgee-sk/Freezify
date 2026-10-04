@@ -16,9 +16,11 @@ import com.freezify.testsupport.ApiTestSupport;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.ResultActions;
 
 class InventoryApiTests extends ApiTestSupport {
+
+    private static final LocalDate WRITTEN_ON = LocalDate.of(2026, 10, 2);
+    private static final Pattern DATE = Pattern.compile("\\b\\d{4}-\\d{2}-\\d{2}\\b");
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -41,7 +46,7 @@ class InventoryApiTests extends ApiTestSupport {
 
     @Test
     void addsAFoodWithTheMinimumInformation() throws Exception {
-        add(jorge, """
+        addDated(jorge, """
                 {"name": "  Tomates  ", "quantity": {"amount": 6, "unit": "UNIT"}, "storageLocation": "REFRIGERATOR",
                  "expirationDate": "2026-10-05"}
                 """)
@@ -53,7 +58,7 @@ class InventoryApiTests extends ApiTestSupport {
                 .andExpect(jsonPath("$.storageLocation").value("REFRIGERATOR"))
                 .andExpect(jsonPath("$.status").value("AVAILABLE"))
                 .andExpect(jsonPath("$.category").value("OTHER"))
-                .andExpect(jsonPath("$.expirationDate").value("2026-10-05"))
+                .andExpect(jsonPath("$.expirationDate").value(relative("2026-10-05")))
                 .andExpect(jsonPath("$.expirationSource").value("USER"))
                 .andExpect(jsonPath("$.purchaseDate")
                         .value(LocalDate.now(ZoneId.of("Europe/Madrid")).toString()));
@@ -73,7 +78,7 @@ class InventoryApiTests extends ApiTestSupport {
     void aCatalogFoodBringsItsCategory() throws Exception {
         String milkId = catalogFoodId("leche");
 
-        add(jorge, """
+        addDated(jorge, """
                 {"foodId": "%s", "name": "Leche semidesnatada", "quantity": {"amount": 750, "unit": "MILLILITER"},
                  "storageLocation": "REFRIGERATOR", "brand": "Hacendado", "estimatedPrice": 0.95,
                  "barcode": "8480000123456", "notes": " ", "purchaseDate": "2026-09-28", "openedDate": "2026-09-30"}
@@ -84,7 +89,7 @@ class InventoryApiTests extends ApiTestSupport {
                 .andExpect(jsonPath("$.status").value("OPENED"))
                 .andExpect(jsonPath("$.brand").value("Hacendado"))
                 .andExpect(jsonPath("$.estimatedPrice").value(0.95))
-                .andExpect(jsonPath("$.purchaseDate").value("2026-09-28"))
+                .andExpect(jsonPath("$.purchaseDate").value(relative("2026-09-28")))
                 .andExpect(jsonPath("$.notes", nullValue()));
     }
 
@@ -115,10 +120,10 @@ class InventoryApiTests extends ApiTestSupport {
 
     @Test
     void listsWhatExpiresFirstAndItemsWithoutDateLast() throws Exception {
-        addItem(jorge, "Yogur", "4", "UNIT", "REFRIGERATOR", "2026-10-09");
+        addItem(jorge, "Yogur", "4", "UNIT", "REFRIGERATOR", relative("2026-10-09"));
         addItem(jorge, "Arroz", "1", "KILOGRAM", "PANTRY", null);
-        addItem(jorge, "Pollo", "500", "GRAM", "REFRIGERATOR", "2026-10-03");
-        addItem(jorge, "Brócoli", "1", "UNIT", "REFRIGERATOR", "2026-10-03");
+        addItem(jorge, "Pollo", "500", "GRAM", "REFRIGERATOR", relative("2026-10-03"));
+        addItem(jorge, "Brócoli", "1", "UNIT", "REFRIGERATOR", relative("2026-10-03"));
 
         list(jorge, "")
                 .andExpect(status().isOk())
@@ -169,7 +174,7 @@ class InventoryApiTests extends ApiTestSupport {
         TestUser partner = register("Lucía");
         TestUser stranger = register("Stranger");
         join(partner, invite(jorge, householdId)).andExpect(status().isOk());
-        String itemId = addItem(jorge, "Leche", "2", "UNIT", "REFRIGERATOR", "2026-10-04");
+        String itemId = addItem(jorge, "Leche", "2", "UNIT", "REFRIGERATOR", relative("2026-10-04"));
         String base = "/api/v1/households/" + householdId + "/inventory";
         String itemJson = """
                 {"name": "Hacked", "quantity": {"amount": 1, "unit": "UNIT"}, "storageLocation": "PANTRY"}
@@ -205,12 +210,12 @@ class InventoryApiTests extends ApiTestSupport {
 
     @Test
     void updatesAnItem() throws Exception {
-        String itemId = addItem(jorge, "Tomates", "6", "UNIT", "REFRIGERATOR", "2026-10-05");
+        String itemId = addItem(jorge, "Tomates", "6", "UNIT", "REFRIGERATOR", relative("2026-10-05"));
 
-        mvc.perform(as(jorge, json(put(item(itemId)), """
+        mvc.perform(as(jorge, json(put(item(itemId)), relative("""
                         {"name": "Tomates pera", "category": "VEGETABLES", "quantity": {"amount": 1.5, "unit": "KILOGRAM"},
                          "storageLocation": "PANTRY", "purchaseDate": "2026-09-30"}
-                        """)))
+                        """))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Tomates pera"))
                 .andExpect(jsonPath("$.category").value("VEGETABLES"))
@@ -219,7 +224,7 @@ class InventoryApiTests extends ApiTestSupport {
                 .andExpect(jsonPath("$.storageLocation").value("PANTRY"))
                 // The user's date was removed, so the date is now an estimate: 5 days from the purchase.
                 .andExpect(jsonPath("$.userExpirationDate", nullValue()))
-                .andExpect(jsonPath("$.expirationDate").value("2026-10-05"))
+                .andExpect(jsonPath("$.expirationDate").value(relative("2026-10-05")))
                 .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"));
 
         list(jorge, "?q=pera").andExpect(jsonPath("$.items", hasSize(1)));
@@ -483,12 +488,12 @@ class InventoryApiTests extends ApiTestSupport {
 
     @Test
     void freshFoodWithoutADateGetsAnEstimateLabelledAsSuch() throws Exception {
-        add(jorge, """
+        addDated(jorge, """
                 {"foodId": "%s", "name": "Pechuga de pollo", "quantity": {"amount": 500, "unit": "GRAM"},
                  "storageLocation": "REFRIGERATOR", "purchaseDate": "2026-10-01"}
                 """.formatted(catalogFoodId("pechuga")))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.expirationDate").value("2026-10-03"))
+                .andExpect(jsonPath("$.expirationDate").value(relative("2026-10-03")))
                 .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"))
                 .andExpect(jsonPath("$.userExpirationDate", nullValue()));
     }
@@ -496,10 +501,10 @@ class InventoryApiTests extends ApiTestSupport {
     @Test
     void theEstimateDependsOnWhereTheFoodIsKept() throws Exception {
         String chicken = catalogFoodId("pechuga");
-        String body = """
+        String body = relative("""
                 {"foodId": "%s", "name": "Pechuga de pollo", "quantity": {"amount": 500, "unit": "GRAM"},
                  "storageLocation": "%s", "purchaseDate": "2026-10-01"}
-                """;
+                """);
         String itemId = JsonPath.read(
                 add(jorge, body.formatted(chicken, "REFRIGERATOR"))
                         .andReturn()
@@ -509,7 +514,7 @@ class InventoryApiTests extends ApiTestSupport {
 
         // Moved to the freezer: three months instead of two days.
         mvc.perform(as(jorge, json(put(item(itemId)), body.formatted(chicken, "FREEZER"))))
-                .andExpect(jsonPath("$.expirationDate").value("2026-12-30"))
+                .andExpect(jsonPath("$.expirationDate").value(relative("2026-12-30")))
                 .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"));
 
         // Nobody knows how long chicken keeps in a pantry: no rule, so no date rather than an invented one.
@@ -521,30 +526,30 @@ class InventoryApiTests extends ApiTestSupport {
     @Test
     void aFoodsOwnRuleWinsOverTheRuleOfItsCategory() throws Exception {
         // Vegetables keep 7 days in the fridge, but carrots keep 21.
-        add(jorge, """
+        addDated(jorge, """
                 {"foodId": "%s", "name": "Zanahoria", "quantity": {"amount": 6, "unit": "UNIT"},
                  "storageLocation": "REFRIGERATOR", "purchaseDate": "2026-10-01"}
                 """.formatted(catalogFoodId("zanahoria")))
-                .andExpect(jsonPath("$.expirationDate").value("2026-10-22"));
+                .andExpect(jsonPath("$.expirationDate").value(relative("2026-10-22")));
 
         // Not from the catalog, but filed as a vegetable by the user: the category rule applies.
-        add(jorge, """
+        addDated(jorge, """
                 {"name": "Pak choi", "category": "VEGETABLES", "quantity": {"amount": 1, "unit": "UNIT"},
                  "storageLocation": "REFRIGERATOR", "purchaseDate": "2026-10-01"}
                 """)
-                .andExpect(jsonPath("$.expirationDate").value("2026-10-08"))
+                .andExpect(jsonPath("$.expirationDate").value(relative("2026-10-08")))
                 .andExpect(jsonPath("$.expirationSource").value("ESTIMATED"));
     }
 
     @Test
     void theDateTheUserGivesIsNeverReplacedByAnEstimate() throws Exception {
-        add(jorge, """
+        addDated(jorge, """
                 {"foodId": "%s", "name": "Pechuga de pollo", "quantity": {"amount": 500, "unit": "GRAM"},
                  "storageLocation": "REFRIGERATOR", "purchaseDate": "2026-10-01", "expirationDate": "2026-10-09"}
                 """.formatted(catalogFoodId("pechuga")))
-                .andExpect(jsonPath("$.expirationDate").value("2026-10-09"))
+                .andExpect(jsonPath("$.expirationDate").value(relative("2026-10-09")))
                 .andExpect(jsonPath("$.expirationSource").value("USER"))
-                .andExpect(jsonPath("$.userExpirationDate").value("2026-10-09"));
+                .andExpect(jsonPath("$.userExpirationDate").value(relative("2026-10-09")));
     }
 
     @Test
@@ -675,6 +680,21 @@ class InventoryApiTests extends ApiTestSupport {
 
     private ResultActions add(TestUser user, String body) throws Exception {
         return mvc.perform(as(user, json(post("/api/v1/households/" + householdId + "/inventory"), body)));
+    }
+
+    /** Like {@link #add}, for a body written with the dates of the week the tests were written in. */
+    private ResultActions addDated(TestUser user, String body) throws Exception {
+        return add(user, relative(body));
+    }
+
+    /**
+     * The tests were written on 2 October 2026 with the dates of that week. So that they mean the same on any
+     * day (food "expiring in three days" must not one day be food that expired long ago), every date in the
+     * text is moved by as many days as have passed since then.
+     */
+    private static String relative(String text) {
+        long days = ChronoUnit.DAYS.between(WRITTEN_ON, LocalDate.now(ZoneId.of("Europe/Madrid")));
+        return DATE.matcher(text).replaceAll(match -> LocalDate.parse(match.group()).plusDays(days).toString());
     }
 
     private String addItem(TestUser user, String name, String amount, String unit, String location, String expiration)
