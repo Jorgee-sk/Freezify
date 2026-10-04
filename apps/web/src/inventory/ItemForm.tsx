@@ -7,6 +7,8 @@ import type { Food, FoodCategory, InventoryItem, ItemInput, RecentFood, StorageL
 import { queryKeys } from '../api/queryKeys'
 import { ErrorMessage } from '../components/ErrorMessage'
 import { currentLocale } from '../i18n'
+import type { PhotoCandidate } from '../api/scans'
+import { FoodPhoto } from './FoodPhoto'
 import { formatDay, parseAmount, todayIso } from './format'
 import { useDebounced } from './useDebounced'
 
@@ -77,6 +79,23 @@ export function ItemForm({ householdId, item, onDone }: Props) {
     setTyping(false)
   }
 
+  /** A food the photo may show, picked by the person: a catalog food fills in as one; anything else, its name. */
+  function pickCandidate(candidate: PhotoCandidate) {
+    if (candidate.foodId && candidate.defaultUnit && candidate.defaultStorage) {
+      pickFood({
+        id: candidate.foodId,
+        name: candidate.name,
+        category: candidate.category,
+        defaultUnit: candidate.defaultUnit,
+        defaultStorage: candidate.defaultStorage,
+      })
+      return
+    }
+    setName(candidate.name)
+    setFoodId(null)
+    setTyping(false)
+  }
+
   function pickRecent(food: RecentFood) {
     setName(food.name)
     setFoodId(food.foodId)
@@ -128,6 +147,8 @@ export function ItemForm({ householdId, item, onDone }: Props) {
             onChange={(event) => typeName(event.target.value)}
           />
         </label>
+
+        {!item && <FoodPhoto householdId={householdId} onPick={pickCandidate} />}
 
         {showSuggestions && (
           <ul className="chips" aria-label={t('inventory.suggestions')}>

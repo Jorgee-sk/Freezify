@@ -62,6 +62,7 @@ export const session = {
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
+  /** Sent as JSON, except a `FormData` (a file), which the browser encodes itself. */
   body?: unknown
   /** `false` for the endpoints that are called without a session. */
   authenticated?: boolean
@@ -72,12 +73,13 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
 
   const send = () => {
     const headers: Record<string, string> = { Accept: 'application/json', ...SESSION_HEADER }
-    if (body !== undefined) headers['Content-Type'] = 'application/json'
+    const form = body instanceof FormData
+    if (body !== undefined && !form) headers['Content-Type'] = 'application/json'
     if (authenticated && accessToken) headers.Authorization = `Bearer ${accessToken}`
     return fetch(`${API_BASE}${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : form ? body : JSON.stringify(body),
     })
   }
 

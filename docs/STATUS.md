@@ -11,9 +11,53 @@
 | 4 — Recipes | 🟡 Funcionalidad completa (CI en verde en el pull request #12). Antes de usuarios reales hay que revisar los datos de alérgenos |
 | 5 — Smart Planning | 🟡 Funcionalidad completa (CI en verde en el pull request #14). Faltan las preferencias del usuario como factor |
 | 6 — Shopping | ✅ Completada (CI en verde en los pull requests #16 y #17) |
-| 7 — AI / OCR | 🟡 En curso: escaneo de tickets (CI en verde en el pull request #19) y receta con IA hechos (tests nuevos del móvil pendientes de CI). Faltan la foto de un alimento y el asistente |
+| 7 — AI / OCR | 🟡 En curso: escaneo de tickets y receta con IA (CI en verde en los pull requests #19 y #20) y foto de un alimento (tests nuevos del móvil pendientes de CI). Faltan escanear tickets desde la web y el asistente |
 
 ## Fase 7 — AI / OCR 🟡
+
+### Tercera unidad: foto de un alimento (2026-10-03)
+
+#### Completed
+
+- **"Identificar por foto"** en el formulario de alta del inventario, en la web (subir o hacer una foto) y en el
+  móvil (cámara o galería). Solo aparece si el servidor tiene un modelo de lenguaje.
+- **El modelo elige entre los alimentos del catálogo** (o "otro", con un nombre) y da **varios candidatos con su
+  confianza** (regla P7): "Tomate — 81 %", "Pimiento rojo — 12 %", "Caqui — 7 %". Se le pide expresamente que,
+  si la foto no es clara, dé varios con poca confianza en vez de uno con mucha; cuando el primero no llega al
+  60 % la app lo dice: "No estamos seguros. ¿Es alguno de estos?".
+- **Nada se rellena hasta que la persona elige**: un alimento del catálogo trae su categoría, unidad y
+  ubicación habituales; "otro" solo pone el nombre; si no es ninguno, se escribe a mano.
+- **La foto se trata con cuidado**:
+  - el backend mira su contenido y solo acepta JPEG, PNG o WebP, diga lo que diga el fichero (415
+    `UNSUPPORTED_IMAGE`); como mucho 5 MB (413 `FILE_TOO_LARGE`), y nginx deja pasar hasta 6 MB;
+  - web y móvil la reducen antes de enviarla (lado mayor de 1280 px, JPEG): una foto de 3000×2000 viajó
+    en unos 16 kB;
+  - **no se guarda** en ningún sitio ni se escribe en los logs; va al modelo configurado y se olvida. La
+    pantalla avisa de que se envía al servicio de IA.
+- La respuesta se comprueba y se descarta entera si no sigue el esquema, propone algo que no está en el
+  catálogo ni es "otro", o da una confianza fuera de 0–1. El mismo alimento dos veces cuenta una.
+- Errores con su motivo (sin IA, límite del día, respuesta inservible) y evento de producto `food_scanned`.
+
+#### Tests
+
+| Qué | Resultado |
+|---|---|
+| Backend `./mvnw verify` | ✅ 367 tests (8 nuevos: validación de los candidatos, envío de la imagen al proveedor y API de la foto); 1 omitido, el que habla con Firebase real |
+| Web lint / test / build | ✅ sin avisos / 178 tests (4 nuevos) / correcto |
+| Mobile `flutter analyze` | ✅ sin avisos |
+| Mobile `flutter test` | 🟡 los **4 nuevos no se han ejecutado** (181 en total): correrán en la CI del pull request |
+| API contra el backend real y un modelo simulado | ✅ un JPEG de 20 kB devolvió "Tomate 81 % (verduras, nevera)", "Pimiento rojo 12 %" y "Caqui 7 % (no es del catálogo)"; un texto con extensión .jpg dio 415 y un JPEG de 7 MB, 413 (el límite de Spring, que los tests no pueden ejercitar); solo el primero llegó al modelo, como imagen en una data URL |
+| Web contra el backend real | ✅ una foto de 3000×2000 se redujo antes de enviarla, salieron los tres candidatos con su porcentaje y elegir "Tomate" rellenó el alimento y la ubicación |
+| App móvil con la cámara | ⏳ **no probado**: no hay móvil ni emulador; la versión web no se ha probado con una foto |
+| Con **Gemini real** u **Ollama real** | ⏳ **no probado**: la calidad real de la identificación es desconocida |
+
+#### Known issues
+
+- **Calidad desconocida**: no se ha probado con un modelo real ni con fotos reales de comida. El porcentaje es
+  lo que dice el modelo, no una probabilidad calibrada.
+- **La foto sale del dispositivo** hacia el servicio de IA (con la capa gratuita de Gemini, Google puede
+  usarla; riesgo R14). Lo avisa la pantalla.
+- **Solo un alimento por foto**: una foto de la compra entera no da una lista.
 
 ### Segunda unidad: "Crea una receta con lo que tengo" (2026-10-03)
 
@@ -153,7 +197,6 @@ Gemini u Ollama en local).
 
 ### Pendiente en esta fase
 
-- Foto de un alimento con candidatos y confianza.
 - Asistente.
 - Escanear desde la web (hoy solo el móvil; la web podría pegar texto).
 
@@ -811,9 +854,9 @@ Tras fusionarlo, `main` también pasa.
 
 ## Next
 
-1. Abrir el pull request de la receta con IA y confirmar en CI los 3 tests nuevos del móvil.
-2. Probar el escaneo con la cámara en un móvil Android y la IA con una clave gratuita de Gemini
-   (HOW_TO_USE 2.5).
-3. Fase 7, siguientes unidades: foto de un alimento, escanear desde la web y el asistente.
+1. Abrir el pull request de la foto de un alimento y confirmar en CI los 4 tests nuevos del móvil.
+2. Probar con la cámara en un móvil Android (ticket y foto de alimento) y la IA con una clave gratuita de
+   Gemini (HOW_TO_USE 2.5).
+3. Fase 7, siguientes unidades: escanear tickets desde la web y el asistente.
 4. Pendientes: probar el push en un móvil Android (Fase 3) y revisar los datos de alérgenos y de vida útil
    con una fuente autorizada antes de abrir a usuarios reales.

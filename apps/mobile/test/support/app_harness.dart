@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:freezify/app.dart';
 import 'package:freezify/core/api_client.dart';
 import 'package:freezify/core/providers.dart';
 import 'package:freezify/features/notifications/push_messaging.dart';
+import 'package:freezify/features/scanning/food_photo.dart';
 import 'package:freezify/features/scanning/receipt_ocr.dart';
 
 import 'fake_backend.dart';
@@ -19,6 +21,7 @@ Future<void> pumpFreezify(
   Locale deviceLocale = const Locale('es'),
   FakePushMessaging? push,
   FakeReceiptOcr? ocr,
+  FakePhotoPicker? photos,
 }) async {
   // The app resolves its language from the list of preferred locales, not from the single locale.
   tester.platformDispatcher.localesTestValue = [deviceLocale];
@@ -34,6 +37,7 @@ Future<void> pumpFreezify(
         pushMessagingProvider.overrideWithValue(push ?? FakePushMessaging()),
         // Never the real camera and OCR; unless a test says otherwise, photos cannot be read on this device.
         receiptOcrProvider.overrideWithValue(ocr ?? FakeReceiptOcr()),
+        photoPickerProvider.overrideWithValue(photos ?? FakePhotoPicker()),
       ],
       child: const FreezifyApp(),
     ),
@@ -99,5 +103,24 @@ class FakeReceiptOcr implements ReceiptOcr {
   Future<String?> read(PhotoSource source) async {
     reads.add(source);
     return text;
+  }
+}
+
+/// Stands in for the camera and the gallery.
+class FakePhotoPicker implements PhotoPicker {
+  FakePhotoPicker({this.hasCamera = false, this.photo});
+
+  @override
+  final bool hasCamera;
+
+  /// What picking gives; null means the person cancelled.
+  Uint8List? photo;
+
+  final List<PhotoSource> picks = [];
+
+  @override
+  Future<Uint8List?> pick(PhotoSource source) async {
+    picks.add(source);
+    return photo;
   }
 }

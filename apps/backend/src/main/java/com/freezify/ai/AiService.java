@@ -1,5 +1,6 @@
 package com.freezify.ai;
 
+import com.freezify.food.Food;
 import com.freezify.food.Quantity;
 import com.freezify.food.Unit;
 import java.math.BigDecimal;
@@ -33,6 +34,25 @@ public interface AiService {
      * @param userId who asked: each person has a daily allowance of calls
      */
     Answer<WrittenRecipe> writeRecipe(RecipeRequest request, UUID userId);
+
+    /**
+     * Says which food a photo shows, as candidates with how sure the model is of each. Never one rotund answer
+     * when the model is not sure: then several, each with its own confidence.
+     *
+     * @param mediaType {@code image/jpeg}, {@code image/png} or {@code image/webp}, already checked by content
+     * @param catalog   the foods a candidate may be; anything else is "other", with a name
+     * @param language  {@code es} or {@code en}: the language of the names of other foods
+     * @param userId    who asked: each person has a daily allowance of calls
+     */
+    Answer<List<FoodGuess>> identifyFood(
+            byte[] image, String mediaType, List<Food> catalog, String language, UUID userId);
+
+    /**
+     * @param foodId     the catalog food, or {@code null} for food that is not in the catalog
+     * @param name       for food that is not in the catalog, what the model calls it; otherwise its catalog name
+     * @param confidence between 0 and 1
+     */
+    record FoodGuess(@Nullable UUID foodId, String name, double confidence) {}
 
     /**
      * A purchased product as the model read it. Every line quotes the text it comes from.

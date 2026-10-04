@@ -1489,4 +1489,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorFoodNotAvailable =>
       'That food is no longer at home, is past its date or is not eaten in your household.';
+
+  @override
+  String get photoCamera => 'Take a photo';
+
+  @override
+  String get photoTake => 'Identify from a photo';
+
+  @override
+  String get photoPrivacy => 'The photo is sent to the AI service to identify it and is not stored.';
+
+  @override
+  String get photoWhatIsIt => 'What is it?';
+
+  @override
+  String get photoNotSure => 'We are not sure. Is it one of these?';
+
+  @override
+  String get photoNoneHelp => 'If it is none of them, type the name.';
+
+  @override
+  String get photoNothing => 'No food was recognised in the photo. Type the name.';
+
+  @override
+  String get errorUnsupportedImage => 'Only JPEG, PNG or WebP photos can be read.';
+
+  @override
+  String get errorFileTooLarge => 'The photo is too large.';
 }

@@ -8,6 +8,7 @@ import com.freezify.notifications.NotificationEvents.NotificationOpened;
 import com.freezify.recipes.RecipeEvents.RecipeCooked;
 import com.freezify.recipes.RecipeEvents.RecipeGenerated;
 import com.freezify.recipes.RecipeEvents.RecipeViewed;
+import com.freezify.scanning.ScanEvents.FoodScanned;
 import com.freezify.scanning.ScanEvents.ReceiptScanned;
 import com.freezify.shopping.ShoppingEvents.ShoppingListCreated;
 import com.freezify.users.UserRegistered;
@@ -130,6 +131,12 @@ class ProductEventRecorder {
     @TransactionalEventListener(fallbackExecution = true)
     void on(RecipeGenerated event) {
         record("recipe_generated", event.userId(), event.householdId());
+    }
+
+    /** Published outside a transaction, so it is recorded right away. */
+    @TransactionalEventListener(fallbackExecution = true)
+    void on(FoodScanned event) {
+        record("food_scanned", event.userId(), event.householdId());
     }
 
     @TransactionalEventListener

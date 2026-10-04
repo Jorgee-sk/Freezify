@@ -4,13 +4,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.freezify.ai.AiService.Answer;
 import com.freezify.ai.AiService.Difficulty;
+import com.freezify.ai.AiService.FoodGuess;
 import com.freezify.ai.AiService.Ingredient;
 import com.freezify.ai.AiService.Outcome;
 import com.freezify.ai.AiService.ReceiptLine;
 import com.freezify.ai.AiService.RecipeRequest;
 import com.freezify.ai.AiService.UsedIngredient;
 import com.freezify.ai.AiService.WrittenRecipe;
+import com.freezify.food.Food;
+import com.freezify.food.FoodCategory;
 import com.freezify.food.Quantity;
+import com.freezify.food.StorageLocation;
 import com.freezify.food.Unit;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -18,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -124,6 +129,71 @@ class DefaultAiServiceTests {
         @Test
         void aFailedCallGivesNothing() {
             assertThat(service(prompt -> Optional.empty(), 5).readReceipt(RECEIPT, UUID.randomUUID())).isEmpty();
+        }
+    }
+
+    @Nested
+    class IdentifyingAFoodInAPhoto {
+
+        private final Food tomato = food("tomato", "Tomate", "Tomato");
+        private final Food redPepper = food("red-pepper", "Pimiento rojo", "Red pepper");
+        private final List<Food> catalog = List.of(tomato, redPepper);
+        private final byte[] photo = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 1, 2, 3};
+
+        @Test
+        void givesCandidatesWithTheirConfidenceTheMostLikelyFirst() {
+            answer = """
+                    {"candidates": [
+                      {"food": "red-pepper", "name": "pimiento", "confidence": 0.12},
+                      {"food": "tomato", "name": "tomate", "confidence": 0.81},
+                      {"food": "other", "name": "Caqui", "confidence": 0.07},
+                      {"food": "tomato", "name": "tomate cherry", "confidence": 0.05}
+                    ]}""";
+
+            Answer<List<FoodGuess>> guesses =
+                    service(provider, 5).identifyFood(photo, "image/jpeg", catalog, "es", UUID.randomUUID());
+
+            assertThat(guesses.outcome()).isEqualTo(Outcome.OK);
+            assertThat(guesses.value()).containsExactly(
+                    // Catalog foods by their catalog name; the same food once.
+                    new FoodGuess(tomato.id(), "Tomate", 0.81),
+                    new FoodGuess(redPepper.id(), "Pimiento rojo", 0.12),
+                    new FoodGuess(null, "Caqui", 0.07));
+            AiProvider.StructuredPrompt prompt = prompts.getFirst();
+            assertThat(prompt.schemaName()).isEqualTo("food_photo");
+            assertThat(prompt.image().bytes()).isEqualTo(photo);
+            assertThat(prompt.image().mediaType()).isEqualTo("image/jpeg");
+            assertThat(prompt.instructions()).contains("give several candidates with low confidence");
+            assertThat(prompt.input()).contains("\"key\":\"tomato\"", "\"name\":\"Tomate\"");
+            assertThat(prompt.schema().toString()).contains("red-pepper", "other");
+        }
+
+        @Test
+        void noFoodInThePhotoIsNoCandidates() {
+            answer = "{\"candidates\": []}";
+            assertThat(service(provider, 5).identifyFood(photo, "image/jpeg", catalog, "es", UUID.randomUUID()).value())
+                    .isEmpty();
+        }
+
+        @Test
+        void anAnswerOutsideTheCatalogOrTheSchemaIsThrownAway() {
+            List<String> wrong = List.of(
+                    "{\"candidates\": [{\"food\": \"caviar\", \"name\": \"caviar\", \"confidence\": 0.9}]}",
+                    "{\"candidates\": [{\"food\": \"tomato\", \"name\": \"tomate\", \"confidence\": 1.5}]}",
+                    "{\"candidates\": [{\"food\": \"tomato\", \"name\": \"\", \"confidence\": 0.5}]}",
+                    "{\"guess\": \"tomato\"}");
+            for (String each : wrong) {
+                answer = each;
+                assertThat(service(provider, 50).identifyFood(photo, "image/jpeg", catalog, "es", UUID.randomUUID()).outcome())
+                        .as(each)
+                        .isEqualTo(Outcome.FAILED);
+            }
+            assertThat(service(new NoAiProvider(), 5).identifyFood(photo, "image/jpeg", catalog, "es", UUID.randomUUID()).outcome())
+                    .isEqualTo(Outcome.NOT_CONFIGURED);
+        }
+
+        private static Food food(String slug, String es, String en) {
+            return new Food(UUID.randomUUID(), slug, es, en, FoodCategory.VEGETABLES, Unit.UNIT, StorageLocation.REFRIGERATOR, Set.of());
         }
     }
 

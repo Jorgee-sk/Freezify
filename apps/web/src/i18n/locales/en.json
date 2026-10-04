@@ -100,7 +100,9 @@
     "AI_UNAVAILABLE": "The AI did not give a usable recipe. Try again.",
     "NOTHING_TO_COOK_WITH": "There is nothing in the inventory, within its date, that your household eats.",
     "PURCHASE_DATE_IN_FUTURE": "The purchase date cannot be later than today.",
-    "FOOD_NOT_AVAILABLE": "That food is no longer at home, is past its date or is not eaten in your household."
+    "FOOD_NOT_AVAILABLE": "That food is no longer at home, is past its date or is not eaten in your household.",
+    "UNSUPPORTED_IMAGE": "Only JPEG, PNG or WebP photos can be read.",
+    "FILE_TOO_LARGE": "The photo is too large."
   },
   "inventory": {
     "title": "Inventory",
@@ -492,5 +494,14 @@
     "optional": "optional",
     "available": "What the AI may use",
     "mustUseHelp": "Pick up to {{count}} foods the recipe has to use."
+  },
+  "photo": {
+    "take": "Identify from a photo",
+    "privacy": "The photo is sent to the AI service to identify it and is not stored.",
+    "reading": "Looking at the photo…",
+    "whatIsIt": "What is it?",
+    "notSure": "We are not sure. Is it one of these?",
+    "noneHelp": "If it is none of them, type the name.",
+    "nothing": "No food was recognised in the photo. Type the name."
   }
 }

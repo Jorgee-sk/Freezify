@@ -5,6 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors.dart';
 import '../../l10n/app_localizations.dart';
+import '../households/dialogs.dart';
+import '../recipes/generated_recipe_screen.dart';
+import '../scanning/food_photo.dart';
+import '../scanning/receipt_ocr.dart';
 import 'inventory_format.dart';
 import 'inventory_models.dart';
 import 'inventory_repository.dart';
@@ -43,6 +47,7 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
   Timer? _searchTimer;
   Object? _error;
   bool _saving = false;
+  bool _identifying = false;
 
   InventoryRepository get _repository => ref.read(inventoryRepositoryProvider);
   String get _language => Localizations.localeOf(context).languageCode;
@@ -96,6 +101,55 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
       _location = food.defaultStorage;
       _suggestions = const [];
     });
+  }
+
+  /// Asks the server's language model which food a photo shows, and fills in the candidate the person picks.
+  Future<void> _identifyFromPhoto() async {
+    final l10n = AppLocalizations.of(context);
+    final language = _language;
+    final picker = ref.read(photoPickerProvider);
+    final source = picker.hasCamera
+        ? await showDialog<PhotoSource>(
+            context: context,
+            builder: (context) => SimpleDialog(
+              children: [
+                SimpleDialogOption(
+                  onPressed: () => Navigator.of(context).pop(PhotoSource.camera),
+                  child: Text(l10n.photoCamera),
+                ),
+                SimpleDialogOption(
+                  onPressed: () => Navigator.of(context).pop(PhotoSource.gallery),
+                  child: Text(l10n.scanPickPhoto),
+                ),
+              ],
+            ),
+          )
+        : PhotoSource.gallery;
+    if (source == null) return;
+    final photo = await picker.pick(source);
+    if (photo == null || !mounted) return;
+    setState(() => _identifying = true);
+    try {
+      final candidates = await identifyFood(ref, widget.householdId, language, photo);
+      if (!mounted) return;
+      setState(() => _identifying = false);
+      final picked = await chooseCandidate(context, candidates);
+      if (picked == null || !mounted) return;
+      final food = picked.food;
+      if (food != null) {
+        _pickFood(food);
+      } else {
+        setState(() {
+          _name.text = picked.name;
+          _foodId = null;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _identifying = false);
+        showError(context, error);
+      }
+    }
   }
 
   void _pickRecent(RecentFood food) {
@@ -166,6 +220,8 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
     final editing = widget.item != null;
     final recent = editing ? null : ref.watch(recentFoodsProvider(widget.householdId)).value;
     final showRecent = recent != null && recent.isNotEmpty && _name.text.isEmpty;
+    // Only where the server has a language model.
+    final canIdentify = !editing && (ref.watch(aiEnabledProvider).value ?? false);
 
     return Scaffold(
       appBar: AppBar(title: Text(editing ? l10n.editFood : l10n.newFood)),
@@ -186,6 +242,21 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
                 onChanged: _nameChanged,
                 validator: (value) => (value == null || value.trim().isEmpty) ? l10n.fieldRequired : null,
               ),
+              if (canIdentify) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: _identifying ? null : _identifyFromPhoto,
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    label: Text(l10n.photoTake),
+                  ),
+                ),
+                if (_identifying) ...[const SizedBox(height: 8), const LinearProgressIndicator()],
+                Text(
+                  l10n.photoPrivacy,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
               if (_suggestions.isNotEmpty)
                 _Chips(
                   label: l10n.suggestions,

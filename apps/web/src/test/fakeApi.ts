@@ -20,7 +20,8 @@ export interface RecordedCall {
 /**
  * Replaces `fetch` with a router keyed by "METHOD /path" (path relative to /api/v1, without query string).
  * An unexpected request fails the test instead of silently hanging, except for what every signed-in page asks
- * for: unless a test serves them, event streams stay open and silent, and there are no unread notifications.
+ * for: unless a test serves them, event streams stay open and silent, there are no unread notifications and the
+ * server has no language model.
  */
 export function fakeApi(routes: Record<string, Handler>) {
   const calls: RecordedCall[] = []
@@ -30,12 +31,15 @@ export function fakeApi(routes: Record<string, Handler>) {
     const route = `${init?.method ?? 'GET'} ${path}`
     const headers = (init?.headers ?? {}) as Record<string, string>
     const query = new URLSearchParams(queryString)
-    const body = typeof init?.body === 'string' ? (JSON.parse(init.body) as unknown) : undefined
+    const body =
+      typeof init?.body === 'string' ? (JSON.parse(init.body) as unknown) : init?.body instanceof FormData ? init.body : undefined
     calls.push({ route, body, headers, query })
 
     const handler = routes[route]
     if (!handler && route.endsWith('/events')) return eventStream().response
     if (!handler && route === 'GET /notifications/unread-count') return Response.json({ count: 0 })
+    // Unless a test says otherwise, the server has no language model.
+    if (!handler && route === 'GET /ai') return Response.json({ enabled: false })
     if (!handler) throw new Error(`Unexpected request: ${route}`)
     const result = handler(body, { headers, query })
     if (result.response) return result.response

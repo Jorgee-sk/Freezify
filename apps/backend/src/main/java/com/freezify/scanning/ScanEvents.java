@@ -9,4 +9,7 @@ public final class ScanEvents {
 
     /** A member reviewed a scanned receipt and put its products in the inventory. */
     public record ReceiptScanned(UUID householdId, UUID userId, int items) {}
+
+    /** A member had a photo of a food identified. */
+    public record FoodScanned(UUID householdId, UUID userId) {}
 }

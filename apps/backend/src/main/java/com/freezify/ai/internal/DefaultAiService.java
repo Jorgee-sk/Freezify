@@ -1,6 +1,7 @@
 package com.freezify.ai.internal;
 
 import com.freezify.ai.AiService;
+import com.freezify.food.Food;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -56,6 +57,27 @@ class DefaultAiService implements AiService {
                         RecipeWriting.INSTRUCTIONS, RecipeWriting.input(request, jsonMapper), "recipe", RecipeWriting.SCHEMA))
                 .flatMap(this::json)
                 .flatMap(answer -> RecipeWriting.recipe(answer, request))
+                .map(Answer::ok)
+                .orElseGet(() -> Answer.not(Outcome.FAILED));
+    }
+
+    @Override
+    public Answer<List<FoodGuess>> identifyFood(
+            byte[] image, String mediaType, List<Food> catalog, String language, UUID userId) {
+        if (!enabled()) {
+            return Answer.not(Outcome.NOT_CONFIGURED);
+        }
+        if (!allowance.take(userId)) {
+            return Answer.not(Outcome.LIMIT_REACHED);
+        }
+        return provider.complete(new AiProvider.StructuredPrompt(
+                        FoodIdentification.INSTRUCTIONS,
+                        FoodIdentification.input(catalog, language, jsonMapper),
+                        "food_photo",
+                        FoodIdentification.schema(catalog),
+                        new AiProvider.Picture(image, mediaType)))
+                .flatMap(this::json)
+                .flatMap(answer -> FoodIdentification.guesses(answer, catalog, language))
                 .map(Answer::ok)
                 .orElseGet(() -> Answer.not(Outcome.FAILED));
     }
