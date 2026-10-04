@@ -1027,5 +1027,14 @@
       }
     }
   },
-  "errorFoodNotAvailable": "That food is no longer at home, is past its date or is not eaten in your household."
+  "errorFoodNotAvailable": "That food is no longer at home, is past its date or is not eaten in your household.",
+  "photoCamera": "Take a photo",
+  "photoTake": "Identify from a photo",
+  "photoPrivacy": "The photo is sent to the AI service to identify it and is not stored.",
+  "photoWhatIsIt": "What is it?",
+  "photoNotSure": "We are not sure. Is it one of these?",
+  "photoNoneHelp": "If it is none of them, type the name.",
+  "photoNothing": "No food was recognised in the photo. Type the name.",
+  "errorUnsupportedImage": "Only JPEG, PNG or WebP photos can be read.",
+  "errorFileTooLarge": "The photo is too large."
 }

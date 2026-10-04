@@ -34,6 +34,8 @@ String errorMessage(AppLocalizations l10n, Object error) {
     'AI_UNAVAILABLE' => l10n.errorAiUnavailable,
     'NOTHING_TO_COOK_WITH' => l10n.errorNothingToCookWith,
     'FOOD_NOT_AVAILABLE' => l10n.errorFoodNotAvailable,
+    'UNSUPPORTED_IMAGE' => l10n.errorUnsupportedImage,
+    'FILE_TOO_LARGE' => l10n.errorFileTooLarge,
     _ => l10n.errorGeneric,
   };
 }

@@ -179,10 +179,12 @@ Instala Ollama, descarga un modelo que admita salida estructurada (por ejemplo `
 arranca el backend con `FREEZIFY_AI_PROVIDER=openai-compatible`, `FREEZIFY_AI_BASE_URL=http://localhost:11434/v1`
 y `FREEZIFY_AI_MODEL=qwen2.5:7b`, sin clave.
 
-Con un modelo configurado aparece también **"Crear una receta con lo que tengo"** en Recetas, en la web y en
-el móvil: el modelo solo recibe los alimentos de tu inventario que tu hogar come.
+Con un modelo configurado aparecen también **"Crear una receta con lo que tengo"** en Recetas (el modelo solo
+recibe los alimentos de tu inventario que tu hogar come) e **"Identificar por foto"** al añadir un alimento.
+Para la foto el modelo tiene que entender imágenes: los de Gemini lo hacen; con Ollama hace falta uno de
+visión (por ejemplo `qwen2.5vl`). La foto se envía al modelo y no se guarda.
 
-Cada persona puede provocar 30 llamadas al día entre las dos cosas (`FREEZIFY_AI_DAILY_CALLS_PER_USER`; la
+Cada persona puede provocar 30 llamadas al día entre todo (`FREEZIFY_AI_DAILY_CALLS_PER_USER`; la
 cuenta está en la tabla `ai_usage`). Si el modelo falla, tarda más de 12 s o responde algo que no valida, el
 ticket se lee con las reglas y la receta se puede volver a pedir.
 

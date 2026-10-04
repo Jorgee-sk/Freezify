@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,18 @@ class OpenAiCompatibleProvider implements AiProvider {
         return completionsUri;
     }
 
+    /** The input alone, or the input and the picture, as the OpenAI API takes images: a data URL. */
+    private static Object userContent(StructuredPrompt prompt) {
+        if (prompt.image() == null) {
+            return prompt.input();
+        }
+        String data = "data:" + prompt.image().mediaType() + ";base64,"
+                + Base64.getEncoder().encodeToString(prompt.image().bytes());
+        return List.of(
+                Map.of("type", "text", "text", prompt.input()),
+                Map.of("type", "image_url", "image_url", Map.of("url", data)));
+    }
+
     @Override
     public Optional<String> complete(StructuredPrompt prompt) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -55,7 +68,7 @@ class OpenAiCompatibleProvider implements AiProvider {
         body.put("temperature", 0);
         body.put("messages", List.of(
                 Map.of("role", "system", "content", prompt.instructions()),
-                Map.of("role", "user", "content", prompt.input())));
+                Map.of("role", "user", "content", userContent(prompt))));
         body.put("response_format", Map.of(
                 "type", "json_schema",
                 "json_schema", Map.of("name", prompt.schemaName(), "strict", true, "schema", prompt.schema())));

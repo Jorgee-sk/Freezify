@@ -388,5 +388,14 @@
   "errorNothingToCookWith": "No hay en el inventario nada sin caducar que se coma en tu hogar.",
   "generatedAvailable": "Lo que la IA puede usar",
   "generatedMustUseHelp": "Marca hasta {count} alimentos que la receta tenga que usar sí o sí.",
-  "errorFoodNotAvailable": "Ese alimento ya no está en casa, ha pasado su fecha o no se come en tu hogar."
+  "errorFoodNotAvailable": "Ese alimento ya no está en casa, ha pasado su fecha o no se come en tu hogar.",
+  "photoCamera": "Hacer una foto",
+  "photoTake": "Identificar por foto",
+  "photoPrivacy": "La foto se envía al servicio de IA para identificarla y no se guarda.",
+  "photoWhatIsIt": "¿Qué es?",
+  "photoNotSure": "No estamos seguros. ¿Es alguno de estos?",
+  "photoNoneHelp": "Si no es ninguno, escribe el nombre.",
+  "photoNothing": "No hemos reconocido ningún alimento en la foto. Escribe el nombre.",
+  "errorUnsupportedImage": "Solo se pueden leer fotos JPEG, PNG o WebP.",
+  "errorFileTooLarge": "La foto es demasiado grande."
 }

@@ -12,7 +12,7 @@ El estado detallado de cada entrega está en [STATUS.md](STATUS.md).
 | 4 | Recipes | 🟡 Funcionalidad completa; pendiente revisar los datos de alérgenos antes de usuarios reales |
 | 5 | Smart Planning | 🟡 Funcionalidad completa; faltan las preferencias del usuario como factor |
 | 6 | Shopping | ✅ Completada |
-| 7 | AI / OCR | 🟡 En curso: escaneo de tickets y receta con IA hechos |
+| 7 | AI / OCR | 🟡 En curso: escaneo de tickets, receta con IA y foto de un alimento hechos |
 | 8 | Analytics | ⏳ Pendiente |
 | 9 | Product Polish | ⏳ Pendiente |
 | 10 | Monetization | ⏳ Pendiente (solo tras validar uso real) |

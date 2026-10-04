@@ -825,3 +825,27 @@ a.button {
   justify-content: flex-end;
   gap: 0.3rem;
 }
+
+/* Hidden but still read by screen readers and reachable by keyboard (the file input behind a button). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.food-photo {
+  margin: 0.5rem 0 0.75rem;
+}
+
+.food-photo label.button {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.food-photo label.button:focus-within {
+  outline: 2px solid var(--green-600);
+  outline-offset: 2px;
+}

@@ -16,6 +16,11 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  servlet:
+    multipart:
+      # Photos of food; the apps shrink them before sending, so this is far more than they need.
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 server:
   port: ${FREEZIFY_PORT:8080}

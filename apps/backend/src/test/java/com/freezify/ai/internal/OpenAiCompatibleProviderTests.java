@@ -94,6 +94,22 @@ class OpenAiCompatibleProviderTests {
     }
 
     @Test
+    void aPictureGoesWithTheInputAsADataUrl() {
+        responseBody = "{\"choices\": [{\"message\": {\"content\": \"{}\"}}]}";
+        byte[] photo = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 42};
+
+        provider("/v1", "key").complete(new AiProvider.StructuredPrompt(
+                "Say which food it is.", "{}", "food_photo", Map.of(), new AiProvider.Picture(photo, "image/jpeg")));
+
+        JsonNode content = jsonMapper.readTree(requestBody.get()).path("messages").path(1).path("content");
+        assertThat(content.path(0).path("type").asString()).isEqualTo("text");
+        assertThat(content.path(0).path("text").asString()).isEqualTo("{}");
+        assertThat(content.path(1).path("type").asString()).isEqualTo("image_url");
+        assertThat(content.path(1).path("image_url").path("url").asString())
+                .isEqualTo("data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(photo));
+    }
+
+    @Test
     void aLocalModelNeedsNoKey() {
         responseBody = "{\"choices\": [{\"message\": {\"content\": \"{}\"}}]}";
 

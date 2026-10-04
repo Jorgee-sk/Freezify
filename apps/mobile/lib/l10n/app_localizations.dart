@@ -2425,6 +2425,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That food is no longer at home, is past its date or is not eaten in your household.'**
   String get errorFoodNotAvailable;
+
+  /// No description provided for @photoCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get photoCamera;
+
+  /// No description provided for @photoTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Identify from a photo'**
+  String get photoTake;
+
+  /// No description provided for @photoPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo is sent to the AI service to identify it and is not stored.'**
+  String get photoPrivacy;
+
+  /// No description provided for @photoWhatIsIt.
+  ///
+  /// In en, this message translates to:
+  /// **'What is it?'**
+  String get photoWhatIsIt;
+
+  /// No description provided for @photoNotSure.
+  ///
+  /// In en, this message translates to:
+  /// **'We are not sure. Is it one of these?'**
+  String get photoNotSure;
+
+  /// No description provided for @photoNoneHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'If it is none of them, type the name.'**
+  String get photoNoneHelp;
+
+  /// No description provided for @photoNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No food was recognised in the photo. Type the name.'**
+  String get photoNothing;
+
+  /// No description provided for @errorUnsupportedImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Only JPEG, PNG or WebP photos can be read.'**
+  String get errorUnsupportedImage;
+
+  /// No description provided for @errorFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo is too large.'**
+  String get errorFileTooLarge;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

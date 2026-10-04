@@ -100,7 +100,9 @@
     "AI_UNAVAILABLE": "La IA no ha dado una receta válida. Inténtalo de nuevo.",
     "NOTHING_TO_COOK_WITH": "No hay en el inventario nada sin caducar que se coma en tu hogar.",
     "PURCHASE_DATE_IN_FUTURE": "La fecha de compra no puede ser posterior a hoy.",
-    "FOOD_NOT_AVAILABLE": "Ese alimento ya no está en casa, ha pasado su fecha o no se come en tu hogar."
+    "FOOD_NOT_AVAILABLE": "Ese alimento ya no está en casa, ha pasado su fecha o no se come en tu hogar.",
+    "UNSUPPORTED_IMAGE": "Solo se pueden leer fotos JPEG, PNG o WebP.",
+    "FILE_TOO_LARGE": "La foto es demasiado grande."
   },
   "inventory": {
     "title": "Inventario",
@@ -492,5 +494,14 @@
     "optional": "opcional",
     "available": "Lo que la IA puede usar",
     "mustUseHelp": "Marca hasta {{count}} alimentos que la receta tenga que usar sí o sí."
+  },
+  "photo": {
+    "take": "Identificar por foto",
+    "privacy": "La foto se envía al servicio de IA para identificarla y no se guarda.",
+    "reading": "Mirando la foto…",
+    "whatIsIt": "¿Qué es?",
+    "notSure": "No estamos seguros. ¿Es alguno de estos?",
+    "noneHelp": "Si no es ninguno, escribe el nombre.",
+    "nothing": "No hemos reconocido ningún alimento en la foto. Escribe el nombre."
   }
 }

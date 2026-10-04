@@ -5,6 +5,7 @@ import com.freezify.food.FoodCategory;
 import com.freezify.food.Quantity;
 import com.freezify.food.StorageLocation;
 import com.freezify.food.Unit;
+import com.freezify.scanning.internal.FoodPhotoService;
 import com.freezify.scanning.internal.ReceiptScanService;
 import com.freezify.scanning.internal.ReceiptScanService.ConfirmedLine;
 import com.freezify.scanning.internal.ScanViews.ReceiptDraft;
@@ -17,11 +18,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +32,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/households/{householdId}/scans")
@@ -40,9 +45,25 @@ class ScanController {
     private static final String LANGUAGE_MESSAGE = "must be 'es' or 'en'";
 
     private final ReceiptScanService receipts;
+    private final FoodPhotoService photos;
 
-    ScanController(ReceiptScanService receipts) {
+    ScanController(ReceiptScanService receipts, FoodPhotoService photos) {
         this.receipts = receipts;
+        this.photos = photos;
+    }
+
+    /**
+     * Says which food a photo shows, as candidates with how sure the model is of each. The photo goes to the
+     * configured language model and is not stored. Needs a model configured (`GET /ai`).
+     */
+    @PostMapping(value = "/food", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    List<FoodPhotoService.Candidate> identifyFood(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID householdId,
+            @RequestParam(defaultValue = "es") @Pattern(regexp = LANGUAGE, message = LANGUAGE_MESSAGE) String lang,
+            @RequestPart("image") MultipartFile image)
+            throws IOException {
+        return photos.identify(householdId, CurrentUser.id(jwt), image.getBytes(), lang);
     }
 
     /**

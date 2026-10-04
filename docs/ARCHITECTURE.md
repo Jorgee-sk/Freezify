@@ -173,6 +173,8 @@ puertos y adaptadores: entidad JPA + repositorio Spring Data + servicio.
 | D71 | El **límite diario de IA se cuenta en la base de datos** con un `insert … on conflict … returning` | Sobrevive a reinicios, vale con varias instancias y dos llamadas a la vez no se cuelan |
 | D72 | Los **alias de alimentos son del módulo `food`** (`FoodAliases`), aunque los aprenda el escaneo | El inventario los usa para reconocer nombres escritos a mano sin depender del escaneo (que depende del inventario) |
 | D73 | Las recetas generadas se comprueban también contra una **lista escrita a mano de alérgenos y carnes fuera del catálogo** | Lo que más daño haría que el modelo añadiera por su cuenta es lo que alguien no puede comer |
+| D74 | La **foto de un alimento** va al modelo en la petición y **no se guarda**; su tipo se comprueba por el contenido | Sin almacenamiento de imágenes, URLs firmadas ni retención que gestionar; nada que no sea una foto sale del servidor |
+| D75 | El modelo **elige entre los alimentos del catálogo** (o "otro") y devuelve **varios candidatos con su confianza** | Lo elegido se añade como un alimento del catálogo, y la duda se ve en lugar de esconderse tras una única respuesta (P7) |
 | D22 | El token viaja en la cabecera `Authorization`, también en SSE | Nunca en la URL; por eso la web usa `fetch` con lectura en streaming en lugar de `EventSource` |
 
 ### 3.4 Seguridad
@@ -306,6 +308,7 @@ Fase 4:
 | POST | `/households/{id}/shopping-list/from-plan` | Añadir lo que les falta a las comidas de una semana, de hoy en adelante |
 | POST | `/households/{id}/scans/receipt?lang=` | Leer el texto de un ticket en un borrador para revisar; no guarda nada |
 | POST | `/households/{id}/scans/receipt/confirm` | Poner en el inventario las líneas revisadas y recordar el alimento elegido para cada texto |
+| POST | `/households/{id}/scans/food?lang=` | Foto de un alimento (multipart `image`, JPEG/PNG/WebP, ≤ 5 MB): candidatos del catálogo con su confianza; no se guarda |
 | GET | `/ai` | Si el servidor tiene un modelo de lenguaje |
 | GET | `/households/{id}/recipes/generated/ingredients?lang=` | Lo que una receta generada puede usar: lo que se le daría al modelo, sin los básicos |
 | POST | `/households/{id}/recipes/generated?lang=` | Receta escrita por IA con lo que hay en casa y el hogar come (1–8 raciones; `use`: hasta 3 alimentos que tiene que usar); no se guarda |
@@ -340,6 +343,9 @@ ScanController → ReceiptScanService ─┬─ ReceiptParser (reglas, siempre)
 RecipeController → RecipeGenerator ─┬─ inventario filtrado por la dieta del hogar
                                     ├─ AiService.writeRecipe → AiProvider (la misma cadena)
                                     └─ FoodMentions (la receta no nombra alimentos que no usa)
+
+ScanController → FoodPhotoService ── tipo por contenido → AiService.identifyFood → AiProvider
+                                                          (imagen como data URL, catálogo como opciones)
 ```
 
 - Los controladores nunca llaman a un modelo; `AiService` expone casos de uso concretos, nunca un "chat".
@@ -358,7 +364,7 @@ RecipeController → RecipeGenerator ─┬─ inventario filtrado por la dieta 
 |---|---|---|---|
 | R1 | **Normalización de alimentos**: los tickets españoles abrevian ("TOM PERA 1K"); sin mapear a `Food` no hay recetas ni lista de la compra fiables | Alto | Catálogo canónico con alias desde Fase 2; revisión humana obligatoria; aprender alias de las correcciones del usuario |
 | R2 | **Calidad del OCR** en tickets arrugados o térmicos | Alto | OCR en dispositivo + estructuración posterior; la UI de revisión es el camino principal, no la excepción. **Pendiente:** probar ML Kit con tickets reales en un móvil |
-| R14 | **Datos enviados a un modelo externo**: en la capa gratuita de Gemini, Google puede usarlos para mejorar sus productos | Medio | Solo se envía el texto del ticket, con los números largos tapados; el modelo es opcional. Con usuarios reales: capa de pago u Ollama, e informarlo en la política de privacidad |
+| R14 | **Datos enviados a un modelo externo**: en la capa gratuita de Gemini, Google puede usarlos para mejorar sus productos | Medio | Del ticket solo se envía el texto, con los números largos tapados; la foto de un alimento sí sale, reducida y con aviso en pantalla, y no se guarda en Freezify; el modelo es opcional. Con usuarios reales: capa de pago u Ollama, e informarlo en la política de privacidad |
 | R13 | **Datos de alérgenos** escritos a mano: un error puede ocultar un alérgeno a una persona alérgica | Alto | Marcado prudente, aviso visible de que no es una garantía y de comprobar la etiqueta. **Pendiente:** contrastar con una fuente autorizada antes del lanzamiento |
 | R3 | **Fechas estimadas** erróneas (seguridad alimentaria, responsabilidad) | Alto | Siempre etiquetadas; reglas conservadoras; nunca pisan la fecha del usuario. **Pendiente:** contrastar los días con una fuente autorizada antes del lanzamiento |
 | R4 | **Conversión de unidades** (recuento ↔ masa: "2 tomates" vs "300 g") | Medio | Peso medio por unidad en el catálogo; cuando no exista, no se convierte y se avisa |
